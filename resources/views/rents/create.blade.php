@@ -32,7 +32,9 @@
             <select name="item_id" class="form-select" required>
                 <option value="">Seleccionar…</option>
                 @foreach($items as $i)
-                <option value="{{ $i->id }}" @selected(old('item_id')==$i->id)>{{ $i->brand->name ?? '' }} {{ $i->model }} — {{ $i->serie }}</option>
+                <option value="{{ $i->id }}" @selected(old('item_id')==$i->id)>
+                    {{ $i->brand->name ?? '' }} {{ $i->model }} — {{ $i->serie }} [{{ $i->location_status ?? '—' }}]
+                </option>
                 @endforeach
             </select>
             @error('item_id')<p class="form-error">{{ $message }}</p>@enderror

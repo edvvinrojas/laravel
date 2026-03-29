@@ -44,9 +44,9 @@ class InventoryController extends Controller
         $validated = $request->validate([
             'item_code'    => 'required|string|max:100',
             'catalog_id'   => 'required|exists:item_catalog,id',
-            'section'      => 'nullable|string|max:100',
+            'section'      => 'required|in:SECCION_1,SECCION_2,SECCION_3,SECCION_4,SECCION_5,SECCION_6',
             'shelf_id'     => 'nullable|exists:shelves,id',
-            'quality'      => 'nullable|string|max:100',
+            'quality'      => 'required|in:ORIGINAL,GENERICO,REPARADO,NUEVA,USADO,NA',
             'entry_date'   => 'nullable|date',
             'supplier_id'  => 'nullable|exists:suppliers,id',
             'invoice'      => 'nullable|string|max:100',
@@ -85,9 +85,9 @@ class InventoryController extends Controller
         $validated = $request->validate([
             'item_code'    => 'required|string|max:100',
             'catalog_id'   => 'required|exists:item_catalog,id',
-            'section'      => 'nullable|string|max:100',
+            'section'      => 'required|in:SECCION_1,SECCION_2,SECCION_3,SECCION_4,SECCION_5,SECCION_6',
             'shelf_id'     => 'nullable|exists:shelves,id',
-            'quality'      => 'nullable|string|max:100',
+            'quality'      => 'required|in:ORIGINAL,GENERICO,REPARADO,NUEVA,USADO,NA',
             'entry_date'   => 'nullable|date',
             'supplier_id'  => 'nullable|exists:suppliers,id',
             'invoice'      => 'nullable|string|max:100',

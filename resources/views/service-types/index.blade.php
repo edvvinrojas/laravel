@@ -4,9 +4,12 @@
 
 @section('content')
 <div class="space-y-4">
-    <div class="flex justify-between items-center">
-        <span class="text-sm text-gray-500">{{ $serviceTypes->total() }} tipo(s)</span>
-        <a href="{{ route('service-types.create') }}" class="btn-primary">+ Nuevo tipo</a>
+    <div class="flex items-center justify-between gap-3">
+        <a href="{{ route('production.index') }}" class="btn-secondary btn-sm">← Producción</a>
+        <div class="flex items-center gap-3">
+            <span class="text-sm text-gray-500">{{ $serviceTypes->total() }} tipo(s)</span>
+            <a href="{{ route('service-types.create') }}" class="btn-primary">+ Nuevo tipo</a>
+        </div>
     </div>
     <div class="card">
         <div class="card-body p-0">

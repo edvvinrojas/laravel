@@ -7,21 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class Client extends Model
 {
     protected $fillable = [
-        'name',
-        'comercial_name',
-        'rfc',
-        'address',
-        'colonia',
-        'zip_code',
-        'city',
-        'contact_id',
-        'user_id',
-        'is_active',
+        'name', 'comercial_name', 'rfc', 'address',
+        'colonia', 'zip_code', 'city', 'user_id', 'is_active',
     ];
 
     protected $casts = ['is_active' => 'boolean'];
 
-    public function contact()  { return $this->belongsTo(Contact::class); }
+    public function contacts() { return $this->hasMany(Contact::class); }
     public function creator()  { return $this->belongsTo(User::class, 'user_id'); }
     public function branches() { return $this->hasMany(Branch::class); }
     public function rents()    { return $this->hasMany(Rent::class); }

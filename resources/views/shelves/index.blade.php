@@ -4,13 +4,16 @@
 
 @section('content')
 <div class="space-y-4">
-    <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+    <div class="flex items-center justify-between gap-3">
+        <a href="{{ route('almacen.index', ['tab' => 'inventario']) }}" class="btn-secondary btn-sm">← Almacén</a>
+        <a href="{{ route('shelves.create') }}" class="btn-primary">+ Nuevo estante</a>
+    </div>
+    <div class="flex gap-2">
         <form method="GET" action="{{ route('shelves.index') }}" class="flex gap-2 flex-1 max-w-md">
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar estante…" class="form-input flex-1">
             <button type="submit" class="btn-secondary btn-sm">Buscar</button>
             @if(request('search'))<a href="{{ route('shelves.index') }}" class="btn-secondary btn-sm">Limpiar</a>@endif
         </form>
-        <a href="{{ route('shelves.create') }}" class="btn-primary">+ Nuevo estante</a>
     </div>
     <div class="card">
         <div class="card-header"><span class="text-sm text-gray-500">{{ $query->total() }} estante(s)</span></div>

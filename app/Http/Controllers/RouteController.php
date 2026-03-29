@@ -62,7 +62,8 @@ class RouteController extends Controller
     public function show(Route $route)
     {
         $route->load(['stops.client', 'stops.branch']);
-        return view('routes.show', compact('route'));
+        $clients = Client::where('is_active', true)->orderBy('name')->get();
+        return view('routes.show', compact('route', 'clients'));
     }
 
     public function edit(Route $route)
@@ -90,5 +91,49 @@ class RouteController extends Controller
     {
         $route->update(['is_active' => false]);
         return redirect()->route('routes.index')->with('success', 'Ruta eliminada.');
+    }
+
+    public function storeStop(Request $request, Route $route)
+    {
+        $request->validate([
+            'client_id'    => 'nullable|exists:clients,id',
+            'branch_id'    => 'nullable|exists:branches,id',
+            'address'      => 'nullable|string|max:500',
+            'city'         => 'nullable|string|max:100',
+            'notes'        => 'nullable|string',
+        ]);
+
+        $order = $route->stops()->max('stop_order') + 1;
+
+        $route->stops()->create([
+            'client_id'    => $request->client_id ?: null,
+            'branch_id'    => $request->branch_id ?: null,
+            'stop_order'   => $order,
+            'address'      => $request->address,
+            'city'         => $request->city,
+            'notes'        => $request->notes,
+            'visit_status' => 'pendiente',
+        ]);
+
+        $route->update(['total_stops' => $route->stops()->count()]);
+
+        return back()->with('success', 'Parada agregada.');
+    }
+
+    public function completeStop(Route $route, RouteStop $stop)
+    {
+        $stop->update(['is_completed' => true, 'visit_status' => 'completado']);
+        $route->update(['completed_stops' => $route->stops()->where('is_completed', true)->count()]);
+        return back()->with('success', 'Parada marcada como completada.');
+    }
+
+    public function destroyStop(Route $route, RouteStop $stop)
+    {
+        $stop->delete();
+        $route->update([
+            'total_stops'     => $route->stops()->count(),
+            'completed_stops' => $route->stops()->where('is_completed', true)->count(),
+        ]);
+        return back()->with('success', 'Parada eliminada.');
     }
 }

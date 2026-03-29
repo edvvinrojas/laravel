@@ -31,12 +31,22 @@
             </select>
         </div>
         <div>
-            <label class="form-label">Sección</label>
-            <input name="section" value="{{ old('section') }}" class="form-input" placeholder="A1, B2…">
+            <label class="form-label">Sección <span class="text-red-500">*</span></label>
+            <select name="section" class="form-select" required>
+                <option value="">Seleccionar…</option>
+                @foreach(['SECCION_1','SECCION_2','SECCION_3','SECCION_4','SECCION_5','SECCION_6'] as $sec)
+                <option value="{{ $sec }}" @selected(old('section')==$sec)>{{ str_replace('_',' ',$sec) }}</option>
+                @endforeach
+            </select>
         </div>
         <div>
-            <label class="form-label">Calidad</label>
-            <input name="quality" value="{{ old('quality') }}" class="form-input" placeholder="Original, Genérico…">
+            <label class="form-label">Calidad <span class="text-red-500">*</span></label>
+            <select name="quality" class="form-select" required>
+                <option value="">Seleccionar…</option>
+                @foreach(['ORIGINAL','GENERICO','REPARADO','NUEVA','USADO','NA'] as $q)
+                <option value="{{ $q }}" @selected(old('quality')==$q)>{{ ucfirst(strtolower($q)) }}</option>
+                @endforeach
+            </select>
         </div>
         <div>
             <label class="form-label">Proveedor</label>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Item;
 use App\Models\InventoryItem;
+use App\Models\Sparepart;
 use Illuminate\Http\Request;
 
 class AlmacenController extends Controller
@@ -31,6 +32,15 @@ class AlmacenController extends Controller
             ->paginate(15, ['*'], 'inv_page')
             ->withQueryString();
 
-        return view('almacen.index', compact('equipment', 'inventory', 'tab'));
+        $spareparts = Sparepart::when($request->q_sp, fn($q, $s) =>
+                $q->where('name', 'like', "%$s%")
+                  ->orWhere('code', 'like', "%$s%")
+                  ->orWhere('brand', 'like', "%$s%")
+            )
+            ->latest()
+            ->paginate(15, ['*'], 'sp_page')
+            ->withQueryString();
+
+        return view('almacen.index', compact('equipment', 'inventory', 'spareparts', 'tab'));
     }
 }

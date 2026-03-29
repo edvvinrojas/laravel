@@ -31,6 +31,8 @@ use App\Http\Controllers\ItemCatalogController;
 use App\Http\Controllers\MonthlyPlanController;
 use App\Http\Controllers\ServiceTypeController;
 use App\Http\Controllers\AlmacenController;
+use App\Http\Controllers\RhController;
+use App\Http\Controllers\ProfileController;
 
 // Auth
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -44,6 +46,7 @@ Route::middleware('auth')->group(function () {
 
     // Clientes
     Route::resource('clients', ClientController::class);
+    Route::delete('clients/{client}/contacts/{contact}', [ClientController::class, 'destroyContact'])->name('clients.contacts.destroy');
     Route::get('clients/{client}/branches', [BranchController::class, 'index'])->name('branches.index');
     Route::post('clients/{client}/branches', [BranchController::class, 'store'])->name('branches.store');
     Route::delete('branches/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
@@ -93,6 +96,12 @@ Route::middleware('auth')->group(function () {
 
     // Rutas
     Route::resource('routes', RouteController::class);
+    Route::post('routes/{route}/stops', [RouteController::class, 'storeStop'])->name('routes.stops.store');
+    Route::patch('routes/{route}/stops/{stop}/complete', [RouteController::class, 'completeStop'])->name('routes.stops.complete');
+    Route::delete('routes/{route}/stops/{stop}', [RouteController::class, 'destroyStop'])->name('routes.stops.destroy');
+
+    // RH hub
+    Route::get('rh', [RhController::class, 'index'])->name('rh.index');
 
     // RH
     Route::resource('employees', EmployeeController::class);
@@ -112,6 +121,10 @@ Route::middleware('auth')->group(function () {
 
     // Auditoría (solo admin)
     Route::get('audit', [AuditController::class, 'index'])->name('audit.index')->middleware('role:administrador');
+
+    // Perfil propio
+    Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
 
     // Notificaciones
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');

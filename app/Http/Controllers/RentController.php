@@ -26,7 +26,7 @@ class RentController extends Controller
     public function create()
     {
         $clients = Client::where('is_active', true)->orderBy('name')->get();
-        $items   = Item::where('is_active', true)->whereIn('location_status', ['BODEGA'])->with('brand')->orderBy('model')->get();
+        $items   = Item::where('is_active', true)->with('brand')->orderBy('model')->get();
         return view('rents.create', compact('clients', 'items'));
     }
 

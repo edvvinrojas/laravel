@@ -124,54 +124,8 @@
                     @enderror
                 </div>
 
-                {{-- Contacto --}}
-                <div>
-                    <label for="contact_id" class="form-label">Contacto existente</label>
-                    <select id="contact_id" name="contact_id"
-                            class="form-select @error('contact_id') border-red-400 @enderror">
-                        <option value="">— Sin contacto —</option>
-                        @foreach($contacts as $contact)
-                            <option value="{{ $contact->id }}"
-                                {{ old('contact_id') == $contact->id ? 'selected' : '' }}>
-                                {{ $contact->name }}{{ $contact->phone ? ' — ' . $contact->phone : '' }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('contact_id')
-                        <p class="form-error">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                {{-- Nuevo contacto inline --}}
-                <div class="border border-dashed border-gray-300 rounded-xl p-4 bg-gray-50">
-                    <button type="button" onclick="toggleNewContact()"
-                        class="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 mb-3">
-                        <span id="toggle-icon">＋</span> Registrar nuevo contacto
-                    </button>
-                    <div id="new-contact-fields" class="{{ old('new_contact_name') ? '' : 'hidden' }} grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div class="sm:col-span-2">
-                            <label class="form-label">Nombre del contacto</label>
-                            <input name="new_contact_name" value="{{ old('new_contact_name') }}" class="form-input" placeholder="Nombre completo">
-                        </div>
-                        <div>
-                            <label class="form-label">Teléfono</label>
-                            <input name="new_contact_phone" value="{{ old('new_contact_phone') }}" class="form-input" placeholder="55 1234 5678">
-                        </div>
-                        <div>
-                            <label class="form-label">Email</label>
-                            <input name="new_contact_email" type="email" value="{{ old('new_contact_email') }}" class="form-input" placeholder="correo@empresa.com">
-                        </div>
-                        <div>
-                            <label class="form-label">Empresa</label>
-                            <input name="new_contact_company" value="{{ old('new_contact_company') }}" class="form-input">
-                        </div>
-                        <div>
-                            <label class="form-label">Cargo / Rol</label>
-                            <input name="new_contact_rol" value="{{ old('new_contact_rol') }}" class="form-input" placeholder="Gerente, Compras…">
-                        </div>
-                        <p class="sm:col-span-2 text-xs text-gray-500">Si llenas el nombre, se creará un nuevo contacto y se asignará al cliente automáticamente.</p>
-                    </div>
-                </div>
+                {{-- Contacto inline --}}
+                @include('clients._contact_form')
 
                 {{-- Ejecutivo --}}
                 <div>

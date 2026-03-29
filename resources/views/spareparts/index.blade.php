@@ -5,10 +5,13 @@
 @section('content')
 <div class="card">
     <div class="card-header">
-        <form method="GET" class="flex gap-2">
-            <input name="search" value="{{ request('search') }}" class="form-input w-56" placeholder="Nombre / código…">
-            <button class="btn-secondary">Buscar</button>
-        </form>
+        <div class="flex items-center gap-3 flex-1">
+            <a href="{{ route('almacen.index', ['tab' => 'refacciones']) }}" class="btn-secondary btn-sm">← Almacén</a>
+            <form method="GET" class="flex gap-2 flex-1 max-w-sm">
+                <input name="search" value="{{ request('search') }}" class="form-input w-56" placeholder="Nombre / código…">
+                <button class="btn-secondary btn-sm">Buscar</button>
+            </form>
+        </div>
         <a href="{{ route('spareparts.create') }}" class="btn-primary">+ Nueva refacción</a>
     </div>
     <div class="table-wrap rounded-none border-0">

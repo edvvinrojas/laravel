@@ -12,10 +12,15 @@
                   {{ $tab === 'equipos' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
             Equipos
         </a>
+        <a href="{{ route('almacen.index', ['tab' => 'refacciones']) }}"
+           class="px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors
+                  {{ $tab === 'refacciones' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
+            Refacciones
+        </a>
         <a href="{{ route('almacen.index', ['tab' => 'inventario']) }}"
            class="px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors
                   {{ $tab === 'inventario' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
-            Inventario
+            Inventario (Tóner)
         </a>
         <div class="flex-1"></div>
         {{-- Catálogos --}}
@@ -23,7 +28,7 @@
             @if($tab === 'equipos')
             <a href="{{ route('brands.index') }}" class="btn-secondary btn-sm">Marcas</a>
             <a href="{{ route('suppliers.index') }}" class="btn-secondary btn-sm">Proveedores</a>
-            @else
+            @elseif($tab === 'inventario')
             <a href="{{ route('item-catalog.index') }}" class="btn-secondary btn-sm">Catálogo</a>
             <a href="{{ route('shelves.index') }}" class="btn-secondary btn-sm">Estantes</a>
             @endif
@@ -112,6 +117,75 @@
         </div>
         @if($equipment->hasPages())
         <div class="flex justify-end">{{ $equipment->appends(['tab' => 'equipos'])->links() }}</div>
+        @endif
+    </div>
+    @endif
+
+    {{-- ===== REFACCIONES ===== --}}
+    @if($tab === 'refacciones')
+    <div class="space-y-3">
+        <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+            <form method="GET" action="{{ route('almacen.index') }}" class="flex gap-2 flex-1 max-w-md">
+                <input type="hidden" name="tab" value="refacciones">
+                <input type="text" name="q_sp" value="{{ request('q_sp') }}"
+                       placeholder="Buscar nombre, código o marca…" class="form-input flex-1">
+                <button type="submit" class="btn-secondary btn-sm">Buscar</button>
+                @if(request('q_sp'))
+                <a href="{{ route('almacen.index', ['tab' => 'refacciones']) }}" class="btn-secondary btn-sm">Limpiar</a>
+                @endif
+            </form>
+            <a href="{{ route('spareparts.create') }}" class="btn-primary">+ Nueva refacción</a>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="text-sm text-gray-500">{{ $spareparts->total() }} refacción(es)</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Nombre</th>
+                                <th>Color</th>
+                                <th>Marca</th>
+                                <th>Equipo compatible</th>
+                                <th>Proveedor</th>
+                                <th class="text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($spareparts as $sp)
+                            <tr>
+                                <td class="font-mono text-xs text-gray-600">{{ $sp->code ?? '—' }}</td>
+                                <td class="font-medium text-gray-900">{{ $sp->name }}</td>
+                                <td class="text-gray-600">{{ $sp->color ?? '—' }}</td>
+                                <td class="text-gray-600">{{ $sp->brand ?? '—' }}</td>
+                                <td class="text-sm text-gray-500">{{ $sp->equipment ?? '—' }}</td>
+                                <td class="text-sm text-gray-500">{{ $sp->supplier ?? '—' }}</td>
+                                <td class="text-right">
+                                    <div class="flex items-center justify-end gap-1">
+                                        <a href="{{ route('spareparts.show', $sp) }}" class="btn-secondary btn-sm">Ver</a>
+                                        <a href="{{ route('spareparts.edit', $sp) }}" class="btn-secondary btn-sm">Editar</a>
+                                        <form action="{{ route('spareparts.destroy', $sp) }}" method="POST"
+                                              onsubmit="return confirm('¿Eliminar refacción?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn-danger btn-sm">Eliminar</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr><td colspan="7" class="text-center text-gray-400 py-10">No hay refacciones registradas.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        @if($spareparts->hasPages())
+        <div class="flex justify-end">{{ $spareparts->appends(['tab' => 'refacciones'])->links() }}</div>
         @endif
     </div>
     @endif

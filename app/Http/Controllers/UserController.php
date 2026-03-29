@@ -10,7 +10,8 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $users = User::when($request->search, fn($q) => $q->where('full_name', 'like', "%{$request->search}%")->orWhere('email', 'like', "%{$request->search}%"))
+        $users = User::where('is_hidden', false)
+            ->when($request->search, fn($q) => $q->where('full_name', 'like', "%{$request->search}%")->orWhere('email', 'like', "%{$request->search}%"))
             ->when($request->rol, fn($q) => $q->where('rol', $request->rol))
             ->orderBy('full_name')
             ->paginate(20)->withQueryString();
@@ -39,8 +40,8 @@ class UserController extends Controller
         $data['is_active'] = $request->boolean('is_active', true);
         $data['permissions'] = [];
 
-        User::create($data);
-        return redirect()->route('users.index')->with('success', 'Usuario creado.');
+        $user = User::create($data);
+        return redirect()->route('users.edit', $user)->with('success', 'Usuario creado. Ahora configura sus permisos.');
     }
 
     public function show(User $user)
@@ -73,6 +74,28 @@ class UserController extends Controller
         }
 
         $data['is_active'] = $request->boolean('is_active');
+
+        // Construir permisos granulares desde los checkboxes
+        $areas = [
+            'ventas','rentas','clientes','produccion','compras','almacen',
+            'cobranza','facturacion','inventario','rutas','ordenes_servicio',
+            'taller','recursos_humanos','ti','usuarios','reportes','auditoria',
+            'configuracion','migraciones',
+        ];
+        $permissions = [];
+        $submitted = $request->input('permissions', []);
+        foreach ($areas as $area) {
+            if (!empty($submitted[$area])) {
+                $permissions[$area] = [
+                    'view'   => !empty($submitted[$area]['view']),
+                    'create' => !empty($submitted[$area]['create']),
+                    'edit'   => !empty($submitted[$area]['edit']),
+                    'delete' => !empty($submitted[$area]['delete']),
+                ];
+            }
+        }
+        $data['permissions'] = $permissions;
+
         $user->update($data);
 
         return redirect()->route('users.show', $user)->with('success', 'Usuario actualizado.');

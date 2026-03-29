@@ -18,6 +18,7 @@ class InventoryItem extends Model
         'is_available' => 'boolean',
         'is_active'    => 'boolean',
         'cost'         => 'decimal:2',
+        'entry_date'   => 'date',
     ];
 
     public function catalog()  { return $this->belongsTo(ItemCatalog::class, 'catalog_id'); }

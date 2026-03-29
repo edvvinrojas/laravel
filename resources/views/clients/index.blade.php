@@ -57,8 +57,9 @@
                             <td class="font-mono text-sm text-gray-700">{{ $client->rfc ?? '—' }}</td>
                             <td class="text-gray-600">{{ $client->city ?? '—' }}</td>
                             <td class="text-gray-600">
-                                @if($client->contact)
-                                    {{ $client->contact->name }}
+                                @php $firstContact = $client->contacts->first() @endphp
+                                @if($firstContact)
+                                    {{ $firstContact->name }}
                                 @else
                                     <span class="text-gray-400">—</span>
                                 @endif

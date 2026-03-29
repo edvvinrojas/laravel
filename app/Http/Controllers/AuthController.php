@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -26,6 +27,7 @@ class AuthController extends Controller
                 return back()->withErrors(['email' => 'Tu cuenta está desactivada.']);
             }
             $request->session()->regenerate();
+            AuditService::log('LOGIN', 'User', Auth::id(), 'Inicio de sesión: ' . Auth::user()->email);
             return redirect()->intended(route('dashboard'));
         }
 
@@ -34,6 +36,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        AuditService::log('LOGOUT', 'User', Auth::id(), 'Cierre de sesión: ' . Auth::user()?->email);
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

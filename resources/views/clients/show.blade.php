@@ -60,12 +60,13 @@
                         </p>
                     </div>
                     <div>
-                        <p class="text-xs text-gray-400 uppercase tracking-wide font-medium">Contacto</p>
+                        <p class="text-xs text-gray-400 uppercase tracking-wide font-medium">Contacto principal</p>
                         <p class="text-gray-700 mt-0.5">
-                            @if($client->contact)
-                                <span class="font-medium">{{ $client->contact->name }}</span>
-                                @if($client->contact->phone)
-                                    <br><span class="text-gray-500">{{ $client->contact->phone }}</span>
+                            @php $firstContact = $client->contacts->first() @endphp
+                            @if($firstContact)
+                                <span class="font-medium">{{ $firstContact->name }}</span>
+                                @if($firstContact->phone)
+                                    <br><span class="text-gray-500">{{ $firstContact->phone }}</span>
                                 @endif
                             @else
                                 —
@@ -104,6 +105,47 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    {{-- Contacts --}}
+    <div class="card">
+        <div class="card-header flex items-center justify-between">
+            <h2 class="font-semibold text-gray-800">Contactos</h2>
+            <a href="{{ route('clients.edit', $client) }}" class="btn-primary btn-sm">+ Agregar contacto</a>
+        </div>
+        <div class="card-body p-0">
+            @if($client->contacts->isEmpty())
+                <p class="text-center text-gray-400 py-8 text-sm">No hay contactos registrados.</p>
+            @else
+                <div class="divide-y divide-gray-100">
+                    @foreach($client->contacts as $contact)
+                    <div class="px-6 py-4 flex items-start justify-between gap-4">
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium text-gray-800 text-sm">{{ $contact->name }}</p>
+                            <div class="flex flex-wrap gap-x-4 gap-y-0.5 mt-0.5">
+                                @if($contact->rol)
+                                    <span class="text-xs text-gray-500">{{ $contact->rol }}</span>
+                                @endif
+                                @if($contact->phone)
+                                    <span class="text-xs text-gray-500">{{ $contact->phone }}</span>
+                                @endif
+                                @if($contact->email)
+                                    <span class="text-xs text-gray-500">{{ $contact->email }}</span>
+                                @endif
+                            </div>
+                        </div>
+                        <form action="{{ route('clients.contacts.destroy', [$client, $contact]) }}"
+                              method="POST"
+                              onsubmit="return confirm('¿Eliminar contacto «{{ addslashes($contact->name) }}»?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn-danger btn-sm">Eliminar</button>
+                        </form>
+                    </div>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </div>
 

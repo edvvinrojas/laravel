@@ -13,11 +13,18 @@ class BillingController extends Controller
 {
     public function index(Request $request)
     {
-        $billings = Billing::with(['client', 'rent', 'sale'])
-            ->when($request->search, fn($q) => $q->whereHas('client', fn($c) => $c->where('name', 'like', "%{$request->search}%"))
-                ->orWhere('invoice_number', 'like', "%{$request->search}%"))
+        $tab = $request->get('tab', 'cobranza');
+
+        $billings = Billing::with(['client'])
+            ->when($request->search, fn($q) =>
+                $q->where(fn($q2) => $q2
+                    ->whereHas('client', fn($c) => $c->where('name', 'like', "%{$request->search}%"))
+                    ->orWhere('invoice_number', 'like', "%{$request->search}%"))
+            )
             ->when($request->status, fn($q) => $q->where('status', $request->status))
-            ->when($request->type, fn($q) => $q->where('billing_type', $request->type))
+            ->when($request->type,   fn($q) => $q->where('billing_type', $request->type))
+            ->when($request->date_from, fn($q) => $q->where('target_date', '>=', $request->date_from))
+            ->when($request->date_to,   fn($q) => $q->where('target_date', '<=', $request->date_to))
             ->where('is_active', true)
             ->orderBy('due_date')
             ->paginate(20)->withQueryString();
@@ -28,7 +35,7 @@ class BillingController extends Controller
             'paid'    => Billing::where('status', 'PAGADO')->whereMonth('payment_date', now()->month)->sum('amount'),
         ];
 
-        return view('billing.index', compact('billings', 'totals'));
+        return view('billing.index', compact('billings', 'totals', 'tab'));
     }
 
     public function create()

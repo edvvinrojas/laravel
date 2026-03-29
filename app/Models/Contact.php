@@ -7,14 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Contact extends Model
 {
     protected $fillable = [
-        'name', 'phone', 'email', 'company', 'rol',
-        'latitude', 'longitude', 'is_client', 'is_active',
+        'client_id', 'name', 'phone', 'email', 'company', 'rol',
+        'latitude', 'longitude', 'is_active',
     ];
 
-    protected $casts = [
-        'is_client' => 'boolean',
-        'is_active' => 'boolean',
-    ];
+    protected $casts = ['is_active' => 'boolean'];
 
-    public function client() { return $this->hasOne(Client::class); }
+    public function client() { return $this->belongsTo(Client::class); }
 }

@@ -4,7 +4,11 @@
 
 @section('content')
 <div class="space-y-4">
-    <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+    <div class="flex items-center justify-between gap-3">
+        <a href="{{ route('almacen.index', ['tab' => 'inventario']) }}" class="btn-secondary btn-sm">← Almacén</a>
+        <a href="{{ route('item-catalog.create') }}" class="btn-primary">+ Nuevo artículo</a>
+    </div>
+    <div class="flex gap-2">
         <form method="GET" action="{{ route('item-catalog.index') }}" class="flex gap-2 flex-1 max-w-xl">
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar por nombre o tipo…" class="form-input flex-1">
             <select name="type" class="form-select w-36">
@@ -15,7 +19,6 @@
             <button type="submit" class="btn-secondary btn-sm">Filtrar</button>
             @if(request()->anyFilled(['search','type']))<a href="{{ route('item-catalog.index') }}" class="btn-secondary btn-sm">Limpiar</a>@endif
         </form>
-        <a href="{{ route('item-catalog.create') }}" class="btn-primary">+ Nuevo artículo</a>
     </div>
     <div class="card">
         <div class="card-header"><span class="text-sm text-gray-500">{{ $query->total() }} artículo(s)</span></div>
