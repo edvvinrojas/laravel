@@ -24,6 +24,13 @@ use App\Http\Controllers\AdministrativeRecordController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\BrandController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\ShelfController;
+use App\Http\Controllers\ItemCatalogController;
+use App\Http\Controllers\MonthlyPlanController;
+use App\Http\Controllers\ServiceTypeController;
+use App\Http\Controllers\AlmacenController;
 
 // Auth
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -41,8 +48,19 @@ Route::middleware('auth')->group(function () {
     Route::post('clients/{client}/branches', [BranchController::class, 'store'])->name('branches.store');
     Route::delete('branches/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
 
+    // Catálogos de equipos
+    Route::resource('brands', BrandController::class);
+    Route::resource('suppliers', SupplierController::class);
+
+    // Almacén unificado (equipos + inventario)
+    Route::get('almacen', [AlmacenController::class, 'index'])->name('almacen.index');
+
     // Equipos
     Route::resource('equipment', EquipmentController::class);
+
+    // Catálogos de inventario
+    Route::resource('shelves', ShelfController::class);
+    Route::resource('item-catalog', ItemCatalogController::class);
 
     // Inventario
     Route::resource('inventory', InventoryController::class);
@@ -85,6 +103,12 @@ Route::middleware('auth')->group(function () {
 
     // Usuarios (solo admin)
     Route::resource('users', UserController::class)->middleware('role:administrador');
+
+    // Producción (planes mensuales)
+    Route::resource('production', MonthlyPlanController::class);
+
+    // Tipos de servicio (catálogo para producción)
+    Route::resource('service-types', ServiceTypeController::class);
 
     // Auditoría (solo admin)
     Route::get('audit', [AuditController::class, 'index'])->name('audit.index')->middleware('role:administrador');

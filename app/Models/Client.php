@@ -7,8 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 class Client extends Model
 {
     protected $fillable = [
-        'name', 'comercial_name', 'rfc', 'address',
-        'colonia', 'zip_code', 'city', 'contact_id', 'user_id', 'is_active',
+        'name',
+        'comercial_name',
+        'rfc',
+        'address',
+        'colonia',
+        'zip_code',
+        'city',
+        'contact_id',
+        'user_id',
+        'is_active',
     ];
 
     protected $casts = ['is_active' => 'boolean'];

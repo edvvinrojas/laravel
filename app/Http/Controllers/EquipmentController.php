@@ -47,7 +47,7 @@ class EquipmentController extends Controller
             'supplier_id'     => 'nullable|exists:suppliers,id',
             'invoice'         => 'nullable|string|max:100',
             'cost'            => 'nullable|numeric|min:0',
-            'location_status' => 'nullable|string|max:100',
+            'location_status' => 'nullable|in:BODEGA,ASIGNADO,VENDIDO,TALLER,DESCONOCIDO',
             'comments'        => 'nullable|string',
             'is_active'       => 'nullable|boolean',
         ]);
@@ -87,7 +87,7 @@ class EquipmentController extends Controller
             'supplier_id'     => 'nullable|exists:suppliers,id',
             'invoice'         => 'nullable|string|max:100',
             'cost'            => 'nullable|numeric|min:0',
-            'location_status' => 'nullable|string|max:100',
+            'location_status' => 'nullable|in:BODEGA,ASIGNADO,VENDIDO,TALLER,DESCONOCIDO',
             'comments'        => 'nullable|string',
             'is_active'       => 'nullable|boolean',
         ]);

@@ -166,11 +166,10 @@
                     <label for="location_status" class="form-label">Estado / Ubicación</label>
                     <select id="location_status" name="location_status"
                             class="form-select @error('location_status') border-red-400 @enderror">
-                        <option value="">— Sin estado —</option>
-                        @foreach(['Disponible', 'Rentado', 'Vendido', 'Taller', 'Almacén', 'Baja'] as $opt)
-                            <option value="{{ $opt }}"
-                                {{ old('location_status', $equipment->location_status) === $opt ? 'selected' : '' }}>
-                                {{ $opt }}
+                        @foreach(['BODEGA' => 'Bodega', 'ASIGNADO' => 'Asignado', 'VENDIDO' => 'Vendido', 'TALLER' => 'Taller', 'DESCONOCIDO' => 'Desconocido'] as $val => $label)
+                            <option value="{{ $val }}"
+                                {{ old('location_status', $equipment->location_status) === $val ? 'selected' : '' }}>
+                                {{ $label }}
                             </option>
                         @endforeach
                     </select>

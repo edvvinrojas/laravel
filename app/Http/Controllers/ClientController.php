@@ -39,21 +39,52 @@ class ClientController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'           => 'required|string|max:255',
-            'comercial_name' => 'nullable|string|max:255',
-            'rfc'            => 'nullable|string|max:20',
-            'address'        => 'nullable|string|max:255',
-            'colonia'        => 'nullable|string|max:255',
-            'zip_code'       => 'nullable|string|max:10',
-            'city'           => 'nullable|string|max:100',
-            'contact_id'     => 'nullable|exists:contacts,id',
-            'user_id'        => 'nullable|exists:users,id',
-            'is_active'      => 'nullable|boolean',
+            'name'              => 'required|string|max:255',
+            'comercial_name'    => 'nullable|string|max:255',
+            'rfc'               => 'nullable|string|max:20',
+            'address'           => 'nullable|string|max:255',
+            'colonia'           => 'nullable|string|max:255',
+            'zip_code'          => 'nullable|string|max:10',
+            'city'              => 'nullable|string|max:100',
+            'contact_id'        => 'nullable|exists:contacts,id',
+            'user_id'           => 'nullable|exists:users,id',
+            'is_active'         => 'nullable|boolean',
+            // Nuevo contacto inline
+            'new_contact_name'  => 'nullable|string|max:255',
+            'new_contact_phone' => 'nullable|string|max:50',
+            'new_contact_email' => 'nullable|email|max:255',
+            'new_contact_company'=> 'nullable|string|max:255',
+            'new_contact_rol'   => 'nullable|string|max:100',
         ]);
 
-        $validated['is_active'] = $request->boolean('is_active', true);
+        $contactId = $validated['contact_id'] ?? null;
 
-        Client::create($validated);
+        // Crear contacto nuevo si se llenó el nombre
+        if (!empty($validated['new_contact_name'])) {
+            $contact = Contact::create([
+                'name'      => $validated['new_contact_name'],
+                'phone'     => $validated['new_contact_phone'] ?? null,
+                'email'     => $validated['new_contact_email'] ?? null,
+                'company'   => $validated['new_contact_company'] ?? null,
+                'rol'       => $validated['new_contact_rol'] ?? null,
+                'is_client' => true,
+                'is_active' => true,
+            ]);
+            $contactId = $contact->id;
+        }
+
+        Client::create([
+            'name'           => $validated['name'],
+            'comercial_name' => $validated['comercial_name'] ?? null,
+            'rfc'            => $validated['rfc'] ?? null,
+            'address'        => $validated['address'] ?? null,
+            'colonia'        => $validated['colonia'] ?? null,
+            'zip_code'       => $validated['zip_code'] ?? null,
+            'city'           => $validated['city'] ?? null,
+            'contact_id'     => $contactId,
+            'user_id'        => $validated['user_id'] ?? null,
+            'is_active'      => $request->boolean('is_active', true),
+        ]);
 
         return redirect()->route('clients.index')
             ->with('success', 'Cliente creado correctamente.');

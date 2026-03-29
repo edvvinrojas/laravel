@@ -11,16 +11,24 @@
     <div class="card-header">
         <h3 class="font-semibold">{{ $equipment->brand?->name }} {{ $equipment->model }}</h3>
         @php
-            $badge = match(strtolower($equipment->location_status ?? '')) {
-                'disponible' => 'badge-green',
-                'rentado'    => 'badge-blue',
-                'vendido'    => 'badge-yellow',
-                'taller'     => 'badge-red',
-                default      => 'badge-gray',
+            $badge = match($equipment->location_status) {
+                'BODEGA'      => 'badge-green',
+                'ASIGNADO'    => 'badge-blue',
+                'VENDIDO'     => 'badge-yellow',
+                'TALLER'      => 'badge-red',
+                default       => 'badge-gray',
+            };
+            $statusLabel = match($equipment->location_status) {
+                'BODEGA'      => 'Bodega',
+                'ASIGNADO'    => 'Asignado',
+                'VENDIDO'     => 'Vendido',
+                'TALLER'      => 'Taller',
+                'DESCONOCIDO' => 'Desconocido',
+                default       => $equipment->location_status ?? '—',
             };
         @endphp
         @if($equipment->location_status)
-        <span class="{{ $badge }}">{{ $equipment->location_status }}</span>
+        <span class="{{ $badge }}">{{ $statusLabel }}</span>
         @endif
     </div>
     <div class="card-body grid grid-cols-2 gap-4 text-sm">

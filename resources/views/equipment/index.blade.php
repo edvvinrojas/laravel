@@ -8,6 +8,12 @@
 @section('content')
 <div class="space-y-4">
 
+    {{-- Catálogos rápidos --}}
+    <div class="flex flex-wrap gap-2">
+        <a href="{{ route('brands.index') }}" class="btn-secondary btn-sm">Marcas</a>
+        <a href="{{ route('suppliers.index') }}" class="btn-secondary btn-sm">Proveedores</a>
+    </div>
+
     {{-- Toolbar --}}
     <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <form method="GET" action="{{ route('equipment.index') }}" class="flex gap-2 flex-1 max-w-md">
@@ -66,16 +72,24 @@
                             <td>
                                 @php
                                     $status = $item->location_status;
-                                    $badge  = match(strtolower($status ?? '')) {
-                                        'disponible'  => 'badge-green',
-                                        'rentado'     => 'badge-blue',
-                                        'vendido'     => 'badge-yellow',
-                                        'taller'      => 'badge-red',
+                                    $badge  = match($status) {
+                                        'BODEGA'      => 'badge-green',
+                                        'ASIGNADO'    => 'badge-blue',
+                                        'VENDIDO'     => 'badge-yellow',
+                                        'TALLER'      => 'badge-red',
                                         default       => 'badge-gray',
+                                    };
+                                    $statusLabel = match($status) {
+                                        'BODEGA'      => 'Bodega',
+                                        'ASIGNADO'    => 'Asignado',
+                                        'VENDIDO'     => 'Vendido',
+                                        'TALLER'      => 'Taller',
+                                        'DESCONOCIDO' => 'Desconocido',
+                                        default       => $status,
                                     };
                                 @endphp
                                 @if($status)
-                                    <span class="{{ $badge }}">{{ $status }}</span>
+                                    <span class="{{ $badge }}">{{ $statusLabel }}</span>
                                 @else
                                     <span class="text-gray-400 text-sm">—</span>
                                 @endif

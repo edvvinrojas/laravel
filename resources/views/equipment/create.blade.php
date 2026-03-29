@@ -164,13 +164,11 @@
                     <label for="location_status" class="form-label">Estado / Ubicación</label>
                     <select id="location_status" name="location_status"
                             class="form-select @error('location_status') border-red-400 @enderror">
-                        <option value="">— Sin estado —</option>
-                        <option value="Disponible"  {{ old('location_status') === 'Disponible'  ? 'selected' : '' }}>Disponible</option>
-                        <option value="Rentado"     {{ old('location_status') === 'Rentado'     ? 'selected' : '' }}>Rentado</option>
-                        <option value="Vendido"     {{ old('location_status') === 'Vendido'     ? 'selected' : '' }}>Vendido</option>
-                        <option value="Taller"      {{ old('location_status') === 'Taller'      ? 'selected' : '' }}>Taller</option>
-                        <option value="Almacén"     {{ old('location_status') === 'Almacén'     ? 'selected' : '' }}>Almacén</option>
-                        <option value="Baja"        {{ old('location_status') === 'Baja'        ? 'selected' : '' }}>Baja</option>
+                        <option value="BODEGA"      {{ old('location_status', 'BODEGA') === 'BODEGA'      ? 'selected' : '' }}>Bodega</option>
+                        <option value="ASIGNADO"    {{ old('location_status') === 'ASIGNADO'    ? 'selected' : '' }}>Asignado</option>
+                        <option value="VENDIDO"     {{ old('location_status') === 'VENDIDO'     ? 'selected' : '' }}>Vendido</option>
+                        <option value="TALLER"      {{ old('location_status') === 'TALLER'      ? 'selected' : '' }}>Taller</option>
+                        <option value="DESCONOCIDO" {{ old('location_status') === 'DESCONOCIDO' ? 'selected' : '' }}>Desconocido</option>
                     </select>
                     @error('location_status')
                         <p class="form-error">{{ $message }}</p>

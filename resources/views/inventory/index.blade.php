@@ -4,6 +4,13 @@
 
 @section('content')
 <div class="space-y-4">
+    {{-- Catálogos rápidos --}}
+    <div class="flex flex-wrap gap-2">
+        <a href="{{ route('item-catalog.index') }}" class="btn-secondary btn-sm">Catálogo de artículos</a>
+        <a href="{{ route('shelves.index') }}" class="btn-secondary btn-sm">Estantes</a>
+        <a href="{{ route('service-types.index') }}" class="btn-secondary btn-sm">Tipos de servicio</a>
+    </div>
+
     <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <form method="GET" action="{{ route('inventory.index') }}" class="flex gap-2 flex-1 max-w-md">
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar por código o tipo…" class="form-input flex-1">
