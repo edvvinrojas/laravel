@@ -139,9 +139,10 @@ function toggleArea(area, active) {
     if (!active) {
         panel.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
     } else {
-        // Activar Ver por defecto
-        const viewCb = panel.querySelector('[name="permissions[' + area + '][view]"]');
-        if (viewCb) viewCb.checked = true;
+        // Activar TODAS las acciones visibles al marcar el área
+        panel.querySelectorAll('input[type=checkbox]').forEach(cb => {
+            if (cb.closest('label').style.display !== 'none') cb.checked = true;
+        });
     }
     syncRolRestrictions();
 }
