@@ -33,9 +33,9 @@ use App\Http\Controllers\ServiceTypeController;
 use App\Http\Controllers\AlmacenController;
 use App\Http\Controllers\RhController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\CategoriaEquipoController;
-use App\Http\Controllers\ModeloEquipoController;
-use App\Http\Controllers\CatalogoConsumibleController;
+use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\AccesorioController;
+use App\Http\Controllers\ConsumibleController;
 
 // Auth
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -54,12 +54,14 @@ Route::middleware('auth')->group(function () {
     Route::post('clients/{client}/branches', [BranchController::class, 'store'])->name('branches.store');
     Route::delete('branches/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
 
-    // Catálogos de equipos
+    // Catálogos
     Route::resource('brands', BrandController::class);
     Route::resource('suppliers', SupplierController::class);
-    Route::resource('categorias-equipo', CategoriaEquipoController::class);
-    Route::resource('modelos-equipo', ModeloEquipoController::class);
-    Route::resource('catalogo-consumibles', CatalogoConsumibleController::class);
+
+    // Productos / Accesorios / Consumibles (dentro de Almacén)
+    Route::resource('productos', ProductoController::class);
+    Route::resource('accesorios', AccesorioController::class)->except(['index','show']);
+    Route::resource('consumibles', ConsumibleController::class)->except(['index','show']);
 
     // Almacén unificado (equipos + inventario)
     Route::get('almacen', [AlmacenController::class, 'index'])->name('almacen.index');

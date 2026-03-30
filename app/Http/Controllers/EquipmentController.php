@@ -6,8 +6,7 @@ namespace App\Http\Controllers;
 use App\Models\Item;
 use App\Models\Brand;
 use App\Models\Supplier;
-use App\Models\CategoriaEquipo;
-use App\Models\ModeloEquipo;
+use App\Models\Producto;
 use Illuminate\Http\Request;
 
 class EquipmentController extends Controller
@@ -32,10 +31,9 @@ class EquipmentController extends Controller
     private function formData(): array
     {
         return [
-            'brands'     => Brand::orderBy('name')->get(),
-            'suppliers'  => Supplier::orderBy('name')->get(),
-            'categorias' => CategoriaEquipo::where('es_activo', true)->orderBy('nombre')->get(),
-            'modelos'    => ModeloEquipo::with('marca', 'categoria')->where('es_activo', true)->orderBy('nombre_modelo')->get(),
+            'brands'    => Brand::orderBy('name')->get(),
+            'suppliers' => Supplier::orderBy('name')->get(),
+            'productos' => Producto::where('es_activo', true)->orderBy('nombre')->get(),
         ];
     }
 
@@ -49,14 +47,11 @@ class EquipmentController extends Controller
         $validated = $request->validate([
             'sku'                   => 'nullable|string|max:100',
             'brand_id'              => 'required|exists:brands,id',
-            'categoria_id'          => 'nullable|exists:categorias_equipo,id',
-            'modelo_id'             => 'nullable|exists:modelos_equipo,id',
+            'producto_id'           => 'nullable|exists:productos,id',
             'model'                 => 'required|string|max:255',
             'serie'                 => 'required|string|max:255|unique:items,serie',
             'model_toner'           => 'required|string|max:255',
             'type'                  => 'required|in:MONOCROMO,COLOR',
-            'tipo_equipo'           => 'nullable|in:COPIADORA,IMPRESORA,MFP,ESCANER,FAX,PLOTTER',
-            'formato_max'           => 'nullable|in:A4,A3,CARTA,OFICIO,A2,A1,A0',
             'supplier_id'           => 'nullable|exists:suppliers,id',
             'invoice'               => 'nullable|string|max:100',
             'cost'                  => 'nullable|numeric|min:0',

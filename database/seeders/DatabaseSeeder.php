@@ -10,12 +10,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call([
-            CategoriasEquipoSeeder::class,
-            TiposConsumibleSeeder::class,
-        ]);
-
-        User::create([
+User::create([
             'username'    => 'admin',
             'email'       => 'admin@copymart.com',
             'password'    => Hash::make('admin1234'),

@@ -56,34 +56,19 @@
 
 {{-- Modelo del catálogo --}}
 <div class="card">
-    <div class="card-header"><h3 class="text-sm font-semibold text-gray-700">Modelo de catálogo</h3></div>
+    <div class="card-header"><h3 class="text-sm font-semibold text-gray-700">Producto del catálogo</h3></div>
     <div class="card-body space-y-4">
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="form-label">Categoría</label>
-                <select name="categoria_id" id="categoria_id"
-                        class="form-select @error('categoria_id') border-red-400 @enderror">
-                    <option value="">— Sin categoría —</option>
-                    @foreach($categorias as $cat)
-                        <option value="{{ $cat->id }}" {{ old('categoria_id') == $cat->id ? 'selected' : '' }}>{{ $cat->nombre }}</option>
-                    @endforeach
-                </select>
-                @error('categoria_id')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label class="form-label">Modelo</label>
-                <select name="modelo_id" id="modelo_id"
-                        class="form-select @error('modelo_id') border-red-400 @enderror">
-                    <option value="">— Sin modelo —</option>
-                    @foreach($modelos as $mod)
-                        <option value="{{ $mod->id }}" {{ old('modelo_id') == $mod->id ? 'selected' : '' }}
-                                data-categoria="{{ $mod->categoria_id }}">
-                            {{ $mod->marca->name ?? '' }} {{ $mod->nombre_modelo }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('modelo_id')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
+        <div>
+            <label class="form-label">Producto</label>
+            <select name="producto_id" class="form-select @error('producto_id') border-red-400 @enderror">
+                <option value="">— Sin producto de catálogo —</option>
+                @foreach($productos as $pr)
+                    <option value="{{ $pr->id }}" {{ old('producto_id') == $pr->id ? 'selected' : '' }}>
+                        {{ $pr->nombre }} ({{ $pr->categoria }})
+                    </option>
+                @endforeach
+            </select>
+            @error('producto_id')<p class="form-error">{{ $message }}</p>@enderror
         </div>
         <div class="grid grid-cols-2 gap-4">
             <div>
@@ -104,7 +89,7 @@
                 @error('model')<p class="form-error">{{ $message }}</p>@enderror
             </div>
         </div>
-        <div class="grid grid-cols-3 gap-4">
+        <div class="grid grid-cols-2 gap-4">
             <div>
                 <label class="form-label">Tipo color <span class="text-red-500">*</span></label>
                 <select name="type" class="form-select @error('type') border-red-400 @enderror" required>
@@ -113,26 +98,6 @@
                     <option value="COLOR"     {{ old('type') === 'COLOR'     ? 'selected' : '' }}>Color</option>
                 </select>
                 @error('type')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label class="form-label">Tipo de equipo</label>
-                <select name="tipo_equipo" class="form-select @error('tipo_equipo') border-red-400 @enderror">
-                    <option value="">— Seleccionar —</option>
-                    @foreach(['COPIADORA','IMPRESORA','MFP','ESCANER','FAX','PLOTTER'] as $te)
-                        <option value="{{ $te }}" {{ old('tipo_equipo') === $te ? 'selected' : '' }}>{{ $te }}</option>
-                    @endforeach
-                </select>
-                @error('tipo_equipo')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label class="form-label">Formato máximo</label>
-                <select name="formato_max" class="form-select @error('formato_max') border-red-400 @enderror">
-                    <option value="">— Seleccionar —</option>
-                    @foreach(['A4','A3','CARTA','OFICIO','A2','A1','A0'] as $f)
-                        <option value="{{ $f }}" {{ old('formato_max') === $f ? 'selected' : '' }}>{{ $f }}</option>
-                    @endforeach
-                </select>
-                @error('formato_max')<p class="form-error">{{ $message }}</p>@enderror
             </div>
         </div>
         <div>
@@ -253,18 +218,4 @@
 </form>
 </div>
 
-<script>
-// Filtrar modelos por categoría seleccionada
-const catSelect = document.getElementById('categoria_id');
-const modSelect = document.getElementById('modelo_id');
-const allOpts   = Array.from(modSelect.options).map(o => ({el: o, cat: o.dataset.categoria}));
-
-catSelect.addEventListener('change', () => {
-    const catId = catSelect.value;
-    allOpts.forEach(({el, cat}) => {
-        el.hidden = catId && cat !== catId;
-    });
-    if (catId) modSelect.value = '';
-});
-</script>
 @endsection

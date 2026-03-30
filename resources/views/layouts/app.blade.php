@@ -95,19 +95,11 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                 Compras
             </a>
-            <a href="{{ route('almacen.index') }}" class="nav-link @activeRoute('almacen.*') @activeRoute('equipment.*') @activeRoute('inventory.*')">
+            <a href="{{ route('almacen.index') }}" class="nav-link @activeRoute('almacen.*') @activeRoute('equipment.*') @activeRoute('inventory.*') @activeRoute('productos.*') @activeRoute('accesorios.*') @activeRoute('consumibles.*')">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                 Almacén
             </a>
-            <a href="{{ route('categorias-equipo.index') }}" class="nav-link @activeRoute('categorias-equipo.*') @activeRoute('modelos-equipo.*')">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h7"/></svg>
-                Catálogo Equipos
-            </a>
-            <a href="{{ route('catalogo-consumibles.index') }}" class="nav-link @activeRoute('catalogo-consumibles.*')">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                Catálogo Consumibles
-            </a>
-            <a href="{{ route('billing.index', ['tab' => 'cobranza']) }}" class="nav-link @activeRoute('billing.*')">
+<a href="{{ route('billing.index', ['tab' => 'cobranza']) }}" class="nav-link @activeRoute('billing.*')">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                 Cobranza / Facturación
             </a>
