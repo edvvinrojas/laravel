@@ -33,6 +33,9 @@ use App\Http\Controllers\ServiceTypeController;
 use App\Http\Controllers\AlmacenController;
 use App\Http\Controllers\RhController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\CategoriaEquipoController;
+use App\Http\Controllers\ModeloEquipoController;
+use App\Http\Controllers\CatalogoConsumibleController;
 
 // Auth
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -54,6 +57,9 @@ Route::middleware('auth')->group(function () {
     // Catálogos de equipos
     Route::resource('brands', BrandController::class);
     Route::resource('suppliers', SupplierController::class);
+    Route::resource('categorias-equipo', CategoriaEquipoController::class);
+    Route::resource('modelos-equipo', ModeloEquipoController::class);
+    Route::resource('catalogo-consumibles', CatalogoConsumibleController::class);
 
     // Almacén unificado (equipos + inventario)
     Route::get('almacen', [AlmacenController::class, 'index'])->name('almacen.index');
