@@ -48,13 +48,10 @@ class BillingController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
+        $base = $request->validate([
             'billing_type'   => 'required|in:RENTA,VENTA',
             'rent_id'        => 'nullable|exists:rents,id',
             'sale_id'        => 'nullable|exists:sales,id',
-            'client_id'      => 'required|exists:clients,id',
-            'branch_id'      => 'nullable|exists:branches,id',
-            'area_id'        => 'nullable|exists:areas,id',
             'invoice_number' => 'nullable|string|max:50|unique:billings',
             'amount'         => 'required|numeric|min:0',
             'target_date'    => 'required|date',
@@ -64,10 +61,29 @@ class BillingController extends Controller
             'comment'        => 'nullable|string',
         ]);
 
-        $data['created_by'] = auth()->id();
-        $data['status'] = 'PENDIENTE';
+        // Enforce: exactly one FK must match billing_type
+        if ($base['billing_type'] === 'RENTA') {
+            if (empty($base['rent_id'])) {
+                return back()->withErrors(['rent_id' => 'Debe seleccionar una renta.'])->withInput();
+            }
+            $base['sale_id'] = null;
+            $source = Rent::findOrFail($base['rent_id']);
+        } else {
+            if (empty($base['sale_id'])) {
+                return back()->withErrors(['sale_id' => 'Debe seleccionar una venta.'])->withInput();
+            }
+            $base['rent_id'] = null;
+            $source = Sale::findOrFail($base['sale_id']);
+        }
 
-        Billing::create($data);
+        // Derive client/branch/area from the linked transaction — avoids denormalization
+        $base['client_id'] = $source->client_id;
+        $base['branch_id'] = $source->branch_id ?? null;
+        $base['area_id']   = $source->area_id   ?? null;
+        $base['created_by'] = auth()->id();
+        $base['status']     = 'PENDIENTE';
+
+        Billing::create($base);
 
         return redirect()->route('billing.index')->with('success', 'Factura creada correctamente.');
     }
