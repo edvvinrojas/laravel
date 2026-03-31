@@ -25,6 +25,26 @@
         </div>
 
         <div>
+            <label class="form-label">Sucursal</label>
+            <select name="branch_id" id="branchSelect" class="form-select">
+                <option value="">Sin sucursal</option>
+                @foreach($branches as $b)
+                <option value="{{ $b->id }}" @selected(old('branch_id',$rent->branch_id)==$b->id)>{{ $b->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div>
+            <label class="form-label">Área</label>
+            <select name="area_id" id="areaSelect" class="form-select">
+                <option value="">Sin área</option>
+                @foreach($areas as $a)
+                <option value="{{ $a->id }}" @selected(old('area_id',$rent->area_id)==$a->id)>{{ $a->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div>
             <label class="form-label">Equipo *</label>
             <select name="item_id" id="item_id_select" class="form-select" required>
                 @foreach($items as $i)
@@ -109,8 +129,38 @@
 
 @push('scripts')
 <script>
-document.getElementById('printCheck').addEventListener('change',function(){
-    document.getElementById('printFields').classList.toggle('hidden',!this.checked);
+document.getElementById('printCheck').addEventListener('change', function() {
+    document.getElementById('printFields').classList.toggle('hidden', !this.checked);
+});
+
+// Recargar sucursales al cambiar cliente
+document.querySelector('[name="client_id"]').addEventListener('change', function() {
+    const clientId  = this.value;
+    const branchSel = document.getElementById('branchSelect');
+    const areaSel   = document.getElementById('areaSelect');
+    branchSel.innerHTML = '<option value="">Cargando…</option>';
+    areaSel.innerHTML   = '<option value="">Sin área</option>';
+    if (!clientId) { branchSel.innerHTML = '<option value="">Sin sucursal</option>'; return; }
+    fetch(`/api/clients/${clientId}/branches`)
+        .then(r => r.json())
+        .then(data => {
+            branchSel.innerHTML = '<option value="">Sin sucursal</option>';
+            data.forEach(b => branchSel.innerHTML += `<option value="${b.id}">${b.name}</option>`);
+        });
+});
+
+// Recargar áreas al cambiar sucursal
+document.getElementById('branchSelect').addEventListener('change', function() {
+    const branchId = this.value;
+    const areaSel  = document.getElementById('areaSelect');
+    areaSel.innerHTML = '<option value="">Cargando…</option>';
+    if (!branchId) { areaSel.innerHTML = '<option value="">Sin área</option>'; return; }
+    fetch(`/api/branches/${branchId}/areas`)
+        .then(r => r.json())
+        .then(data => {
+            areaSel.innerHTML = '<option value="">Sin área</option>';
+            data.forEach(a => areaSel.innerHTML += `<option value="${a.id}">${a.name}</option>`);
+        });
 });
 </script>
 @endpush

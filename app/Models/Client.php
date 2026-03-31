@@ -8,7 +8,7 @@ class Client extends Model
 {
     protected $fillable = [
         'name', 'comercial_name', 'rfc', 'address',
-        'colonia', 'zip_code', 'city', 'user_id', 'is_active', 'documents',
+        'colonia', 'zip_code', 'city', 'user_id', 'is_active', 'documents', 'share_token',
     ];
 
     protected $casts = [

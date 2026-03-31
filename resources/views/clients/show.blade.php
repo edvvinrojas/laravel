@@ -9,7 +9,7 @@
 <div class="space-y-6">
 
     {{-- Header actions --}}
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-2">
             @if($client->is_active)
                 <span class="badge-green">Activo</span>
@@ -17,11 +17,44 @@
                 <span class="badge-gray">Inactivo</span>
             @endif
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
+            {{-- Portal de contadores --}}
+            @if($client->share_token)
+            <button onclick="copyPortalLink()"
+                    class="btn-success btn-sm flex items-center gap-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+                <span id="copyBtnText">Copiar enlace portal</span>
+            </button>
+            <a href="{{ route('portal.counters', $client->share_token) }}" target="_blank"
+               class="btn-secondary btn-sm">Ver portal</a>
+            <form action="{{ route('clients.portal.revoke', $client) }}" method="POST"
+                  onsubmit="return confirm('¿Revocar acceso? El cliente ya no podrá ver sus contadores.')">
+                @csrf @method('DELETE')
+                <button type="submit" class="btn-danger btn-sm">Revocar acceso</button>
+            </form>
+            @else
+            <form action="{{ route('clients.portal.generate', $client) }}" method="POST">
+                @csrf
+                <button type="submit" class="btn-secondary btn-sm flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                    </svg>
+                    Generar portal contadores
+                </button>
+            </form>
+            @endif
             <a href="{{ route('clients.edit', $client) }}" class="btn-secondary btn-sm">Editar</a>
             <a href="{{ route('clients.index') }}" class="btn-secondary btn-sm">Volver</a>
         </div>
     </div>
+
+    @if(session('success'))
+    <div class="bg-green-50 border border-green-200 text-green-800 rounded-lg px-4 py-3 text-sm">{{ session('success') }}</div>
+    @endif
 
     {{-- Client details --}}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -349,4 +382,19 @@
     </div>
 
 </div>
+
+@push('scripts')
+@if($client->share_token)
+<script>
+function copyPortalLink() {
+    const url = '{{ route('portal.counters', $client->share_token) }}';
+    navigator.clipboard.writeText(url).then(() => {
+        const btn = document.getElementById('copyBtnText');
+        btn.textContent = '¡Copiado!';
+        setTimeout(() => btn.textContent = 'Copiar enlace portal', 2000);
+    });
+}
+</script>
+@endif
+@endpush
 @endsection
