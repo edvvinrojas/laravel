@@ -33,9 +33,11 @@ use App\Http\Controllers\ServiceTypeController;
 use App\Http\Controllers\AlmacenController;
 use App\Http\Controllers\RhController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ServiceOrderController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\AccesorioController;
 use App\Http\Controllers\ConsumibleController;
+use App\Http\Controllers\TiEquipmentController;
 
 // Auth
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -50,6 +52,8 @@ Route::middleware('auth')->group(function () {
     // Clientes
     Route::resource('clients', ClientController::class);
     Route::delete('clients/{client}/contacts/{contact}', [ClientController::class, 'destroyContact'])->name('clients.contacts.destroy');
+    Route::post('clients/{client}/documents', [ClientController::class, 'uploadDocument'])->name('clients.documents.upload');
+    Route::delete('clients/{client}/documents/{docType}', [ClientController::class, 'destroyDocument'])->name('clients.documents.destroy');
     Route::get('clients/{client}/branches', [BranchController::class, 'index'])->name('branches.index');
     Route::post('clients/{client}/branches', [BranchController::class, 'store'])->name('branches.store');
     Route::delete('branches/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
@@ -68,6 +72,7 @@ Route::middleware('auth')->group(function () {
 
     // Equipos
     Route::resource('equipment', EquipmentController::class);
+    Route::get('equipment/{equipment}/producto-detalle', [EquipmentController::class, 'productoDetalle'])->name('equipment.producto-detalle');
 
     // Catálogos de inventario
     Route::resource('shelves', ShelfController::class);
@@ -75,6 +80,42 @@ Route::middleware('auth')->group(function () {
 
     // Inventario
     Route::resource('inventory', InventoryController::class);
+
+    // API JSON helpers (para selects dinámicos)
+    Route::get('api/clients/{client}/branches', fn(\App\Models\Client $client) =>
+        $client->branches()->select('id','name','address','city','colonia','zip_code','latitude','longitude')->orderBy('name')->get()
+    )->name('api.client.branches');
+    Route::get('api/branches/{branch}/areas', fn(\App\Models\Branch $branch) =>
+        $branch->areas()->select('id','name')->orderBy('name')->get()
+    )->name('api.branch.areas');
+    Route::get('api/areas/{area}/items', function(\App\Models\Area $area) {
+        $items = \App\Models\Item::whereHas('rents', fn($q) =>
+            $q->where('area_id', $area->id)->where('contract_status', 'VIGENTE')
+        )->with('brand')->get()->map(fn($i) => [
+            'id'    => $i->id,
+            'model' => $i->model,
+            'serie' => $i->serie,
+            'sku'   => $i->sku,
+            'brand' => $i->brand->name ?? '',
+        ]);
+        return response()->json($items);
+    })->name('api.area.items');
+    Route::get('api/rents/{rent}/billing-amount', function(\App\Models\Rent $rent) {
+        $lastCounter = $rent->printCounters()->where('is_active', true)->orderByDesc('id')->first();
+        $excess = $lastCounter ? (float) $lastCounter->total_excess_amount : 0;
+        return response()->json([
+            'base'    => (float) $rent->rent,
+            'excess'  => $excess,
+            'total'   => (float) $rent->rent + $excess,
+            'client_id' => $rent->client_id,
+        ]);
+    })->name('api.rent.billing-amount');
+    Route::get('api/sales/{sale}/billing-amount', function(\App\Models\Sale $sale) {
+        return response()->json([
+            'total'     => (float) $sale->sale_price,
+            'client_id' => $sale->client_id,
+        ]);
+    })->name('api.sale.billing-amount');
 
     // Rentas
     Route::resource('rents', RentController::class);
@@ -91,6 +132,8 @@ Route::middleware('auth')->group(function () {
 
     // Compras
     Route::resource('purchases', PurchaseController::class);
+    Route::patch('purchases/{purchase}/approve', [PurchaseController::class, 'approve'])->name('purchases.approve');
+    Route::patch('purchases/{purchase}/status',  [PurchaseController::class, 'updateStatus'])->name('purchases.status');
 
     // Refacciones
     Route::resource('spareparts', SparepartController::class);
@@ -115,17 +158,32 @@ Route::middleware('auth')->group(function () {
     Route::resource('employees', EmployeeController::class);
     Route::resource('payrolls', PayrollController::class);
     Route::resource('vacations', VacationController::class);
+    Route::patch('vacations/{vacation}/approve', [VacationController::class, 'approve'])->name('vacations.approve');
+    Route::patch('vacations/{vacation}/reject',  [VacationController::class, 'reject'])->name('vacations.reject');
     Route::resource('absences', AbsenceController::class);
+    Route::patch('absences/{absence}/approve', [AbsenceController::class, 'approve'])->name('absences.approve');
+    Route::patch('absences/{absence}/reject',  [AbsenceController::class, 'reject'])->name('absences.reject');
     Route::resource('administrative-records', AdministrativeRecordController::class);
 
     // Usuarios (solo admin)
     Route::resource('users', UserController::class)->middleware('role:administrador');
+
+    // Órdenes de Servicio
+    Route::resource('service-orders', ServiceOrderController::class);
 
     // Producción (planes mensuales)
     Route::resource('production', MonthlyPlanController::class);
 
     // Tipos de servicio (catálogo para producción)
     Route::resource('service-types', ServiceTypeController::class);
+
+    // TI – Inventario interno
+    Route::resource('ti-equipment', TiEquipmentController::class);
+    Route::post('ti-equipment/{tiEquipment}/peripherals',           [TiEquipmentController::class, 'storePeripheral'])->name('ti-equipment.peripherals.store');
+    Route::delete('ti-equipment/{tiEquipment}/peripherals/{peripheral}', [TiEquipmentController::class, 'destroyPeripheral'])->name('ti-equipment.peripherals.destroy');
+    Route::get('ti-licenses',                                        [TiEquipmentController::class, 'licensesIndex'])->name('ti-equipment.licenses');
+    Route::post('ti-licenses',                                       [TiEquipmentController::class, 'licenseStore'])->name('ti-equipment.licenses.store');
+    Route::delete('ti-licenses/{license}',                          [TiEquipmentController::class, 'licenseDestroy'])->name('ti-equipment.licenses.destroy');
 
     // Auditoría (solo admin)
     Route::get('audit', [AuditController::class, 'index'])->name('audit.index')->middleware('role:administrador');

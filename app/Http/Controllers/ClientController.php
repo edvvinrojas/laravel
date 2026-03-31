@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Contact;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ClientController extends Controller
 {
@@ -144,5 +145,37 @@ class ClientController extends Controller
     {
         $client->delete();
         return redirect()->route('clients.index')->with('success', 'Cliente eliminado correctamente.');
+    }
+
+    public function uploadDocument(Request $request, Client $client)
+    {
+        $request->validate([
+            'doc_type' => 'required|string|in:acta_constitutiva,constancia_fiscal,comprobante_domicilio,deposito_garantia,ine_representante,carta_poder,estado_cuenta,alta_cliente,cotizacion,contrato',
+            'archivo'  => 'required|file|mimes:pdf|max:10240',
+        ]);
+
+        $docType = $request->doc_type;
+        $docs    = $client->documents ?? [];
+
+        if (isset($docs[$docType])) {
+            Storage::disk('public')->delete($docs[$docType]);
+        }
+
+        $path = $request->file('archivo')->store("clients/{$client->id}", 'public');
+        $docs[$docType] = $path;
+        $client->update(['documents' => $docs]);
+
+        return back()->with('success', 'Documento subido correctamente.');
+    }
+
+    public function destroyDocument(Client $client, string $docType)
+    {
+        $docs = $client->documents ?? [];
+        if (isset($docs[$docType])) {
+            Storage::disk('public')->delete($docs[$docType]);
+            unset($docs[$docType]);
+            $client->update(['documents' => $docs]);
+        }
+        return back()->with('success', 'Documento eliminado.');
     }
 }

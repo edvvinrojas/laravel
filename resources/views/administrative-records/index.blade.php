@@ -10,7 +10,7 @@
             <select name="type" class="form-select w-56"><option value="">Tipo</option>@foreach(['RETROALIMENTACION_ESCRITA','AMONESTACION','ACTA_ADMINISTRATIVA','ENTREVISTA_AUSENTISMO'] as $t)<option value="{{ $t }}" @selected(request('type')===$t)>{{ str_replace('_',' ',$t) }}</option>@endforeach</select>
             <button class="btn-secondary">Buscar</button>
         </form>
-        <a href="{{ route('administrative-records.create') }}" class="btn-primary">+ Nuevo registro</a>
+        <div class="flex gap-2"><a href="{{ route('rh.index') }}" class="btn-secondary">&larr; RH</a><a href="{{ route('administrative-records.create') }}" class="btn-primary">+ Nuevo registro</a></div>
     </div>
     <div class="table-wrap rounded-none border-0">
         <table class="table">

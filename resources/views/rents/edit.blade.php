@@ -12,7 +12,7 @@
 
         <div>
             <label class="form-label">No. Contrato</label>
-            <input name="contract_number" value="{{ old('contract_number',$rent->contract_number) }}" class="form-input">
+            <input name="contract_number" value="{{ old('contract_number',$rent->contract_number) }}" class="form-input bg-gray-50" readonly>
         </div>
 
         <div>
@@ -26,9 +26,15 @@
 
         <div>
             <label class="form-label">Equipo *</label>
-            <select name="item_id" class="form-select" required>
+            <select name="item_id" id="item_id_select" class="form-select" required>
                 @foreach($items as $i)
-                <option value="{{ $i->id }}" @selected(old('item_id',$rent->item_id)==$i->id)>{{ $i->brand->name ?? '' }} {{ $i->model }} — {{ $i->serie }}</option>
+                    @php $asignado = $i->location_status === 'ASIGNADO' && $i->id !== $rent->item_id; @endphp
+                    <option value="{{ $i->id }}"
+                        @selected(old('item_id',$rent->item_id)==$i->id)
+                        @if($asignado) disabled class="text-gray-400 bg-gray-100" @endif>
+                        {{ $i->brand->name ?? '' }} {{ $i->model }} — {{ $i->serie }}
+                        @if($asignado) [RENTADO] @else [{{ $i->location_status ?? 'BODEGA' }}] @endif
+                    </option>
                 @endforeach
             </select>
         </div>
@@ -91,11 +97,21 @@
         <a href="{{ route('rents.show',$rent) }}" class="btn-secondary">Cancelar</a>
     </div>
 </div>
+
+@include('components.accesorios-consumibles-selector', [
+    'itemSelectId'        => 'item_id_select',
+    'selectedAccesorios'  => $rent->accesorios,
+    'selectedConsumibles' => $rent->consumibles,
+])
+
 </form>
 </div>
+
 @push('scripts')
 <script>
-document.getElementById('printCheck').addEventListener('change',function(){document.getElementById('printFields').classList.toggle('hidden',!this.checked);});
+document.getElementById('printCheck').addEventListener('change',function(){
+    document.getElementById('printFields').classList.toggle('hidden',!this.checked);
+});
 </script>
 @endpush
 @endsection

@@ -12,8 +12,8 @@
 
         <div>
             <label class="form-label">No. Contrato</label>
-            <input name="contract_number" value="{{ old('contract_number') }}" class="form-input" placeholder="Automático si se deja vacío">
-            @error('contract_number')<p class="form-error">{{ $message }}</p>@enderror
+            <input name="contract_number" value="{{ $nextContract }}" class="form-input bg-gray-50" readonly>
+            <p class="text-xs text-gray-400 mt-1">Se genera automáticamente</p>
         </div>
 
         <div>
@@ -28,16 +28,52 @@
         </div>
 
         <div>
+            <label class="form-label">Sucursal</label>
+            <select name="branch_id" id="branchSelect" class="form-select">
+                <option value="">Seleccione cliente primero…</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="form-label">Área</label>
+            <select name="area_id" id="areaSelect" class="form-select">
+                <option value="">Seleccione sucursal primero…</option>
+            </select>
+        </div>
+
+        <div class="md:col-span-2">
             <label class="form-label">Equipo *</label>
-            <select name="item_id" class="form-select" required>
+            <select name="item_id" id="item_id_select" class="form-select" required>
                 <option value="">Seleccionar…</option>
                 @foreach($items as $i)
-                <option value="{{ $i->id }}" @selected(old('item_id')==$i->id)>
-                    {{ $i->brand->name ?? '' }} {{ $i->model }} — {{ $i->serie }} [{{ $i->location_status ?? '—' }}]
-                </option>
+                    @php $asignado = $i->location_status === 'ASIGNADO'; @endphp
+                    <option value="{{ $i->id }}"
+                        @selected(old('item_id')==$i->id)
+                        @if($asignado) disabled class="text-gray-400 bg-gray-100" @endif
+                        data-status="{{ $i->location_status }}"
+                        data-bn="{{ $i->contador_inicial_bn ?? 0 }}"
+                        data-color="{{ $i->contador_inicial_color ?? 0 }}">
+                        {{ $i->brand->name ?? '' }} {{ $i->model }} — {{ $i->serie }}
+                        @if($asignado) [RENTADO - NO DISPONIBLE] @else [{{ $i->location_status ?? 'BODEGA' }}] @endif
+                    </option>
                 @endforeach
             </select>
             @error('item_id')<p class="form-error">{{ $message }}</p>@enderror
+        </div>
+
+        <div id="contadorSection" class="md:col-span-2 grid grid-cols-2 gap-4 hidden">
+            <div>
+                <label class="form-label">Contador inicial BN</label>
+                <input name="contador_inicial_bn" id="contador_bn" type="number" min="0"
+                    value="{{ old('contador_inicial_bn', 0) }}" class="form-input">
+                <p class="text-xs text-gray-400 mt-1">Lectura actual del equipo al instalarlo</p>
+            </div>
+            <div>
+                <label class="form-label">Contador inicial Color</label>
+                <input name="contador_inicial_color" id="contador_color" type="number" min="0"
+                    value="{{ old('contador_inicial_color', 0) }}" class="form-input">
+                <p class="text-xs text-gray-400 mt-1">Lectura actual del equipo al instalarlo</p>
+            </div>
         </div>
 
         <div>
@@ -103,13 +139,59 @@
         <a href="{{ route('rents.index') }}" class="btn-secondary">Cancelar</a>
     </div>
 </div>
+
+@include('components.accesorios-consumibles-selector', [
+    'itemSelectId' => 'item_id_select',
+])
+
 </form>
 </div>
 
 @push('scripts')
 <script>
+// Mostrar/ocultar campos de impresión
 document.getElementById('printCheck').addEventListener('change', function() {
     document.getElementById('printFields').classList.toggle('hidden', !this.checked);
+});
+
+// Al seleccionar equipo: mostrar contadores con valores sugeridos
+document.getElementById('item_id_select').addEventListener('change', function() {
+    const selected = this.options[this.selectedIndex];
+    const section  = document.getElementById('contadorSection');
+    if (!this.value) { section.classList.add('hidden'); return; }
+    section.classList.remove('hidden');
+    document.getElementById('contador_bn').value    = selected.dataset.bn    || 0;
+    document.getElementById('contador_color').value = selected.dataset.color || 0;
+});
+
+// Sucursales por cliente
+document.getElementById('clientSelect').addEventListener('change', function() {
+    const clientId = this.value;
+    const branchSel = document.getElementById('branchSelect');
+    const areaSel   = document.getElementById('areaSelect');
+    branchSel.innerHTML = '<option value="">Cargando…</option>';
+    areaSel.innerHTML   = '<option value="">Seleccione sucursal primero…</option>';
+    if (!clientId) { branchSel.innerHTML = '<option value="">Seleccione cliente primero…</option>'; return; }
+    fetch(`/api/clients/${clientId}/branches`)
+        .then(r => r.json())
+        .then(data => {
+            branchSel.innerHTML = '<option value="">Sin sucursal</option>';
+            data.forEach(b => branchSel.innerHTML += `<option value="${b.id}">${b.name}</option>`);
+        });
+});
+
+// Áreas por sucursal
+document.getElementById('branchSelect').addEventListener('change', function() {
+    const branchId = this.value;
+    const areaSel  = document.getElementById('areaSelect');
+    areaSel.innerHTML = '<option value="">Cargando…</option>';
+    if (!branchId) { areaSel.innerHTML = '<option value="">Sin área</option>'; return; }
+    fetch(`/api/branches/${branchId}/areas`)
+        .then(r => r.json())
+        .then(data => {
+            areaSel.innerHTML = '<option value="">Sin área</option>';
+            data.forEach(a => areaSel.innerHTML += `<option value="${a.id}">${a.name}</option>`);
+        });
 });
 </script>
 @endpush

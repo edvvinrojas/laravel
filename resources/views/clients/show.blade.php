@@ -251,5 +251,82 @@
         </div>
     </div>
 
+    {{-- Documentos --}}
+    @php
+        $docLabels = [
+            'acta_constitutiva'     => 'Acta constitutiva',
+            'constancia_fiscal'     => 'Constancia de situación fiscal (CSF)',
+            'comprobante_domicilio' => 'Comprobante de domicilio',
+            'deposito_garantia'     => 'Comprobante de depósito en garantía',
+            'ine_representante'     => 'INE del representante legal',
+            'carta_poder'           => 'Carta poder',
+            'estado_cuenta'         => 'Carátula de estado de cuenta',
+            'alta_cliente'          => 'Alta cliente',
+            'cotizacion'            => 'Cotización autorizada',
+            'contrato'              => 'Contrato',
+        ];
+        $docs = $client->documents ?? [];
+    @endphp
+    <div class="card">
+        <div class="card-header flex items-center justify-between">
+            <h2 class="font-semibold text-gray-800">Documentos del cliente</h2>
+            <button onclick="document.getElementById('doc-form').classList.toggle('hidden')" class="btn-primary btn-sm">+ Subir documento</button>
+        </div>
+
+        <div id="doc-form" class="hidden border-b border-gray-100 bg-gray-50 px-6 py-4">
+            <form action="{{ route('clients.documents.upload', $client) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                    <div class="sm:col-span-1">
+                        <label class="form-label">Tipo de documento</label>
+                        <select name="doc_type" class="form-select" required>
+                            <option value="">Seleccionar…</option>
+                            @foreach($docLabels as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <label class="form-label">Archivo PDF (máx. 10 MB)</label>
+                        <input type="file" name="archivo" accept=".pdf" class="form-input" required>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="submit" class="btn-primary btn-sm">Subir</button>
+                        <button type="button" onclick="document.getElementById('doc-form').classList.add('hidden')" class="btn-secondary btn-sm">Cancelar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="divide-y divide-gray-100">
+                @foreach($docLabels as $key => $label)
+                <div class="px-6 py-3 flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        @if(isset($docs[$key]))
+                            <span class="w-2 h-2 rounded-full bg-green-500 flex-shrink-0"></span>
+                        @else
+                            <span class="w-2 h-2 rounded-full bg-gray-200 flex-shrink-0"></span>
+                        @endif
+                        <span class="text-sm text-gray-700">{{ $label }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        @if(isset($docs[$key]))
+                            <a href="{{ Storage::url($docs[$key]) }}" target="_blank" class="btn-secondary btn-sm">Ver PDF</a>
+                            <form action="{{ route('clients.documents.destroy', [$client, $key]) }}" method="POST"
+                                  onsubmit="return confirm('¿Eliminar este documento?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn-danger btn-sm">Eliminar</button>
+                            </form>
+                        @else
+                            <span class="text-xs text-gray-400">Sin documento</span>
+                        @endif
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
 </div>
 @endsection

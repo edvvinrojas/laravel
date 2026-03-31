@@ -18,7 +18,7 @@
         </div>
         <div>
             <label class="form-label">Equipo *</label>
-            <select name="item_id" class="form-select" required>
+            <select name="item_id" id="item_id_select" class="form-select" required>
                 @foreach($items as $i)
                 <option value="{{ $i->id }}" @selected(old('item_id',$sale->item_id)==$i->id)>{{ $i->brand->name ?? '' }} {{ $i->model }} — {{ $i->serie }}</option>
                 @endforeach
@@ -46,6 +46,13 @@
         <a href="{{ route('sales.show',$sale) }}" class="btn-secondary">Cancelar</a>
     </div>
 </div>
+
+@include('components.accesorios-consumibles-selector', [
+    'itemSelectId'        => 'item_id_select',
+    'selectedAccesorios'  => $sale->accesorios,
+    'selectedConsumibles' => $sale->consumibles,
+])
+
 </form>
 </div>
 @endsection

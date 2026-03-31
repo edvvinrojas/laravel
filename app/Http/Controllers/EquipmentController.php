@@ -134,4 +134,40 @@ class EquipmentController extends Controller
         return redirect()->route('equipment.index')
             ->with('success', 'Equipo eliminado correctamente.');
     }
+
+    /**
+     * AJAX: devuelve el producto y sus accesorios/consumibles compatibles para un equipo.
+     */
+    public function productoDetalle(Item $equipment)
+    {
+        if (!$equipment->producto_id) {
+            return response()->json(['producto' => null, 'accesorios' => [], 'consumibles' => []]);
+        }
+
+        $producto = $equipment->producto()->with([
+            'accesorios' => fn($q) => $q->where('es_activo', true),
+            'consumibles' => fn($q) => $q->where('es_activo', true),
+        ])->first();
+
+        return response()->json([
+            'producto' => [
+                'id'     => $producto->id,
+                'nombre' => $producto->nombre,
+            ],
+            'accesorios' => $producto->accesorios->map(fn($a) => [
+                'id'          => $a->id,
+                'nombre'      => $a->nombre,
+                'codigo'      => $a->codigo,
+                'es_incluido' => (bool) $a->pivot->es_incluido,
+            ]),
+            'consumibles' => $producto->consumibles->map(fn($c) => [
+                'id'         => $c->id,
+                'nombre'     => $c->nombre,
+                'codigo_oem' => $c->codigo_oem,
+                'tipo'       => $c->tipo,
+                'color'      => $c->color,
+                'es_oficial' => (bool) $c->pivot->es_oficial,
+            ]),
+        ]);
+    }
 }

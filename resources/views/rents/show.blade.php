@@ -48,6 +48,56 @@
         </ul>
     </div>
 
+    {{-- Accesorios y consumibles incluidos --}}
+    @if($rent->accesorios->count() || $rent->consumibles->count())
+    <div class="card lg:col-span-3">
+        <div class="card-header">
+            <h3 class="font-semibold text-sm">Accesorios y consumibles del contrato</h3>
+        </div>
+        <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            @if($rent->accesorios->count())
+            <div>
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Accesorios</p>
+                <div class="space-y-1.5">
+                    @foreach($rent->accesorios as $acc)
+                    <div class="flex items-center gap-2 text-sm">
+                        <svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span class="font-medium">{{ $acc->nombre }}</span>
+                        @if($acc->codigo)<span class="text-gray-400 text-xs">{{ $acc->codigo }}</span>@endif
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            @if($rent->consumibles->count())
+            <div>
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Consumibles / Tóner</p>
+                <div class="space-y-1.5">
+                    @foreach($rent->consumibles as $con)
+                    <div class="flex items-center gap-2 text-sm">
+                        <svg class="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span>
+                            <span class="font-medium">{{ $con->nombre }}</span>
+                            <span class="text-gray-400 text-xs ml-1">
+                                {{ $con->tipo }}{{ $con->color ? ' · '.$con->color : '' }}
+                            </span>
+                        </span>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+        </div>
+    </div>
+    @endif
+
     @if($rent->has_print_service)
     <div class="card lg:col-span-3">
         <div class="card-header"><h3 class="font-semibold text-sm">Contadores de impresión</h3><a href="{{ route('print-counters.create') }}?rent_id={{ $rent->id }}" class="btn btn-sm btn-primary">+ Contador</a></div>

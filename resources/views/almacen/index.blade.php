@@ -156,7 +156,7 @@
                                         <span class="badge-gray">—</span>
                                     @endif
                                 </td>
-                                <td>{{ $p->es_activo ? '<span class="badge-green">Activo</span>' : '<span class="badge-gray">Inactivo</span>' }}</td>
+                                <td>{!! $p->es_activo ? '<span class="badge-green">Activo</span>' : '<span class="badge-gray">Inactivo</span>' !!}</td>
                                 <td class="text-right">
                                     <div class="flex items-center justify-end gap-1">
                                         <a href="{{ route('productos.show', $p) }}" class="btn-secondary btn-sm">Ver</a>
@@ -225,7 +225,7 @@
                                         <span class="badge-gray">—</span>
                                     @endif
                                 </td>
-                                <td>{{ $ac->es_activo ? '<span class="badge-green">Activo</span>' : '<span class="badge-gray">Inactivo</span>' }}</td>
+                                <td>{!! $ac->es_activo ? '<span class="badge-green">Activo</span>' : '<span class="badge-gray">Inactivo</span>' !!}</td>
                                 <td class="text-right">
                                     <div class="flex items-center justify-end gap-1">
                                         <a href="{{ route('accesorios.edit', $ac) }}" class="btn-secondary btn-sm">Editar</a>
@@ -297,7 +297,7 @@
                                         <span class="badge-gray">—</span>
                                     @endif
                                 </td>
-                                <td>{{ $c->es_activo ? '<span class="badge-green">Activo</span>' : '<span class="badge-gray">Inactivo</span>' }}</td>
+                                <td>{!! $c->es_activo ? '<span class="badge-green">Activo</span>' : '<span class="badge-gray">Inactivo</span>' !!}</td>
                                 <td class="text-right">
                                     <div class="flex items-center justify-end gap-1">
                                         <a href="{{ route('consumibles.edit', $c) }}" class="btn-secondary btn-sm">Editar</a>

@@ -9,7 +9,7 @@
             <input name="search" value="{{ request('search') }}" class="form-input w-56" placeholder="Nombre / NSS / RFC…">
             <button class="btn-secondary">Buscar</button>
         </form>
-        <a href="{{ route('employees.create') }}" class="btn-primary">+ Nuevo empleado</a>
+        <div class="flex gap-2"><a href="{{ route('rh.index') }}" class="btn-secondary">&larr; RH</a><a href="{{ route('employees.create') }}" class="btn-primary">+ Nuevo empleado</a></div>
     </div>
     <div class="table-wrap rounded-none border-0">
         <table class="table">

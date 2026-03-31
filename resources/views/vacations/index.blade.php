@@ -10,7 +10,7 @@
             <select name="status" class="form-select w-36"><option value="">Estado</option>@foreach(['PENDIENTE','APROBADO','RECHAZADO'] as $s)<option value="{{ $s }}" @selected(request('status')===$s)>{{ $s }}</option>@endforeach</select>
             <button class="btn-secondary">Buscar</button>
         </form>
-        <a href="{{ route('vacations.create') }}" class="btn-primary">+ Solicitar vacaciones</a>
+        <div class="flex gap-2"><a href="{{ route('rh.index') }}" class="btn-secondary">&larr; RH</a><a href="{{ route('vacations.create') }}" class="btn-primary">+ Solicitar vacaciones</a></div>
     </div>
     <div class="table-wrap rounded-none border-0">
         <table class="table">

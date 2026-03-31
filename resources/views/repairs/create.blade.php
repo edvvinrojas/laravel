@@ -19,11 +19,9 @@
         </div>
         <div>
             <label class="form-label">Procedencia *</label>
-            <select name="procedencia" class="form-select" required>
-                @foreach(['BODEGA','ASIGNADO','VENDIDO','DESCONOCIDO'] as $p)
-                <option value="{{ $p }}" @selected(old('procedencia')===$p)>{{ $p }}</option>
-                @endforeach
-            </select>
+            <input name="procedencia" value="{{ old('procedencia') }}" class="form-input" required
+                placeholder="Ej: Cliente ABC, Bodega central, Comprado por empleado…">
+            <p class="text-xs text-gray-400 mt-1">Indica de dónde viene el equipo</p>
         </div>
         <div>
             <label class="form-label">Estado taller *</label>
