@@ -4,6 +4,72 @@
 @section('page-title', 'Dashboard')
 
 @section('content')
+{{-- Mesa de Ayuda quick-ticket button --}}
+<div class="flex justify-end mb-4">
+    <button type="button" onclick="document.getElementById('mesaAyudaModal').classList.remove('hidden')"
+        class="btn-primary flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+        Levantar ticket a Mesa de Ayuda
+    </button>
+</div>
+
+{{-- Modal Mesa de Ayuda --}}
+<div id="mesaAyudaModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <h2 class="font-semibold text-gray-800">Nuevo ticket — Mesa de Ayuda</h2>
+            <button type="button" onclick="document.getElementById('mesaAyudaModal').classList.add('hidden')"
+                class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+        </div>
+        <form method="POST" action="{{ route('it-requests.store') }}">
+            @csrf
+            <div class="px-5 py-4 grid grid-cols-1 gap-4">
+                <div>
+                    <label class="form-label">Asunto *</label>
+                    <input name="title" class="form-input" placeholder="Describe brevemente el problema" required>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="form-label">Categoría *</label>
+                        <select name="category" class="form-select" required>
+                            <option value="">Seleccionar…</option>
+                            <option value="HARDWARE">Hardware</option>
+                            <option value="SOFTWARE">Software</option>
+                            <option value="IMPRESORA">Impresora</option>
+                            <option value="INTERNET">Internet / Red</option>
+                            <option value="EMAIL">Correo electrónico</option>
+                            <option value="TELEFONO">Teléfono</option>
+                            <option value="ACCESOS">Accesos / Contraseñas</option>
+                            <option value="OTRO">Otro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Prioridad *</label>
+                        <select name="priority" class="form-select" required>
+                            <option value="BAJA">Baja</option>
+                            <option value="MEDIA" selected>Media</option>
+                            <option value="ALTA">Alta</option>
+                            <option value="URGENTE">Urgente</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="form-label">Descripción *</label>
+                    <textarea name="description" rows="4" class="form-input" placeholder="Detalla el problema, pasos para reproducirlo, equipo afectado…" required></textarea>
+                </div>
+            </div>
+            <div class="px-5 py-4 border-t border-gray-100 flex gap-3 justify-end">
+                <button type="button" onclick="document.getElementById('mesaAyudaModal').classList.add('hidden')"
+                    class="btn-secondary">Cancelar</button>
+                <button type="submit" class="btn-primary">Enviar ticket</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 {{-- Stat cards --}}
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
     <x-stat-card label="Clientes activos"   value="{{ $stats['clients'] }}"         color="blue"   icon="users"/>
@@ -112,4 +178,11 @@
     </div>
 
 </div>
+@push('scripts')
+<script>
+document.getElementById('mesaAyudaModal').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.add('hidden');
+});
+</script>
+@endpush
 @endsection
