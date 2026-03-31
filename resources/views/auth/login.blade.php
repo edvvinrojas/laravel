@@ -8,7 +8,7 @@
         <div class="card-body">
             {{-- Logo --}}
             <div class="text-center mb-8">
-                <div class="mx-auto rounded-xl overflow-hidden mb-3" style="background:#001b71; padding: 12px 16px; display:inline-block;">
+                <div class="mx-auto rounded-xl overflow-hidden mb-3" style="background:#ffffff; padding: 12px 16px; display:inline-block;">
                     <img src="{{ asset('img/logo.svg') }}" alt="CopyMart" class="h-10 w-auto">
                 </div>
                 <p class="text-sm text-gray-500 mt-1">Ingresa tus credenciales para continuar</p>

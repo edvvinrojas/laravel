@@ -50,7 +50,7 @@
 
     {{-- Logo --}}
     <div class="flex items-center justify-center px-4 py-4 border-b border-gray-700">
-        <img src="{{ asset('img/logo.svg') }}" alt="CopyMart" class="h-8 w-auto">
+        <img src="{{ asset('img/logo.svg') }}" alt="CopyMart" class="h-11 w-auto bg-white rounded-md p-1">
     </div>
 
     {{-- Nav --}}
