@@ -28,7 +28,7 @@ class TiEquipmentController extends Controller
 
     public function create()
     {
-        $users    = User::where('is_active', true)->orderBy('name')->get();
+        $users    = User::where('is_active', true)->orderBy('full_name')->get();
         $licenses = TiLicense::where('is_active', true)->orderBy('software')->get();
         $nextCode = $this->nextCode();
         return view('ti-equipment.create', compact('users', 'licenses', 'nextCode'));
@@ -88,7 +88,7 @@ class TiEquipmentController extends Controller
     public function edit(TiEquipment $tiEquipment)
     {
         $tiEquipment->load(['peripherals', 'licenses']);
-        $users    = User::where('is_active', true)->orderBy('name')->get();
+        $users    = User::where('is_active', true)->orderBy('full_name')->get();
         $licenses = TiLicense::where('is_active', true)->orderBy('software')->get();
         return view('ti-equipment.edit', compact('tiEquipment', 'users', 'licenses'));
     }
