@@ -165,8 +165,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('absences/{absence}/reject',  [AbsenceController::class, 'reject'])->name('absences.reject');
     Route::resource('administrative-records', AdministrativeRecordController::class);
 
-    // Usuarios (solo admin)
-    Route::resource('users', UserController::class)->middleware('role:administrador');
+    // Usuarios (admin o departamento TI)
+    Route::resource('users', UserController::class)->middleware('role:administrador,dept:ti');
 
     // Órdenes de Servicio
     Route::resource('service-orders', ServiceOrderController::class);
@@ -191,6 +191,8 @@ Route::middleware('auth')->group(function () {
     // Perfil propio
     Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('profile/avatar', [ProfileController::class, 'uploadAvatar'])->name('profile.avatar');
+    Route::delete('profile/avatar', [ProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
 
     // Notificaciones
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');

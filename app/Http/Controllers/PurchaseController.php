@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Purchase;
+use App\Models\PurchaseQuote;
 use App\Models\Sparepart;
 use App\Models\User;
 use App\Models\Notification;
@@ -83,7 +84,7 @@ class PurchaseController extends Controller
 
     public function show(Purchase $purchase)
     {
-        $purchase->load(['sparepart', 'user', 'areaChief', 'admin']);
+        $purchase->load(['sparepart', 'user', 'areaChief', 'admin', 'quotes']);
         return view('purchases.show', compact('purchase'));
     }
 
@@ -110,19 +111,33 @@ class PurchaseController extends Controller
 
         if ($isCompras) {
             $rules += [
-                'supplier1_name' => 'nullable|string|max:255',
-                'supplier1_cost' => 'nullable|numeric|min:0',
-                'supplier2_name' => 'nullable|string|max:255',
-                'supplier2_cost' => 'nullable|numeric|min:0',
-                'supplier3_name' => 'nullable|string|max:255',
-                'supplier3_cost' => 'nullable|numeric|min:0',
-                'shipping_method'=> 'nullable|string|max:100',
-                'shipping_cost'  => 'nullable|numeric|min:0',
-                'shipping_code'  => 'nullable|string|max:100',
+                'shipping_method' => 'nullable|string|max:100',
+                'shipping_cost'   => 'nullable|numeric|min:0',
+                'shipping_code'   => 'nullable|string|max:100',
+                'quotes'          => 'nullable|array',
+                'quotes.*.supplier_name' => 'required_with:quotes.*|string|max:255',
+                'quotes.*.cost'          => 'required_with:quotes.*|numeric|min:0',
+                'quotes.*.notes'         => 'nullable|string',
             ];
         }
 
         $data = $request->validate($rules);
+
+        // Sync quotes (delete old, insert new) — only for compras/admin
+        if ($isCompras) {
+            $purchase->quotes()->delete();
+            foreach ($request->input('quotes', []) as $q) {
+                if (!empty($q['supplier_name'])) {
+                    $purchase->quotes()->create([
+                        'supplier_name' => $q['supplier_name'],
+                        'cost'          => $q['cost'],
+                        'notes'         => $q['notes'] ?? null,
+                    ]);
+                }
+            }
+            unset($data['quotes']);
+        }
+
         $purchase->update($data);
 
         return redirect()->route('purchases.show', $purchase)->with('success', 'Compra actualizada.');

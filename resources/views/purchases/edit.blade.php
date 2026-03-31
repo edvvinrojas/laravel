@@ -48,12 +48,28 @@
             <input name="shipping_code" value="{{ old('shipping_code',$purchase->shipping_code) }}" class="form-input">
         </div>
         <div class="col-span-2">
-            <label class="form-label">Cotizaciones</label>
-            <div class="grid grid-cols-3 gap-3">
-                @foreach([1,2,3] as $n)
-                <div>
-                    <input name="supplier{{ $n }}_name" value="{{ old('supplier'.$n.'_name',$purchase->{'supplier'.$n.'_name'}) }}" class="form-input mb-2" placeholder="Proveedor {{ $n }}">
-                    <input name="supplier{{ $n }}_cost" type="number" step="0.01" value="{{ old('supplier'.$n.'_cost',$purchase->{'supplier'.$n.'_cost'}) }}" class="form-input" placeholder="Costo">
+            <div class="flex items-center justify-between mb-2">
+                <label class="form-label mb-0">Cotizaciones de proveedores</label>
+                <button type="button" id="addQuote" class="text-blue-600 text-sm">+ Agregar cotización</button>
+            </div>
+            <div id="quotesContainer" class="space-y-2">
+                @foreach($purchase->quotes as $i => $q)
+                <div class="grid grid-cols-3 gap-2 items-end quote-row">
+                    <div>
+                        <label class="form-label text-xs">Proveedor *</label>
+                        <input name="quotes[{{ $i }}][supplier_name]" value="{{ old("quotes.$i.supplier_name", $q->supplier_name) }}" class="form-input text-sm" placeholder="Nombre proveedor" required>
+                    </div>
+                    <div>
+                        <label class="form-label text-xs">Costo *</label>
+                        <input name="quotes[{{ $i }}][cost]" type="number" step="0.01" min="0" value="{{ old("quotes.$i.cost", $q->cost) }}" class="form-input text-sm" placeholder="0.00" required>
+                    </div>
+                    <div class="flex gap-2 items-end">
+                        <div class="flex-1">
+                            <label class="form-label text-xs">Notas</label>
+                            <input name="quotes[{{ $i }}][notes]" value="{{ old("quotes.$i.notes", $q->notes) }}" class="form-input text-sm" placeholder="Opcional">
+                        </div>
+                        <button type="button" class="btn-danger text-xs mb-0.5" onclick="this.closest('.quote-row').remove()">✕</button>
+                    </div>
                 </div>
                 @endforeach
             </div>
@@ -70,4 +86,33 @@
 </div>
 </form>
 </div>
+
+@push('scripts')
+<script>
+let quoteIdx = {{ $purchase->quotes->count() }};
+document.getElementById('addQuote').addEventListener('click', () => {
+    const row = document.createElement('div');
+    row.className = 'grid grid-cols-3 gap-2 items-end quote-row';
+    row.innerHTML = `
+        <div>
+            <label class="form-label text-xs">Proveedor *</label>
+            <input name="quotes[${quoteIdx}][supplier_name]" class="form-input text-sm" placeholder="Nombre proveedor" required>
+        </div>
+        <div>
+            <label class="form-label text-xs">Costo *</label>
+            <input name="quotes[${quoteIdx}][cost]" type="number" step="0.01" min="0" class="form-input text-sm" placeholder="0.00" required>
+        </div>
+        <div class="flex gap-2 items-end">
+            <div class="flex-1">
+                <label class="form-label text-xs">Notas</label>
+                <input name="quotes[${quoteIdx}][notes]" class="form-input text-sm" placeholder="Opcional">
+            </div>
+            <button type="button" class="btn-danger text-xs mb-0.5" onclick="this.closest('.quote-row').remove()">✕</button>
+        </div>
+    `;
+    document.getElementById('quotesContainer').appendChild(row);
+    quoteIdx++;
+});
+</script>
+@endpush
 @endsection

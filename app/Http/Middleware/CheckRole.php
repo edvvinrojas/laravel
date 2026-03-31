@@ -14,10 +14,19 @@ class CheckRole
             return redirect()->route('login');
         }
 
-        if (!in_array(auth()->user()->rol, $roles)) {
-            abort(403, 'No tienes permiso para acceder a esta sección.');
+        $user = auth()->user();
+
+        foreach ($roles as $rule) {
+            // Acepta "dept:ti" además de nombres de rol directos
+            if (str_starts_with($rule, 'dept:')) {
+                if ($user->department === substr($rule, 5)) {
+                    return $next($request);
+                }
+            } elseif ($user->rol === $rule) {
+                return $next($request);
+            }
         }
 
-        return $next($request);
+        abort(403, 'No tienes permiso para acceder a esta sección.');
     }
 }

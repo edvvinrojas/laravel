@@ -24,8 +24,8 @@
             @forelse($repairs as $r)
             @php $sc=['PENDIENTE'=>'badge-yellow','PAUSADO'=>'badge-gray','LISTO'=>'badge-green']; @endphp
             <tr>
-                <td>{{ $r->item->brand->name ?? '' }} {{ $r->model }}</td>
-                <td class="font-mono text-xs">{{ $r->serie }}</td>
+                <td>{{ $r->item->brand->name ?? '' }} {{ $r->item->model }}</td>
+                <td class="font-mono text-xs">{{ $r->item->serie }}</td>
                 <td><span class="badge-blue text-xs">{{ $r->procedencia }}</span></td>
                 <td><span class="{{ $sc[$r->estado_taller]??'badge-gray' }}">{{ $r->estado_taller }}</span></td>
                 <td>{{ $r->ubicacion ?? '—' }}</td>

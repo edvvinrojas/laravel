@@ -11,7 +11,10 @@ class RepairController extends Controller
     public function index(Request $request)
     {
         $repairs = Repair::with(['item.brand'])
-            ->when($request->search, fn($q) => $q->where('serie', 'like', "%{$request->search}%")->orWhere('model', 'like', "%{$request->search}%"))
+            ->when($request->search, fn($q) => $q->whereHas('item', fn($i) =>
+                $i->where('serie', 'like', "%{$request->search}%")
+                  ->orWhere('model', 'like', "%{$request->search}%")
+            ))
             ->when($request->status, fn($q) => $q->where('estado_taller', $request->status))
             ->where('is_active', true)
             ->orderBy('created_at', 'desc')
@@ -39,10 +42,7 @@ class RepairController extends Controller
             'comments'          => 'nullable|string',
         ]);
 
-        $item = Item::find($data['item_id']);
-        $data['model']       = $item->model;
-        $data['serie']       = $item->serie;
-        $data['model_toner'] = $item->model_toner;
+        $item = Item::findOrFail($data['item_id']);
         $item->update(['location_status' => 'TALLER']);
 
         Repair::create($data);
