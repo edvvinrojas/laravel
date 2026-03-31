@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Absence;
 use App\Models\Employee;
+use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class AbsenceController extends Controller
@@ -40,8 +42,23 @@ class AbsenceController extends Controller
         $data['is_justified'] = $request->boolean('is_justified');
         $data['status'] = 'PENDIENTE';
 
-        Absence::create($data);
-        return redirect()->route('absences.index')->with('success', 'Ausentismo registrado.');
+        $absence  = Absence::create($data);
+        $employee = Employee::find($data['employee_id']);
+        $link     = route('absences.show', $absence);
+
+        User::whereIn('rol', ['gerencia', 'administrador'])->where('is_active', true)->each(
+            fn($u) => Notification::create([
+                'user_id'    => $u->id,
+                'type'       => 'ausentismo',
+                'title'      => 'Nueva solicitud de ausentismo',
+                'message'    => "{$employee->nombre} registró una ausencia.",
+                'link'       => $link,
+                'is_read'    => false,
+                'created_at' => now(),
+            ])
+        );
+
+        return redirect()->route('absences.index')->with('success', 'Ausentismo registrado. Pendiente de aprobación.');
     }
 
     public function show(Absence $absence)
@@ -75,6 +92,46 @@ class AbsenceController extends Controller
 
         $absence->update($data);
         return redirect()->route('absences.show', $absence)->with('success', 'Ausentismo actualizado.');
+    }
+
+    public function approve(Absence $absence)
+    {
+        if (!in_array(auth()->user()->rol, ['gerencia', 'administrador'])) abort(403);
+        $absence->update(['status' => 'APROBADO', 'reviewed_by' => auth()->id()]);
+
+        if ($absence->employee?->user_id) {
+            Notification::create([
+                'user_id'    => $absence->employee->user_id,
+                'type'       => 'ausentismo',
+                'title'      => 'Ausentismo aprobado',
+                'message'    => 'Tu solicitud de ausentismo fue aprobada.',
+                'link'       => route('absences.show', $absence),
+                'is_read'    => false,
+                'created_at' => now(),
+            ]);
+        }
+
+        return back()->with('success', 'Ausentismo aprobado.');
+    }
+
+    public function reject(Absence $absence)
+    {
+        if (!in_array(auth()->user()->rol, ['gerencia', 'administrador'])) abort(403);
+        $absence->update(['status' => 'RECHAZADO', 'reviewed_by' => auth()->id()]);
+
+        if ($absence->employee?->user_id) {
+            Notification::create([
+                'user_id'    => $absence->employee->user_id,
+                'type'       => 'ausentismo',
+                'title'      => 'Ausentismo rechazado',
+                'message'    => 'Tu solicitud de ausentismo fue rechazada.',
+                'link'       => route('absences.show', $absence),
+                'is_read'    => false,
+                'created_at' => now(),
+            ]);
+        }
+
+        return back()->with('success', 'Solicitud rechazada.');
     }
 
     public function destroy(Absence $absence)

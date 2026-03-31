@@ -18,10 +18,12 @@ class Sale extends Model
         'sale_price' => 'decimal:2',
     ];
 
-    public function client()   { return $this->belongsTo(Client::class); }
-    public function branch()   { return $this->belongsTo(Branch::class); }
-    public function area()     { return $this->belongsTo(Area::class); }
-    public function item()     { return $this->belongsTo(Item::class); }
-    public function creator()  { return $this->belongsTo(User::class, 'created_by'); }
-    public function billings() { return $this->hasMany(Billing::class); }
+    public function client()     { return $this->belongsTo(Client::class); }
+    public function branch()     { return $this->belongsTo(Branch::class); }
+    public function area()       { return $this->belongsTo(Area::class); }
+    public function item()       { return $this->belongsTo(Item::class); }
+    public function creator()    { return $this->belongsTo(User::class, 'created_by'); }
+    public function billings()   { return $this->hasMany(Billing::class); }
+    public function accesorios() { return $this->belongsToMany(Accesorio::class, 'sale_accesorio')->withPivot('cantidad','notas')->withTimestamps(); }
+    public function consumibles(){ return $this->belongsToMany(Consumible::class, 'sale_consumible')->withPivot('cantidad','notas')->withTimestamps(); }
 }

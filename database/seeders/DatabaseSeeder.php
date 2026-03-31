@@ -10,7 +10,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        User::create([
+User::create([
             'username'    => 'admin',
             'email'       => 'admin@copymart.com',
             'password'    => Hash::make('admin1234'),

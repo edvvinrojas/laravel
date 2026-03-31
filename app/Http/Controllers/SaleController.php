@@ -24,7 +24,7 @@ class SaleController extends Controller
     public function create()
     {
         $clients = Client::where('is_active', true)->orderBy('name')->get();
-        $items   = Item::where('is_active', true)->whereIn('location_status', ['BODEGA'])->with('brand')->get();
+        $items   = Item::where('is_active', true)->with('brand')->orderBy('model')->get();
         return view('sales.create', compact('clients', 'items'));
     }
 
@@ -46,6 +46,9 @@ class SaleController extends Controller
 
         $sale = Sale::create($data);
 
+        $sale->accesorios()->sync($request->input('accesorios', []));
+        $sale->consumibles()->sync($request->input('consumibles', []));
+
         if ($sale->sale_status === 'ENTREGADA') {
             $sale->item->update(['location_status' => 'VENDIDO']);
         }
@@ -55,7 +58,7 @@ class SaleController extends Controller
 
     public function show(Sale $sale)
     {
-        $sale->load(['client', 'branch', 'area', 'item.brand', 'creator', 'billings']);
+        $sale->load(['client', 'branch', 'area', 'item.brand', 'creator', 'billings', 'accesorios', 'consumibles']);
         return view('sales.show', compact('sale'));
     }
 
@@ -63,6 +66,7 @@ class SaleController extends Controller
     {
         $clients = Client::where('is_active', true)->orderBy('name')->get();
         $items   = Item::where('is_active', true)->with('brand')->get();
+        $sale->load('accesorios', 'consumibles');
         return view('sales.edit', compact('sale', 'clients', 'items'));
     }
 
@@ -81,6 +85,9 @@ class SaleController extends Controller
 
         $data['is_foreign'] = $request->boolean('is_foreign');
         $sale->update($data);
+
+        $sale->accesorios()->sync($request->input('accesorios', []));
+        $sale->consumibles()->sync($request->input('consumibles', []));
 
         return redirect()->route('sales.show', $sale)->with('success', 'Venta actualizada.');
     }

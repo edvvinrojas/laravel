@@ -3,8 +3,20 @@
 @section('page-title','Detalle de Ausencia')
 
 @section('content')
-<div class="flex gap-3 mb-4">
-    <a href="{{ route('absences.edit',$absence) }}" class="btn-primary">Editar</a>
+@php $isApprover = in_array(auth()->user()->rol, ['gerencia','administrador']); @endphp
+<div class="flex gap-3 mb-4 flex-wrap">
+    @if($isApprover && $absence->status === 'PENDIENTE')
+        <form action="{{ route('absences.approve', $absence) }}" method="POST">
+            @csrf @method('PATCH')
+            <button type="submit" class="btn-primary">✓ Aprobar</button>
+        </form>
+        <form action="{{ route('absences.reject', $absence) }}" method="POST"
+              onsubmit="return confirm('¿Rechazar esta solicitud?')">
+            @csrf @method('PATCH')
+            <button type="submit" class="btn-danger">✗ Rechazar</button>
+        </form>
+    @endif
+    <a href="{{ route('absences.edit',$absence) }}" class="btn-secondary">Editar</a>
     <a href="{{ route('absences.index') }}" class="btn-secondary">← Volver</a>
 </div>
 <div class="card max-w-md">

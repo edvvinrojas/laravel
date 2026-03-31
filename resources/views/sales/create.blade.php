@@ -21,10 +21,12 @@
         </div>
         <div>
             <label class="form-label">Equipo *</label>
-            <select name="item_id" class="form-select" required>
+            <select name="item_id" id="item_id_select" class="form-select" required>
                 <option value="">Seleccionar…</option>
                 @foreach($items as $i)
-                <option value="{{ $i->id }}" @selected(old('item_id')==$i->id)>{{ $i->brand->name ?? '' }} {{ $i->model }} — {{ $i->serie }}</option>
+                <option value="{{ $i->id }}" @selected(old('item_id')==$i->id)>
+                    {{ $i->brand->name ?? '' }} {{ $i->model }} — {{ $i->serie }}
+                </option>
                 @endforeach
             </select>
             @error('item_id')<p class="form-error">{{ $message }}</p>@enderror
@@ -55,6 +57,11 @@
         <a href="{{ route('sales.index') }}" class="btn-secondary">Cancelar</a>
     </div>
 </div>
+
+@include('components.accesorios-consumibles-selector', [
+    'itemSelectId' => 'item_id_select',
+])
+
 </form>
 </div>
 @endsection

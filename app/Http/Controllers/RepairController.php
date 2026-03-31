@@ -30,7 +30,7 @@ class RepairController extends Controller
     {
         $data = $request->validate([
             'item_id'           => 'required|exists:items,id',
-            'procedencia'       => 'required|in:BODEGA,ASIGNADO,VENDIDO,DESCONOCIDO',
+            'procedencia'       => 'required|string|max:255',
             'estado_taller'     => 'required|in:PENDIENTE,PAUSADO,LISTO',
             'ubicacion'         => 'nullable|in:ZONA_1,ZONA_2,ZONA_3,ZONA_4,BASURA',
             'proceso'           => 'required|in:DESCONOCIDO,PROCESO_1,PROCESO_2,PROCESO_3',

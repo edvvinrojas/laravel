@@ -8,10 +8,13 @@ class Client extends Model
 {
     protected $fillable = [
         'name', 'comercial_name', 'rfc', 'address',
-        'colonia', 'zip_code', 'city', 'user_id', 'is_active',
+        'colonia', 'zip_code', 'city', 'user_id', 'is_active', 'documents',
     ];
 
-    protected $casts = ['is_active' => 'boolean'];
+    protected $casts = [
+        'is_active' => 'boolean',
+        'documents' => 'array',
+    ];
 
     public function contacts() { return $this->hasMany(Contact::class); }
     public function creator()  { return $this->belongsTo(User::class, 'user_id'); }

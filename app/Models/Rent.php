@@ -12,6 +12,7 @@ class Rent extends Model
         'has_print_service', 'bn_included', 'bn_cost_per_excess',
         'color_included', 'color_cost_per_excess', 'print_notes',
         'is_active', 'created_by',
+        'contador_inicial_bn', 'contador_inicial_color',
     ];
 
     protected $casts = [
@@ -30,4 +31,6 @@ class Rent extends Model
     public function creator()       { return $this->belongsTo(User::class, 'created_by'); }
     public function billings()      { return $this->hasMany(Billing::class); }
     public function printCounters() { return $this->hasMany(PrintCounter::class); }
+    public function accesorios()    { return $this->belongsToMany(Accesorio::class, 'rent_accesorio')->withPivot('cantidad','notas')->withTimestamps(); }
+    public function consumibles()   { return $this->belongsToMany(Consumible::class, 'rent_consumible')->withPivot('cantidad','notas')->withTimestamps(); }
 }

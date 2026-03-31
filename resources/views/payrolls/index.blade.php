@@ -15,7 +15,7 @@
             </select>
             <button class="btn-secondary">Buscar</button>
         </form>
-        <a href="{{ route('payrolls.create') }}" class="btn-primary">+ Nueva nómina</a>
+        <div class="flex gap-2"><a href="{{ route('rh.index') }}" class="btn-secondary">&larr; RH</a><a href="{{ route('payrolls.create') }}" class="btn-primary">+ Nueva nómina</a></div>
     </div>
     <div class="table-wrap rounded-none border-0">
         <table class="table">
