@@ -23,8 +23,8 @@ class ItRequestController extends Controller
                 $q2->where('folio', 'like', "%{$request->search}%")
                    ->orWhere('title', 'like', "%{$request->search}%");
             }))
-            ->orderByRaw("FIELD(status,'ABIERTO','EN_PROCESO','RESUELTO','CERRADO')")
-            ->orderByRaw("FIELD(priority,'URGENTE','ALTA','MEDIA','BAJA')")
+            ->orderByRaw($this->fieldOrder('status', ['ABIERTO','EN_PROCESO','RESUELTO','CERRADO']))
+            ->orderByRaw($this->fieldOrder('priority', ['URGENTE','ALTA','MEDIA','BAJA']))
             ->orderByDesc('created_at')
             ->paginate(20)->withQueryString();
 
@@ -188,6 +188,19 @@ class ItRequestController extends Controller
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
+
+    private function fieldOrder(string $column, array $values): string
+    {
+        if (\DB::getDriverName() === 'pgsql') {
+            $cases = '';
+            foreach ($values as $i => $val) {
+                $cases .= " WHEN {$column} = '{$val}' THEN {$i}";
+            }
+            return "CASE{$cases} ELSE " . count($values) . " END";
+        }
+        $list = implode("','", $values);
+        return "FIELD({$column},'{$list}')";
+    }
 
     private function nextFolio(): string
     {
