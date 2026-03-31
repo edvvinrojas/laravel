@@ -58,7 +58,7 @@ class ItRequestController extends Controller
         })->where('is_active', true)->where('id', '!=', auth()->id())->each(
             fn($u) => Notification::create([
                 'user_id'    => $u->id,
-                'type'       => 'it_ticket',
+                'type'       => 'IT_TICKET',
                 'title'      => "Nuevo ticket [{$ticket->folio}]",
                 'message'    => auth()->user()->full_name . " reportó: {$ticket->title}",
                 'link'       => $link,
@@ -128,7 +128,7 @@ class ItRequestController extends Controller
             if ($wasResolved && $itRequest->user_id !== $user->id) {
                 Notification::create([
                     'user_id'    => $itRequest->user_id,
-                    'type'       => 'it_ticket',
+                    'type'       => 'IT_TICKET',
                     'title'      => "Ticket resuelto [{$itRequest->folio}]",
                     'message'    => "Tu solicitud \"{$itRequest->title}\" fue marcada como {$data['status']}.",
                     'link'       => route('it-requests.show', $itRequest),
@@ -175,7 +175,7 @@ class ItRequestController extends Controller
         if ($itRequest->user_id !== $user->id) {
             Notification::create([
                 'user_id'    => $itRequest->user_id,
-                'type'       => 'it_ticket',
+                'type'       => 'IT_TICKET',
                 'title'      => "Ticket en proceso [{$itRequest->folio}]",
                 'message'    => "Tu solicitud \"{$itRequest->title}\" fue tomada por {$user->full_name}.",
                 'link'       => route('it-requests.show', $itRequest),
