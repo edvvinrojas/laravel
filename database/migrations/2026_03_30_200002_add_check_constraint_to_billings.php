@@ -7,42 +7,81 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // MariaDB no permite CHECK constraints sobre columnas con FK (error 1901).
-        // La integridad se garantiza con triggers BEFORE INSERT y BEFORE UPDATE.
-        DB::unprepared("
-            CREATE TRIGGER trg_billings_bi
-            BEFORE INSERT ON billings
-            FOR EACH ROW
-            BEGIN
-                IF NOT (
-                    (NEW.billing_type = 'RENTA' AND NEW.rent_id IS NOT NULL AND NEW.sale_id IS NULL) OR
-                    (NEW.billing_type = 'VENTA' AND NEW.sale_id IS NOT NULL AND NEW.rent_id IS NULL)
-                ) THEN
-                    SIGNAL SQLSTATE '45000'
-                    SET MESSAGE_TEXT = 'billing_type must match exactly one of rent_id or sale_id';
-                END IF;
-            END
-        ");
+        $driver = DB::getDriverName();
 
-        DB::unprepared("
-            CREATE TRIGGER trg_billings_bu
-            BEFORE UPDATE ON billings
-            FOR EACH ROW
-            BEGIN
-                IF NOT (
-                    (NEW.billing_type = 'RENTA' AND NEW.rent_id IS NOT NULL AND NEW.sale_id IS NULL) OR
-                    (NEW.billing_type = 'VENTA' AND NEW.sale_id IS NOT NULL AND NEW.rent_id IS NULL)
-                ) THEN
-                    SIGNAL SQLSTATE '45000'
-                    SET MESSAGE_TEXT = 'billing_type must match exactly one of rent_id or sale_id';
-                END IF;
-            END
-        ");
+        if ($driver === 'pgsql') {
+            // PostgreSQL: requiere una función separada que luego usan los triggers
+            DB::unprepared("
+                CREATE OR REPLACE FUNCTION fn_check_billing_type_fk()
+                RETURNS TRIGGER AS \$\$
+                BEGIN
+                    IF NOT (
+                        (NEW.billing_type = 'RENTA' AND NEW.rent_id IS NOT NULL AND NEW.sale_id IS NULL) OR
+                        (NEW.billing_type = 'VENTA' AND NEW.sale_id IS NOT NULL AND NEW.rent_id IS NULL)
+                    ) THEN
+                        RAISE EXCEPTION 'billing_type must match exactly one of rent_id or sale_id';
+                    END IF;
+                    RETURN NEW;
+                END;
+                \$\$ LANGUAGE plpgsql;
+            ");
+
+            DB::unprepared("
+                CREATE TRIGGER trg_billings_bi
+                BEFORE INSERT ON billings
+                FOR EACH ROW EXECUTE FUNCTION fn_check_billing_type_fk();
+            ");
+
+            DB::unprepared("
+                CREATE TRIGGER trg_billings_bu
+                BEFORE UPDATE ON billings
+                FOR EACH ROW EXECUTE FUNCTION fn_check_billing_type_fk();
+            ");
+        } else {
+            // MySQL / MariaDB
+            DB::unprepared("
+                CREATE TRIGGER trg_billings_bi
+                BEFORE INSERT ON billings
+                FOR EACH ROW
+                BEGIN
+                    IF NOT (
+                        (NEW.billing_type = 'RENTA' AND NEW.rent_id IS NOT NULL AND NEW.sale_id IS NULL) OR
+                        (NEW.billing_type = 'VENTA' AND NEW.sale_id IS NOT NULL AND NEW.rent_id IS NULL)
+                    ) THEN
+                        SIGNAL SQLSTATE '45000'
+                        SET MESSAGE_TEXT = 'billing_type must match exactly one of rent_id or sale_id';
+                    END IF;
+                END
+            ");
+
+            DB::unprepared("
+                CREATE TRIGGER trg_billings_bu
+                BEFORE UPDATE ON billings
+                FOR EACH ROW
+                BEGIN
+                    IF NOT (
+                        (NEW.billing_type = 'RENTA' AND NEW.rent_id IS NOT NULL AND NEW.sale_id IS NULL) OR
+                        (NEW.billing_type = 'VENTA' AND NEW.sale_id IS NOT NULL AND NEW.rent_id IS NULL)
+                    ) THEN
+                        SIGNAL SQLSTATE '45000'
+                        SET MESSAGE_TEXT = 'billing_type must match exactly one of rent_id or sale_id';
+                    END IF;
+                END
+            ");
+        }
     }
 
     public function down(): void
     {
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_billings_bi');
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_billings_bu');
+        $driver = DB::getDriverName();
+
+        if ($driver === 'pgsql') {
+            DB::unprepared('DROP TRIGGER IF EXISTS trg_billings_bi ON billings');
+            DB::unprepared('DROP TRIGGER IF EXISTS trg_billings_bu ON billings');
+            DB::unprepared('DROP FUNCTION IF EXISTS fn_check_billing_type_fk');
+        } else {
+            DB::unprepared('DROP TRIGGER IF EXISTS trg_billings_bi');
+            DB::unprepared('DROP TRIGGER IF EXISTS trg_billings_bu');
+        }
     }
 };
