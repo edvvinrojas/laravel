@@ -16,7 +16,12 @@ class Purchase extends Model
         'status', 'comments', 'end_date',
     ];
 
-    protected $casts = ['is_paid' => 'boolean'];
+    protected $casts = [
+        'is_paid'                       => 'boolean',
+        'authorized_by_area_chief_date' => 'date',
+        'authorized_by_admin_date'      => 'date',
+        'end_date'                      => 'date',
+    ];
 
     public function sparepart()  { return $this->belongsTo(Sparepart::class); }
     public function user()       { return $this->belongsTo(User::class); }

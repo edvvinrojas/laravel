@@ -3,9 +3,16 @@
 @section('page-title','Detalle de Ruta')
 
 @section('content')
-<div class="flex gap-3 mb-4">
+<div class="flex gap-3 mb-4 flex-wrap">
     <a href="{{ route('routes.edit',$route) }}" class="btn-primary">Editar</a>
     <a href="{{ route('routes.index') }}" class="btn-secondary">← Volver</a>
+    @if($route->status !== 'COMPLETADA' && $route->status !== 'CANCELADA')
+    <form action="{{ route('routes.complete', $route) }}" method="POST"
+          onsubmit="return confirm('¿Marcar la ruta como completada?')">
+        @csrf @method('PATCH')
+        <button class="btn-success">Completar Ruta</button>
+    </form>
+    @endif
 </div>
 
 {{-- Mapa de la ruta --}}
@@ -173,11 +180,16 @@
 
                     {{-- Acciones --}}
                     <div class="flex-shrink-0 flex items-center gap-1">
-                        @if(!$stop->is_completed)
+                        @if(!$stop->is_completed && $stop->visit_status !== 'pospuesto')
                         <form action="{{ route('routes.stops.complete', [$route, $stop]) }}" method="POST">
                             @csrf @method('PATCH')
                             <button type="submit" class="btn-success btn-sm" title="Marcar completada">✓</button>
                         </form>
+                        <button type="button" class="btn-secondary btn-sm"
+                            onclick="togglePostpone('pp-{{ $stop->id }}')">Posponer</button>
+                        @endif
+                        @if($stop->visit_status === 'pospuesto')
+                            <span class="badge-yellow text-xs">Pospuesta</span>
                         @endif
                         <form action="{{ route('routes.stops.destroy', [$route, $stop]) }}" method="POST"
                               onsubmit="return confirm('¿Eliminar parada?')">
@@ -236,6 +248,27 @@
                         </div>
                         @endif
                     </div>
+                </div>
+                @endif
+                {{-- Razón de posposición si aplica --}}
+                @if($stop->visit_status === 'pospuesto' && $stop->no_visit_reason)
+                <div class="ml-10 mt-2 text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded px-3 py-2">
+                    <span class="font-semibold">Motivo de posposición:</span> {{ $stop->no_visit_reason }}
+                </div>
+                @endif
+
+                {{-- Formulario posponer (oculto) --}}
+                @if(!$stop->is_completed && $stop->visit_status !== 'pospuesto')
+                <div id="pp-{{ $stop->id }}" class="hidden ml-10 mt-2">
+                    <form action="{{ route('routes.stops.postpone', [$route, $stop]) }}" method="POST" class="flex gap-2 items-end">
+                        @csrf @method('PATCH')
+                        <div class="flex-1">
+                            <label class="form-label text-xs">Motivo de posposición *</label>
+                            <input name="no_visit_reason" class="form-input text-sm" required placeholder="Ej: cliente no disponible, acceso bloqueado…">
+                        </div>
+                        <button type="submit" class="btn-primary btn-sm">Guardar</button>
+                        <button type="button" onclick="togglePostpone('pp-{{ $stop->id }}')" class="btn-secondary btn-sm">Cancelar</button>
+                    </form>
                 </div>
                 @endif
             </div>
@@ -322,6 +355,11 @@ function fillBranchAddress(sel) {
 }
 
 function toggleUbicacion(id) {
+    const el = document.getElementById(id);
+    el.classList.toggle('hidden');
+}
+
+function togglePostpone(id) {
     const el = document.getElementById(id);
     el.classList.toggle('hidden');
 }

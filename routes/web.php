@@ -154,12 +154,15 @@ Route::middleware('auth')->group(function () {
 
     // Taller / Reparaciones
     Route::resource('repairs', RepairController::class);
+    Route::patch('repairs/{repair}/listo', [RepairController::class, 'markListo'])->name('repairs.listo');
 
     // Rutas
     Route::resource('routes', RouteController::class);
-    Route::post('routes/{route}/stops', [RouteController::class, 'storeStop'])->name('routes.stops.store');
-    Route::patch('routes/{route}/stops/{stop}/complete', [RouteController::class, 'completeStop'])->name('routes.stops.complete');
-    Route::delete('routes/{route}/stops/{stop}', [RouteController::class, 'destroyStop'])->name('routes.stops.destroy');
+    Route::post('routes/{route}/stops',                       [RouteController::class, 'storeStop'])->name('routes.stops.store');
+    Route::patch('routes/{route}/stops/{stop}/complete',      [RouteController::class, 'completeStop'])->name('routes.stops.complete');
+    Route::patch('routes/{route}/stops/{stop}/postpone',      [RouteController::class, 'postponeStop'])->name('routes.stops.postpone');
+    Route::delete('routes/{route}/stops/{stop}',              [RouteController::class, 'destroyStop'])->name('routes.stops.destroy');
+    Route::patch('routes/{route}/complete',                   [RouteController::class, 'completeRoute'])->name('routes.complete');
 
     // RH hub
     Route::get('rh', [RhController::class, 'index'])->name('rh.index');
@@ -191,6 +194,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('ti-equipment', TiEquipmentController::class);
     Route::post('ti-equipment/{tiEquipment}/peripherals',           [TiEquipmentController::class, 'storePeripheral'])->name('ti-equipment.peripherals.store');
     Route::delete('ti-equipment/{tiEquipment}/peripherals/{peripheral}', [TiEquipmentController::class, 'destroyPeripheral'])->name('ti-equipment.peripherals.destroy');
+    Route::post('ti-equipment/{tiEquipment}/licenses/attach',             [TiEquipmentController::class, 'attachLicense'])->name('ti-equipment.licenses.attach');
+    Route::delete('ti-equipment/{tiEquipment}/licenses/{license}/detach',[TiEquipmentController::class, 'detachLicense'])->name('ti-equipment.licenses.detach');
+    Route::get('ti-equipment/{tiEquipment}/responsiva',                  [TiEquipmentController::class, 'responsiva'])->name('ti-equipment.responsiva');
     Route::get('ti-licenses',                                        [TiEquipmentController::class, 'licensesIndex'])->name('ti-equipment.licenses');
     Route::post('ti-licenses',                                       [TiEquipmentController::class, 'licenseStore'])->name('ti-equipment.licenses.store');
     Route::delete('ti-licenses/{license}',                          [TiEquipmentController::class, 'licenseDestroy'])->name('ti-equipment.licenses.destroy');

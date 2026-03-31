@@ -54,7 +54,7 @@ class TiEquipmentController extends Controller
             'licenses'          => 'nullable|array',
             'licenses.*'        => 'exists:ti_licenses,id',
             // Periféricos
-            'perifericos.*.tipo'         => 'nullable|in:MONITOR,TECLADO,MOUSE,CARGADOR,DOCKING,HEADSET,CAMARA,OTRO',
+            'perifericos.*.tipo'         => 'nullable|in:MONITOR,TECLADO,MOUSE,CARGADOR,DOCKING,HEADSET,CAMARA,ELIMINADOR,OTRO',
             'perifericos.*.marca'        => 'nullable|string|max:100',
             'perifericos.*.modelo'       => 'nullable|string|max:100',
             'perifericos.*.numero_serie' => 'nullable|string|max:100',
@@ -72,6 +72,7 @@ class TiEquipmentController extends Controller
 
         foreach ($perifericos as $p) {
             if (!empty($p['tipo'])) {
+                $p['codigo'] = $this->nextPeripheralCode($p['tipo']);
                 $equipo->peripherals()->create($p);
             }
         }
@@ -82,7 +83,11 @@ class TiEquipmentController extends Controller
     public function show(TiEquipment $tiEquipment)
     {
         $tiEquipment->load(['assignedUser', 'peripherals', 'licenses', 'creator']);
-        return view('ti-equipment.show', compact('tiEquipment'));
+        $attachedIds    = $tiEquipment->licenses->pluck('id');
+        $availableLicenses = TiLicense::where('is_active', true)
+            ->whereNotIn('id', $attachedIds)
+            ->orderBy('software')->get();
+        return view('ti-equipment.show', compact('tiEquipment', 'availableLicenses'));
     }
 
     public function edit(TiEquipment $tiEquipment)
@@ -130,17 +135,63 @@ class TiEquipmentController extends Controller
 
     // ─── Periféricos ─────────────────────────────────────────────────────────
 
+    // ─── Responsiva ──────────────────────────────────────────────────────────
+
+    public function responsiva(TiEquipment $tiEquipment)
+    {
+        $tiEquipment->load(['assignedUser', 'peripherals', 'licenses', 'creator']);
+        return view('ti-equipment.responsiva', compact('tiEquipment'));
+    }
+
+    // ─── Licencias por equipo ────────────────────────────────────────────────
+
+    public function attachLicense(Request $request, TiEquipment $tiEquipment)
+    {
+        $request->validate(['license_id' => 'required|exists:ti_licenses,id']);
+        $tiEquipment->licenses()->syncWithoutDetaching([$request->license_id]);
+        return back()->with('success', 'Licencia vinculada.');
+    }
+
+    public function detachLicense(TiEquipment $tiEquipment, TiLicense $license)
+    {
+        $tiEquipment->licenses()->detach($license->id);
+        return back()->with('success', 'Licencia desvinculada.');
+    }
+
+    // ─── Periféricos ─────────────────────────────────────────────────────────
+
     public function storePeripheral(Request $request, TiEquipment $tiEquipment)
     {
         $data = $request->validate([
-            'tipo'         => 'required|in:MONITOR,TECLADO,MOUSE,CARGADOR,DOCKING,HEADSET,CAMARA,OTRO',
+            'tipo'         => 'required|in:MONITOR,TECLADO,MOUSE,CARGADOR,DOCKING,HEADSET,CAMARA,ELIMINADOR,OTRO',
             'marca'        => 'nullable|string|max:100',
             'modelo'       => 'nullable|string|max:100',
             'numero_serie' => 'nullable|string|max:100',
             'notas'        => 'nullable|string',
         ]);
+        $data['codigo'] = $this->nextPeripheralCode($data['tipo']);
         $tiEquipment->peripherals()->create($data);
         return back()->with('success', 'Periférico agregado.');
+    }
+
+    private function nextPeripheralCode(string $tipo): string
+    {
+        $prefixes = [
+            'MONITOR'    => 'LCD',
+            'TECLADO'    => 'TEC',
+            'MOUSE'      => 'MOU',
+            'CARGADOR'   => 'CAR',
+            'DOCKING'    => 'DOK',
+            'HEADSET'    => 'HST',
+            'CAMARA'     => 'CAM',
+            'ELIMINADOR' => 'ELI',
+            'OTRO'       => 'OTR',
+        ];
+        $prefix = $prefixes[$tipo] ?? 'OTR';
+        $last   = TiPeripheral::where('codigo', 'like', "{$prefix}%")
+                    ->orderByDesc('codigo')->value('codigo');
+        $next   = $last ? ((int) substr($last, 3)) + 1 : 1;
+        return $prefix . str_pad($next, 3, '0', STR_PAD_LEFT);
     }
 
     public function destroyPeripheral(TiEquipment $tiEquipment, TiPeripheral $peripheral)

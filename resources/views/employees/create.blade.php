@@ -9,6 +9,9 @@
 <div class="card">
     <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="col-span-2"><label class="form-label">Nombre completo *</label><input name="nombre" value="{{ old('nombre') }}" class="form-input" required>@error('nombre')<p class="form-error">{{ $message }}</p>@enderror</div>
+        <div><label class="form-label">Departamento</label><input name="departamento" value="{{ old('departamento') }}" class="form-input" placeholder="Ej: Ventas, Operaciones…"></div>
+        <div><label class="form-label">Puesto</label><input name="puesto" value="{{ old('puesto') }}" class="form-input" placeholder="Ej: Vendedor, Técnico…"></div>
+        <div><label class="form-label">Sueldo mensual</label><input name="sueldo" type="number" step="0.01" min="0" value="{{ old('sueldo') }}" class="form-input" placeholder="0.00"></div>
         <div><label class="form-label">Usuario del sistema</label><select name="user_id" class="form-select"><option value="">Ninguno</option>@foreach($users as $u)<option value="{{ $u->id }}" @selected(old('user_id')==$u->id)>{{ $u->full_name }}</option>@endforeach</select></div>
         <div><label class="form-label">NSS *</label><input name="nss" maxlength="11" value="{{ old('nss') }}" class="form-input" required>@error('nss')<p class="form-error">{{ $message }}</p>@enderror</div>
         <div><label class="form-label">RFC *</label><input name="rfc" maxlength="13" value="{{ old('rfc') }}" class="form-input" required>@error('rfc')<p class="form-error">{{ $message }}</p>@enderror</div>

@@ -6,6 +6,7 @@
 <div class="flex gap-3 mb-4 flex-wrap">
     <a href="{{ route('ti-equipment.edit', $tiEquipment) }}" class="btn-secondary">Editar</a>
     <a href="{{ route('ti-equipment.index') }}" class="btn-secondary">← Volver</a>
+    <a href="{{ route('ti-equipment.responsiva', $tiEquipment) }}" target="_blank" class="btn-primary">Generar Responsiva</a>
     <form action="{{ route('ti-equipment.destroy', $tiEquipment) }}" method="POST"
           onsubmit="return confirm('¿Eliminar este equipo?')" class="ml-auto">
         @csrf @method('DELETE')
@@ -41,7 +42,7 @@
         <div class="flex justify-between"><span class="text-gray-500">S.O.</span><span>{{ $tiEquipment->sistema_operativo }}</span></div>
         @endif
         <div class="flex justify-between"><span class="text-gray-500">Asignado a</span>
-            <span>{{ $tiEquipment->assignedUser?->name ?? '—' }}</span></div>
+            <span>{{ $tiEquipment->assignedUser?->full_name ?? '—' }}</span></div>
         <div class="flex justify-between"><span class="text-gray-500">Ubicación</span>
             <span>{{ $tiEquipment->ubicacion ?? '—' }}</span></div>
         @if($tiEquipment->fecha_compra)
@@ -56,7 +57,31 @@
 
 {{-- Licencias --}}
 <div class="card">
-    <div class="card-header font-semibold">Licencias</div>
+    <div class="card-header font-semibold flex items-center justify-between">
+        Licencias
+        @if($availableLicenses->isNotEmpty())
+        <button onclick="document.getElementById('addLicForm').classList.toggle('hidden')" class="text-blue-600 text-sm">+ Vincular</button>
+        @endif
+    </div>
+
+    @if($availableLicenses->isNotEmpty())
+    <div id="addLicForm" class="hidden px-5 py-4 border-b border-gray-100 bg-gray-50">
+        <form method="POST" action="{{ route('ti-equipment.licenses.attach', $tiEquipment) }}" class="flex gap-3 items-end">
+            @csrf
+            <div class="flex-1">
+                <label class="form-label text-xs">Selecciona licencia *</label>
+                <select name="license_id" class="form-select text-sm" required>
+                    <option value="">— Selecciona —</option>
+                    @foreach($availableLicenses as $lic)
+                    <option value="{{ $lic->id }}">{{ $lic->software }} ({{ $lic->tipo }})</option>
+                    @endforeach
+                </select>
+            </div>
+            <button type="submit" class="btn-primary text-sm">Vincular</button>
+        </form>
+    </div>
+    @endif
+
     <div class="card-body text-sm">
         @forelse($tiEquipment->licenses as $lic)
         @php $lsc=['OFFICE'=>'badge-blue','ANTIVIRUS'=>'badge-green','OS'=>'badge-purple','OTRO'=>'badge-gray']; @endphp
@@ -65,9 +90,16 @@
                 <span class="font-medium">{{ $lic->software }}</span>
                 <span class="{{ $lsc[$lic->tipo]??'badge-gray' }} ml-2">{{ $lic->tipo }}</span>
             </div>
-            @if($lic->fecha_vencimiento)
-            <span class="text-xs text-gray-500">Vence: {{ $lic->fecha_vencimiento->format('d/m/Y') }}</span>
-            @endif
+            <div class="flex items-center gap-3">
+                @if($lic->fecha_vencimiento)
+                <span class="text-xs text-gray-500">Vence: {{ $lic->fecha_vencimiento->format('d/m/Y') }}</span>
+                @endif
+                <form method="POST" action="{{ route('ti-equipment.licenses.detach', [$tiEquipment, $lic]) }}"
+                      onsubmit="return confirm('¿Desvincular esta licencia?')">
+                    @csrf @method('DELETE')
+                    <button class="text-red-500 text-xs hover:underline">Desvincular</button>
+                </form>
+            </div>
         </div>
         @empty
         <p class="text-gray-400">Sin licencias</p>
@@ -91,7 +123,7 @@
                 <div>
                     <label class="form-label text-xs">Tipo *</label>
                     <select name="tipo" class="form-select text-sm" required>
-                        @foreach(['MONITOR','TECLADO','MOUSE','CARGADOR','DOCKING','HEADSET','CAMARA','OTRO'] as $pt)
+                        @foreach(['MONITOR','TECLADO','MOUSE','CARGADOR','DOCKING','HEADSET','CAMARA','ELIMINADOR','OTRO'] as $pt)
                         <option>{{ $pt }}</option>
                         @endforeach
                     </select>
@@ -119,9 +151,10 @@
         @forelse($tiEquipment->peripherals as $p)
         <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
             <div>
+                @if($p->codigo) <span class="font-mono text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded mr-2">{{ $p->codigo }}</span> @endif
                 <span class="font-medium">{{ $p->tipo }}</span>
-                @if($p->marca) <span class="text-gray-500">{{ $p->marca }}</span> @endif
-                @if($p->modelo) <span class="text-gray-600">{{ $p->modelo }}</span> @endif
+                @if($p->marca) <span class="text-gray-500 ml-1">{{ $p->marca }}</span> @endif
+                @if($p->modelo) <span class="text-gray-600"> {{ $p->modelo }}</span> @endif
                 @if($p->numero_serie) <span class="font-mono text-xs text-gray-400 ml-2">{{ $p->numero_serie }}</span> @endif
             </div>
             <form method="POST" action="{{ route('ti-equipment.peripherals.destroy', [$tiEquipment, $p]) }}"

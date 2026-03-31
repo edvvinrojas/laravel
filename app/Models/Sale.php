@@ -9,13 +9,15 @@ class Sale extends Model
     protected $fillable = [
         'client_id', 'branch_id', 'area_id', 'item_id',
         'invoice_number', 'sale_status', 'sale_price',
-        'is_foreign', 'is_active', 'created_by',
+        'is_foreign', 'services_included', 'services_quantity',
+        'is_active', 'created_by',
     ];
 
     protected $casts = [
-        'is_foreign' => 'boolean',
-        'is_active'  => 'boolean',
-        'sale_price' => 'decimal:2',
+        'is_foreign'        => 'boolean',
+        'is_active'         => 'boolean',
+        'services_included' => 'boolean',
+        'sale_price'        => 'decimal:2',
     ];
 
     public function client()     { return $this->belongsTo(Client::class); }

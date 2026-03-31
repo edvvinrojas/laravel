@@ -16,7 +16,7 @@ class PurchaseController extends Controller
     {
         Notification::create([
             'user_id'    => $userId,
-            'type'       => 'compra',
+            'type'       => 'COMPRA_PENDIENTE',
             'title'      => $title,
             'message'    => $message,
             'link'       => $link,

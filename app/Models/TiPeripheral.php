@@ -10,7 +10,7 @@ class TiPeripheral extends Model
     protected $table = 'ti_peripherals';
 
     protected $fillable = [
-        'ti_equipment_id', 'tipo', 'marca', 'modelo', 'numero_serie', 'notas',
+        'ti_equipment_id', 'codigo', 'tipo', 'marca', 'modelo', 'numero_serie', 'notas',
     ];
 
     public function equipment(): BelongsTo

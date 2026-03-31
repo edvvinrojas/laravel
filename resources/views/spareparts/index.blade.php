@@ -22,9 +22,9 @@
             <tr>
                 <td class="font-mono text-xs">{{ $s->code ?? '—' }}</td>
                 <td class="font-medium">{{ $s->name }}</td>
-                <td>{{ $s->brand ?? '—' }}</td>
+                <td>{{ $s->brand_name ?? '—' }}</td>
                 <td>{{ $s->equipment ?? '—' }}</td>
-                <td>{{ $s->supplier ?? '—' }}</td>
+                <td>{{ $s->supplier_name ?? '—' }}</td>
                 <td class="flex gap-1">
                     <a href="{{ route('spareparts.show',$s) }}" class="btn btn-sm btn-secondary">Ver</a>
                     <a href="{{ route('spareparts.edit',$s) }}" class="btn btn-sm btn-primary">Editar</a>

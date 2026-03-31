@@ -14,6 +14,15 @@
             @if($employee->is_active)<span class="badge-green">Activo</span>@else<span class="badge-gray">Inactivo</span>@endif
         </div>
         <div class="card-body grid grid-cols-2 gap-4 text-sm">
+            @if($employee->departamento)
+            <div><p class="text-gray-500">Departamento</p><p>{{ $employee->departamento }}</p></div>
+            @endif
+            @if($employee->puesto)
+            <div><p class="text-gray-500">Puesto</p><p>{{ $employee->puesto }}</p></div>
+            @endif
+            @if($employee->sueldo)
+            <div><p class="text-gray-500">Sueldo mensual</p><p class="font-medium">${{ number_format($employee->sueldo, 2) }}</p></div>
+            @endif
             <div><p class="text-gray-500">NSS</p><p class="font-mono">{{ $employee->nss }}</p></div>
             <div><p class="text-gray-500">RFC</p><p class="font-mono">{{ $employee->rfc }}</p></div>
             <div><p class="text-gray-500">CURP</p><p class="font-mono text-xs">{{ $employee->curp }}</p></div>

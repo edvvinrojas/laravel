@@ -3,9 +3,16 @@
 @section('page-title','Detalle de Reparación')
 
 @section('content')
-<div class="flex gap-3 mb-4">
+<div class="flex gap-3 mb-4 flex-wrap">
     <a href="{{ route('repairs.edit',$repair) }}" class="btn-primary">Editar</a>
     <a href="{{ route('repairs.index') }}" class="btn-secondary">← Volver</a>
+    @if($repair->estado_taller !== 'LISTO')
+    <form action="{{ route('repairs.listo', $repair) }}" method="POST"
+          onsubmit="return confirm('¿Marcar como listo y pasar a bodega?')">
+        @csrf @method('PATCH')
+        <button class="btn-success">Marcar Listo → Bodega</button>
+    </form>
+    @endif
 </div>
 <div class="card max-w-2xl">
     <div class="card-header">

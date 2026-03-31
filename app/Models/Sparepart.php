@@ -11,7 +11,8 @@ class Sparepart extends Model
         'name', 'color', 'description',
         'brand', 'brand_id',
         'equipment',
-        'code',
+        'code', 'internal_code',
+        'shelf_id',
         'supplier', 'supplier_id',
     ];
 
@@ -28,6 +29,11 @@ class Sparepart extends Model
     public function supplierModel(): BelongsTo
     {
         return $this->belongsTo(Supplier::class, 'supplier_id');
+    }
+
+    public function shelf(): BelongsTo
+    {
+        return $this->belongsTo(Shelf::class);
     }
 
     /** Devuelve el nombre de la marca (FK si existe, texto si no). */

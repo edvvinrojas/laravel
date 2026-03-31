@@ -82,6 +82,19 @@ class RepairController extends Controller
         return redirect()->route('repairs.show', $repair)->with('success', 'Reparación actualizada.');
     }
 
+    public function markListo(Repair $repair)
+    {
+        if ($repair->estado_taller !== 'LISTO') {
+            $repair->update([
+                'estado_taller'   => 'LISTO',
+                'estatus'         => 'LISTO',
+                'fecha_conclusion' => now(),
+            ]);
+            $repair->item->update(['location_status' => 'BODEGA']);
+        }
+        return back()->with('success', 'Equipo marcado como listo y movido a bodega.');
+    }
+
     public function destroy(Repair $repair)
     {
         $repair->update(['is_active' => false]);

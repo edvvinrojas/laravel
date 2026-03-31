@@ -49,7 +49,7 @@ class AbsenceController extends Controller
         User::whereIn('rol', ['gerencia', 'administrador'])->where('is_active', true)->each(
             fn($u) => Notification::create([
                 'user_id'    => $u->id,
-                'type'       => 'ausentismo',
+                'type'       => 'SISTEMA',
                 'title'      => 'Nueva solicitud de ausentismo',
                 'message'    => "{$employee->nombre} registró una ausencia.",
                 'link'       => $link,
@@ -102,7 +102,7 @@ class AbsenceController extends Controller
         if ($absence->employee?->user_id) {
             Notification::create([
                 'user_id'    => $absence->employee->user_id,
-                'type'       => 'ausentismo',
+                'type'       => 'SISTEMA',
                 'title'      => 'Ausentismo aprobado',
                 'message'    => 'Tu solicitud de ausentismo fue aprobada.',
                 'link'       => route('absences.show', $absence),
@@ -122,7 +122,7 @@ class AbsenceController extends Controller
         if ($absence->employee?->user_id) {
             Notification::create([
                 'user_id'    => $absence->employee->user_id,
-                'type'       => 'ausentismo',
+                'type'       => 'SISTEMA',
                 'title'      => 'Ausentismo rechazado',
                 'message'    => 'Tu solicitud de ausentismo fue rechazada.',
                 'link'       => route('absences.show', $absence),

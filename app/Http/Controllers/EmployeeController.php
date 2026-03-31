@@ -29,6 +29,9 @@ class EmployeeController extends Controller
         $data = $request->validate([
             'user_id'           => 'nullable|exists:users,id|unique:employees',
             'nombre'            => 'required|string|max:255',
+            'departamento'      => 'nullable|string|max:100',
+            'puesto'            => 'nullable|string|max:150',
+            'sueldo'            => 'nullable|numeric|min:0',
             'nss'               => 'required|string|max:11|unique:employees',
             'rfc'               => 'required|string|max:13|unique:employees',
             'curp'              => 'required|string|max:18|unique:employees',
@@ -61,6 +64,9 @@ class EmployeeController extends Controller
         $data = $request->validate([
             'user_id'           => "nullable|exists:users,id|unique:employees,user_id,{$employee->id}",
             'nombre'            => 'required|string|max:255',
+            'departamento'      => 'nullable|string|max:100',
+            'puesto'            => 'nullable|string|max:150',
+            'sueldo'            => 'nullable|numeric|min:0',
             'nss'               => "required|string|max:11|unique:employees,nss,{$employee->id}",
             'rfc'               => "required|string|max:13|unique:employees,rfc,{$employee->id}",
             'curp'              => "required|string|max:18|unique:employees,curp,{$employee->id}",

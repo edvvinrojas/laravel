@@ -31,18 +31,22 @@ class SaleController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'client_id'      => 'required|exists:clients,id',
-            'branch_id'      => 'nullable|exists:branches,id',
-            'area_id'        => 'nullable|exists:areas,id',
-            'item_id'        => 'required|exists:items,id',
-            'invoice_number' => 'nullable|string|max:50|unique:sales',
-            'sale_status'    => 'required|in:PENDIENTE,CONFIRMADA,ENTREGADA,CANCELADA',
-            'sale_price'     => 'required|numeric|min:0',
-            'is_foreign'     => 'boolean',
+            'client_id'          => 'required|exists:clients,id',
+            'branch_id'          => 'nullable|exists:branches,id',
+            'area_id'            => 'nullable|exists:areas,id',
+            'item_id'            => 'required|exists:items,id',
+            'invoice_number'     => 'nullable|string|max:50|unique:sales',
+            'sale_status'        => 'required|in:PENDIENTE,CONFIRMADA,ENTREGADA,CANCELADA',
+            'sale_price'         => 'required|numeric|min:0',
+            'is_foreign'         => 'boolean',
+            'services_included'  => 'boolean',
+            'services_quantity'  => 'nullable|integer|min:1',
         ]);
 
-        $data['created_by'] = auth()->id();
-        $data['is_foreign'] = $request->boolean('is_foreign');
+        $data['created_by']         = auth()->id();
+        $data['is_foreign']         = $request->boolean('is_foreign');
+        $data['services_included']  = $request->boolean('services_included');
+        $data['services_quantity']  = $data['services_included'] ? ($data['services_quantity'] ?? null) : null;
 
         $sale = Sale::create($data);
 
@@ -73,17 +77,21 @@ class SaleController extends Controller
     public function update(Request $request, Sale $sale)
     {
         $data = $request->validate([
-            'client_id'      => 'required|exists:clients,id',
-            'branch_id'      => 'nullable|exists:branches,id',
-            'area_id'        => 'nullable|exists:areas,id',
-            'item_id'        => 'required|exists:items,id',
-            'invoice_number' => "nullable|string|max:50|unique:sales,invoice_number,{$sale->id}",
-            'sale_status'    => 'required|in:PENDIENTE,CONFIRMADA,ENTREGADA,CANCELADA',
-            'sale_price'     => 'required|numeric|min:0',
-            'is_foreign'     => 'boolean',
+            'client_id'         => 'required|exists:clients,id',
+            'branch_id'         => 'nullable|exists:branches,id',
+            'area_id'           => 'nullable|exists:areas,id',
+            'item_id'           => 'required|exists:items,id',
+            'invoice_number'    => "nullable|string|max:50|unique:sales,invoice_number,{$sale->id}",
+            'sale_status'       => 'required|in:PENDIENTE,CONFIRMADA,ENTREGADA,CANCELADA',
+            'sale_price'        => 'required|numeric|min:0',
+            'is_foreign'        => 'boolean',
+            'services_included' => 'boolean',
+            'services_quantity' => 'nullable|integer|min:1',
         ]);
 
-        $data['is_foreign'] = $request->boolean('is_foreign');
+        $data['is_foreign']        = $request->boolean('is_foreign');
+        $data['services_included'] = $request->boolean('services_included');
+        $data['services_quantity'] = $data['services_included'] ? ($data['services_quantity'] ?? null) : null;
         $sale->update($data);
 
         $sale->accesorios()->sync($request->input('accesorios', []));

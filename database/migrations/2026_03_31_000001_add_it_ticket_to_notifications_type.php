@@ -5,10 +5,13 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
+    // tipos usados en controllers
     private const VALUES = [
         'COBRANZA_VENCIDA', 'COBRANZA_POR_VENCER', 'TICKET_URGENTE',
         'COMPRA_PENDIENTE', 'VACACION_PENDIENTE', 'RENTA_POR_VENCER',
-        'SISTEMA', 'INFO', 'IT_TICKET',
+        'SISTEMA', 'INFO',
+        
+        'IT_TICKET', 'compra', 'ausentismo', 'vacaciones',
     ];
 
     public function up(): void

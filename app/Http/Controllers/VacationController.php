@@ -14,7 +14,7 @@ class VacationController extends Controller
     {
         Notification::create([
             'user_id'    => $userId,
-            'type'       => 'vacaciones',
+            'type'       => 'VACACION_PENDIENTE',
             'title'      => $title,
             'message'    => $message,
             'link'       => $link,
@@ -82,7 +82,7 @@ class VacationController extends Controller
             'employee_id'   => 'required|exists:employees,id',
             'vacation_days' => 'required|integer|min:1',
             'start_date'    => 'required|date',
-            'end_date'      => 'required|date|after:start_date',
+            'end_date'      => 'required|date|after_or_equal:start_date',
             'notes'         => 'nullable|string',
         ]);
 
@@ -121,7 +121,7 @@ class VacationController extends Controller
         $data = $request->validate([
             'vacation_days' => 'required|integer|min:1',
             'start_date'    => 'required|date',
-            'end_date'      => 'required|date|after:start_date',
+            'end_date'      => 'required|date|after_or_equal:start_date',
             'notes'         => 'nullable|string',
         ]);
 

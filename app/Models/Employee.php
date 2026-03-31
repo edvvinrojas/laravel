@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Employee extends Model
 {
     protected $fillable = [
-        'user_id', 'nombre', 'nss', 'rfc', 'curp',
+        'user_id', 'nombre', 'departamento', 'puesto', 'sueldo',
+        'nss', 'rfc', 'curp',
         'birthday', 'hire_date', 'phone_emergency', 'contact_emergency', 'is_active',
     ];
 
@@ -15,6 +16,7 @@ class Employee extends Model
         'is_active'  => 'boolean',
         'birthday'   => 'date',
         'hire_date'  => 'date',
+        'sueldo'     => 'decimal:2',
     ];
 
     public function user()                 { return $this->belongsTo(User::class); }

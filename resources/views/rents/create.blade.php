@@ -46,15 +46,21 @@
             <select name="item_id" id="item_id_select" class="form-select" required>
                 <option value="">Seleccionar…</option>
                 @foreach($items as $i)
-                    @php $asignado = $i->location_status === 'ASIGNADO'; @endphp
+                    @php
+                        $noDisponible = in_array($i->location_status, ['ASIGNADO', 'TALLER']);
+                        $statusLabel  = match($i->location_status) {
+                            'ASIGNADO' => 'RENTADO - NO DISPONIBLE',
+                            'TALLER'   => 'EN TALLER - NO DISPONIBLE',
+                            default    => $i->location_status ?? 'BODEGA',
+                        };
+                    @endphp
                     <option value="{{ $i->id }}"
                         @selected(old('item_id')==$i->id)
-                        @if($asignado) disabled class="text-gray-400 bg-gray-100" @endif
+                        @if($noDisponible) disabled class="text-gray-400 bg-gray-100" @endif
                         data-status="{{ $i->location_status }}"
                         data-bn="{{ $i->contador_inicial_bn ?? 0 }}"
                         data-color="{{ $i->contador_inicial_color ?? 0 }}">
-                        {{ $i->brand->name ?? '' }} {{ $i->model }} — {{ $i->serie }}
-                        @if($asignado) [RENTADO - NO DISPONIBLE] @else [{{ $i->location_status ?? 'BODEGA' }}] @endif
+                        {{ $i->brand->name ?? '' }} {{ $i->model }} — {{ $i->serie }} [{{ $statusLabel }}]
                     </option>
                 @endforeach
             </select>

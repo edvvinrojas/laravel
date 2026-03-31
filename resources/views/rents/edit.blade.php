@@ -48,12 +48,19 @@
             <label class="form-label">Equipo *</label>
             <select name="item_id" id="item_id_select" class="form-select" required>
                 @foreach($items as $i)
-                    @php $asignado = $i->location_status === 'ASIGNADO' && $i->id !== $rent->item_id; @endphp
+                    @php
+                        $noDisponible = in_array($i->location_status, ['ASIGNADO', 'TALLER'])
+                            && $i->id !== $rent->item_id;
+                        $statusLabel  = match($i->location_status) {
+                            'ASIGNADO' => 'RENTADO - NO DISPONIBLE',
+                            'TALLER'   => 'EN TALLER - NO DISPONIBLE',
+                            default    => $i->location_status ?? 'BODEGA',
+                        };
+                    @endphp
                     <option value="{{ $i->id }}"
                         @selected(old('item_id',$rent->item_id)==$i->id)
-                        @if($asignado) disabled class="text-gray-400 bg-gray-100" @endif>
-                        {{ $i->brand->name ?? '' }} {{ $i->model }} — {{ $i->serie }}
-                        @if($asignado) [RENTADO] @else [{{ $i->location_status ?? 'BODEGA' }}] @endif
+                        @if($noDisponible) disabled class="text-gray-400 bg-gray-100" @endif>
+                        {{ $i->brand->name ?? '' }} {{ $i->model }} — {{ $i->serie }} [{{ $statusLabel }}]
                     </option>
                 @endforeach
             </select>
