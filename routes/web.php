@@ -165,8 +165,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('absences/{absence}/reject',  [AbsenceController::class, 'reject'])->name('absences.reject');
     Route::resource('administrative-records', AdministrativeRecordController::class);
 
-    // Usuarios (solo admin)
-    Route::resource('users', UserController::class)->middleware('role:administrador');
+    // Usuarios (admin o departamento TI)
+    Route::resource('users', UserController::class)->middleware('role:administrador,dept:ti');
 
     // Órdenes de Servicio
     Route::resource('service-orders', ServiceOrderController::class);
