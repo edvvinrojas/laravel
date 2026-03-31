@@ -79,7 +79,7 @@ class EquipmentController extends Controller
 
     public function show(Item $equipment)
     {
-        $equipment->load('brand', 'supplier', 'categoria', 'modelo', 'rents.client', 'sales.client');
+        $equipment->load('brand', 'supplier', 'producto', 'rents.client', 'sales.client');
 
         return view('equipment.show', compact('equipment'));
     }
