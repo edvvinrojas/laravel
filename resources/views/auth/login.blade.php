@@ -8,10 +8,9 @@
         <div class="card-body">
             {{-- Logo --}}
             <div class="text-center mb-8">
-                <div class="mx-auto w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mb-3">
-                    <span class="text-white font-bold text-lg">CM</span>
+                <div class="mx-auto rounded-xl overflow-hidden mb-3" style="background:#001b71; padding: 12px 16px; display:inline-block;">
+                    <img src="{{ asset('img/logo.svg') }}" alt="CopyMart" class="h-10 w-auto">
                 </div>
-                <h1 class="text-xl font-bold text-gray-900">CopyMart ERP</h1>
                 <p class="text-sm text-gray-500 mt-1">Ingresa tus credenciales para continuar</p>
             </div>
 

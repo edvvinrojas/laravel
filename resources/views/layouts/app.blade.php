@@ -49,9 +49,8 @@
            -translate-x-full lg:translate-x-0 lg:static lg:flex">
 
     {{-- Logo --}}
-    <div class="flex items-center gap-3 px-5 py-4 border-b border-gray-700">
-        <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center font-bold text-sm">CM</div>
-        <span class="text-lg font-semibold tracking-tight">CopyMart ERP</span>
+    <div class="flex items-center justify-center px-4 py-4 border-b border-gray-700">
+        <img src="{{ asset('img/logo.svg') }}" alt="CopyMart" class="h-8 w-auto">
     </div>
 
     {{-- Nav --}}
