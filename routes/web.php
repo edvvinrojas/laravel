@@ -38,6 +38,7 @@ use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\AccesorioController;
 use App\Http\Controllers\ConsumibleController;
 use App\Http\Controllers\TiEquipmentController;
+use App\Http\Controllers\AreaController;
 use App\Http\Controllers\ItRequestController;
 
 // Auth
@@ -58,6 +59,8 @@ Route::middleware('auth')->group(function () {
     Route::get('clients/{client}/branches', [BranchController::class, 'index'])->name('branches.index');
     Route::post('clients/{client}/branches', [BranchController::class, 'store'])->name('branches.store');
     Route::delete('branches/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
+    Route::post('branches/{branch}/areas', [AreaController::class, 'store'])->name('branches.areas.store');
+    Route::delete('branches/{branch}/areas/{area}', [AreaController::class, 'destroy'])->name('branches.areas.destroy');
 
     // Catálogos
     Route::resource('brands', BrandController::class);

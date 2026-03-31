@@ -226,15 +226,35 @@
                                 @endif
 
                                 {{-- Areas --}}
-                                @if($branch->areas->isNotEmpty())
-                                    <div class="flex flex-wrap gap-1.5 mt-2">
-                                        @foreach($branch->areas as $area)
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600">
-                                                {{ $area->name }}
-                                            </span>
-                                        @endforeach
-                                    </div>
-                                @endif
+                                <div class="flex flex-wrap items-center gap-1.5 mt-2">
+                                    @foreach($branch->areas as $area)
+                                        <span class="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded text-xs bg-gray-100 text-gray-600">
+                                            {{ $area->name }}
+                                            <form action="{{ route('branches.areas.destroy', [$branch, $area]) }}"
+                                                  method="POST"
+                                                  onsubmit="return confirm('¿Eliminar área «{{ addslashes($area->name) }}»?')"
+                                                  class="inline">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="text-gray-400 hover:text-red-500 leading-none">✕</button>
+                                            </form>
+                                        </span>
+                                    @endforeach
+                                    <button type="button"
+                                            onclick="document.getElementById('area-form-{{ $branch->id }}').classList.toggle('hidden')"
+                                            class="text-xs text-blue-600 hover:underline">+ Área</button>
+                                </div>
+                                {{-- Inline area form --}}
+                                <form id="area-form-{{ $branch->id }}"
+                                      action="{{ route('branches.areas.store', $branch) }}"
+                                      method="POST"
+                                      class="hidden flex items-center gap-2 mt-2">
+                                    @csrf
+                                    <input name="name" type="text" placeholder="Nombre del área" class="form-input text-xs py-1" required>
+                                    <button type="submit" class="btn-primary btn-sm">Guardar</button>
+                                    <button type="button"
+                                            onclick="document.getElementById('area-form-{{ $branch->id }}').classList.add('hidden')"
+                                            class="btn-secondary btn-sm">Cancelar</button>
+                                </form>
                             </div>
                             <form action="{{ route('branches.destroy', $branch) }}"
                                   method="POST"
