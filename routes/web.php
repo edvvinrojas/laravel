@@ -38,6 +38,7 @@ use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\AccesorioController;
 use App\Http\Controllers\ConsumibleController;
 use App\Http\Controllers\TiEquipmentController;
+use App\Http\Controllers\ItRequestController;
 
 // Auth
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -184,6 +185,10 @@ Route::middleware('auth')->group(function () {
     Route::get('ti-licenses',                                        [TiEquipmentController::class, 'licensesIndex'])->name('ti-equipment.licenses');
     Route::post('ti-licenses',                                       [TiEquipmentController::class, 'licenseStore'])->name('ti-equipment.licenses.store');
     Route::delete('ti-licenses/{license}',                          [TiEquipmentController::class, 'licenseDestroy'])->name('ti-equipment.licenses.destroy');
+
+    // TI – Mesa de Ayuda (tickets internos)
+    Route::resource('it-requests', ItRequestController::class);
+    Route::patch('it-requests/{itRequest}/assign', [ItRequestController::class, 'assign'])->name('it-requests.assign');
 
     // Auditoría (solo admin)
     Route::get('audit', [AuditController::class, 'index'])->name('audit.index')->middleware('role:administrador');
