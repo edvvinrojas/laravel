@@ -88,20 +88,20 @@
         @if($isCompras)
         <div class="col-span-2 border-t pt-3">
             <p class="font-medium text-gray-700 mb-2">Cotizaciones de proveedores</p>
-            <div class="grid grid-cols-3 gap-3">
-                @foreach([1,2,3] as $n)
-                @php $sn = "supplier{$n}_name"; $sc = "supplier{$n}_cost"; @endphp
+            @if($purchase->quotes->count())
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                @foreach($purchase->quotes as $i => $q)
                 <div class="bg-gray-50 rounded p-3">
-                    <p class="text-xs text-gray-500 mb-1">Proveedor {{ $n }}</p>
-                    @if($purchase->$sn)
-                        <p class="font-medium text-sm">{{ $purchase->$sn }}</p>
-                        <p class="text-green-700 font-semibold">${{ number_format($purchase->$sc, 2) }}</p>
-                    @else
-                        <p class="text-gray-400 text-xs">Sin cotización</p>
-                    @endif
+                    <p class="text-xs text-gray-500 mb-1">Cotización {{ $i + 1 }}</p>
+                    <p class="font-medium text-sm">{{ $q->supplier_name }}</p>
+                    <p class="text-green-700 font-semibold">${{ number_format($q->cost, 2) }}</p>
+                    @if($q->notes)<p class="text-xs text-gray-500 mt-1">{{ $q->notes }}</p>@endif
                 </div>
                 @endforeach
             </div>
+            @else
+            <p class="text-sm text-gray-400">Sin cotizaciones registradas.</p>
+            @endif
         </div>
 
         @if($purchase->shipping_method || $purchase->shipping_code)
