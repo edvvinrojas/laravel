@@ -10,8 +10,8 @@
 <div class="card max-w-2xl">
     <div class="card-header">
         <div>
-            <h3 class="font-semibold">{{ $repair->item->brand->name ?? '' }} {{ $repair->model }}</h3>
-            <p class="text-xs text-gray-500 font-mono">{{ $repair->serie }}</p>
+            <h3 class="font-semibold">{{ $repair->item->brand->name ?? '' }} {{ $repair->item->model }}</h3>
+            <p class="text-xs text-gray-500 font-mono">{{ $repair->item->serie }}</p>
         </div>
         @php $sc=['PENDIENTE'=>'badge-yellow','PAUSADO'=>'badge-gray','LISTO'=>'badge-green']; @endphp
         <span class="{{ $sc[$repair->estado_taller]??'badge-gray' }}">{{ $repair->estado_taller }}</span>
