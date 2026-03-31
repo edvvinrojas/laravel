@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -45,5 +46,36 @@ class ProfileController extends Controller
         $user->save();
 
         return back()->with('success', 'Perfil actualizado correctamente.');
+    }
+
+    public function uploadAvatar(Request $request)
+    {
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+
+        $user = auth()->user();
+
+        // Eliminar avatar anterior si existe
+        if ($user->avatar) {
+            Storage::disk('public')->delete($user->avatar);
+        }
+
+        $path = $request->file('avatar')->store("avatars/{$user->id}", 'public');
+        $user->update(['avatar' => $path]);
+
+        return back()->with('success', 'Foto de perfil actualizada.');
+    }
+
+    public function deleteAvatar()
+    {
+        $user = auth()->user();
+
+        if ($user->avatar) {
+            Storage::disk('public')->delete($user->avatar);
+            $user->update(['avatar' => null]);
+        }
+
+        return back()->with('success', 'Foto eliminada.');
     }
 }

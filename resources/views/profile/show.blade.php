@@ -1,3 +1,4 @@
+@php use Illuminate\Support\Facades\Storage; @endphp
 @extends('layouts.app')
 @section('title','Mi Perfil')
 @section('page-title','Mi Perfil')
@@ -8,10 +9,57 @@
 
     {{-- Avatar + info --}}
     <div class="card">
-        <div class="card-body flex items-center gap-5">
-            <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
-                {{ strtoupper(substr($user->full_name, 0, 1)) }}
+        <div class="card-body flex items-center gap-6">
+
+            {{-- Foto + controles --}}
+            <div class="flex flex-col items-center gap-2 flex-shrink-0">
+                <div class="relative group w-24 h-24">
+                    @if($user->avatar)
+                        <img src="{{ Storage::url($user->avatar) }}"
+                             alt="Foto de perfil"
+                             class="w-24 h-24 rounded-full object-cover border-2 border-gray-200">
+                    @else
+                        <div class="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center text-white text-3xl font-bold">
+                            {{ strtoupper(substr($user->full_name, 0, 1)) }}
+                        </div>
+                    @endif
+                    {{-- overlay al hover --}}
+                    <label for="avatarInput"
+                           class="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition cursor-pointer flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </label>
+                </div>
+
+                {{-- Upload form oculto --}}
+                <form id="avatarForm" method="POST" action="{{ route('profile.avatar') }}"
+                      enctype="multipart/form-data" class="hidden">
+                    @csrf
+                    <input id="avatarInput" name="avatar" type="file"
+                           accept="image/jpeg,image/png,image/webp"
+                           onchange="document.getElementById('avatarForm').submit()">
+                </form>
+
+                @if($user->avatar)
+                <form method="POST" action="{{ route('profile.avatar.delete') }}">
+                    @csrf @method('DELETE')
+                    <button type="submit"
+                            onclick="return confirm('¿Eliminar foto de perfil?')"
+                            class="text-xs text-red-500 hover:underline">
+                        Eliminar foto
+                    </button>
+                </form>
+                @else
+                <label for="avatarInput" class="text-xs text-blue-600 hover:underline cursor-pointer">
+                    Subir foto
+                </label>
+                @endif
             </div>
+
+            {{-- Info --}}
             <div>
                 <h2 class="text-lg font-semibold text-gray-800">{{ $user->full_name }}</h2>
                 <p class="text-sm text-gray-500">{{ $user->email }}</p>
@@ -21,6 +69,7 @@
                     </span>
                     <span class="badge-purple">{{ ucfirst($user->department) }}</span>
                 </div>
+                <p class="text-xs text-gray-400 mt-2">Pasa el cursor sobre la foto para cambiarla</p>
             </div>
         </div>
     </div>

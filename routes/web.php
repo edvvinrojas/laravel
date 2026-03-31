@@ -191,6 +191,8 @@ Route::middleware('auth')->group(function () {
     // Perfil propio
     Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('profile/avatar', [ProfileController::class, 'uploadAvatar'])->name('profile.avatar');
+    Route::delete('profile/avatar', [ProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
 
     // Notificaciones
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');

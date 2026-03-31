@@ -156,9 +156,15 @@
     {{-- User footer --}}
     <div class="border-t border-gray-700 px-4 py-3 flex items-center gap-3">
         <a href="{{ route('profile.show') }}" class="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition">
-            <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-sm font-semibold flex-shrink-0">
-                {{ strtoupper(substr(auth()->user()->full_name, 0, 1)) }}
-            </div>
+            @if(auth()->user()->avatar)
+                <img src="{{ \Illuminate\Support\Facades\Storage::url(auth()->user()->avatar) }}"
+                     alt="Foto"
+                     class="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-gray-600">
+            @else
+                <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-sm font-semibold flex-shrink-0">
+                    {{ strtoupper(substr(auth()->user()->full_name, 0, 1)) }}
+                </div>
+            @endif
             <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium truncate">{{ auth()->user()->full_name }}</p>
                 <p class="text-xs text-gray-400 capitalize">{{ auth()->user()->rol }}</p>
