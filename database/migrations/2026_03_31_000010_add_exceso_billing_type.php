@@ -10,8 +10,31 @@ return new class extends Migration
         $driver = DB::getDriverName();
 
         if ($driver === 'pgsql') {
-            // PostgreSQL: ALTER TYPE enum
-            DB::unprepared("ALTER TYPE billing_type_enum ADD VALUE IF NOT EXISTS 'EXCESO'");
+            // PostgreSQL: solo agregar valor al enum si el tipo existe
+            $typeExists = DB::selectOne("SELECT 1 FROM pg_type WHERE typname = 'billing_type_enum'");
+            if ($typeExists) {
+                DB::unprepared("ALTER TYPE billing_type_enum ADD VALUE IF NOT EXISTS 'EXCESO'");
+            }
+
+            // Verificar si la columna usa CHECK constraint en vez de enum type
+            $checkExists = DB::selectOne("
+                SELECT 1 FROM information_schema.check_constraints
+                WHERE constraint_name LIKE '%billing_type%'
+            ");
+            if ($checkExists) {
+                // Reemplazar CHECK constraint para incluir EXCESO
+                $constraintName = DB::selectOne("
+                    SELECT con.conname FROM pg_constraint con
+                    JOIN pg_class rel ON rel.oid = con.conrelid
+                    WHERE rel.relname = 'billings' AND con.contype = 'c'
+                    AND pg_get_constraintdef(con.oid) LIKE '%billing_type%'
+                ")?->conname;
+
+                if ($constraintName) {
+                    DB::unprepared("ALTER TABLE billings DROP CONSTRAINT \"{$constraintName}\"");
+                    DB::unprepared("ALTER TABLE billings ADD CONSTRAINT \"{$constraintName}\" CHECK (billing_type::text = ANY (ARRAY['RENTA','VENTA','EXCESO']))");
+                }
+            }
 
             // Recrear función de trigger para permitir EXCESO
             DB::unprepared("
