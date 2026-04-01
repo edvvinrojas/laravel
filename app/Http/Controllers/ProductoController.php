@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Producto;
 use App\Models\Accesorio;
 use App\Models\Consumible;
-use App\Models\Sku;
 use App\Models\Stock;
 use App\Models\Brand;
 use Illuminate\Http\Request;
@@ -33,7 +32,7 @@ class ProductoController extends Controller
         $marcas      = Brand::orderBy('name')->get();
         $accesorios  = Accesorio::where('es_activo', true)->orderBy('nombre')->get();
         $consumibles = Consumible::where('es_activo', true)->orderBy('nombre')->get();
-        $skus        = Sku::where('category', 'PRODUCTO')->orderBy('code')->get();
+        $skus        = \App\Models\Sku::where('category', 'PRODUCTO')->orderBy('code')->get();
 
         return view('productos.create', compact('marcas', 'accesorios', 'consumibles', 'skus'));
     }
@@ -42,7 +41,7 @@ class ProductoController extends Controller
     {
         $request->validate([
             'nombre'                   => 'required|string|max:200',
-            'codigo'                   => 'required|string|max:50|unique:productos,codigo',
+            'codigo'                   => 'required|string|max:50',
             'brand_id'                 => 'nullable|exists:brands,id',
             'categoria'                => 'required|in:COPIADORA,IMPRESORA,MFP,ESCANER,FAX,PLOTTER,OTRO',
             'tipo_color'               => 'nullable|in:MONOCROMO,COLOR,AMBOS',
@@ -64,9 +63,9 @@ class ProductoController extends Controller
             'stock_ubicacion'          => 'nullable|string|max:200',
         ]);
 
-        $producto = Producto::create([
-            'nombre'       => $request->nombre,
-            'codigo'       => strtoupper($request->codigo),
+    $producto = Producto::create([
+        'nombre'       => $request->nombre,
+        'codigo'       => $request->filled('codigo') ? strtoupper($request->codigo) : \App\Models\SkuFormat::nextSku('PRODUCTO'),
             'brand_id'     => $request->brand_id,
             'categoria'    => $request->categoria,
             'tipo_color'   => $request->tipo_color,

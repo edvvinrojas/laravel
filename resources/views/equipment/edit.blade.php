@@ -8,45 +8,16 @@
 <form action="{{ route('equipment.update', $equipment) }}" method="POST" class="space-y-4">
 @csrf @method('PUT')
 
-{{-- Identificación --}}
-<div class="card">
-    <div class="card-header"><h3 class="text-sm font-semibold text-gray-700">Identificación</h3></div>
-    <div class="card-body space-y-4">
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="form-label">SKU</label>
-                <input name="sku" value="{{ old('sku', $equipment->sku) }}"
-                       class="form-input @error('sku') border-red-400 @enderror">
-                @error('sku')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label class="form-label">Serie <span class="text-red-500">*</span></label>
-                <input name="serie" value="{{ old('serie', $equipment->serie) }}"
-                       class="form-input @error('serie') border-red-400 @enderror"
-                       required>
-                @error('serie')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
-        </div>
-        <div>
-            <label class="form-label">Ubicación física</label>
-            <input name="ubicacion_fisica" value="{{ old('ubicacion_fisica', $equipment->ubicacion_fisica) }}"
-                   class="form-input @error('ubicacion_fisica') border-red-400 @enderror"
-                   placeholder="Ej. Piso 2 – Oficina 204">
-            @error('ubicacion_fisica')<p class="form-error">{{ $message }}</p>@enderror
-        </div>
-    </div>
-</div>
-
 {{-- Producto del catálogo --}}
 <div class="card">
     <div class="card-header"><h3 class="text-sm font-semibold text-gray-700">Producto del catálogo</h3></div>
     <div class="card-body space-y-4">
         <div>
             <label class="form-label">Producto</label>
-            <select name="producto_id" class="form-select @error('producto_id') border-red-400 @enderror">
+            <select name="producto_id" id="producto_id" class="form-select @error('producto_id') border-red-400 @enderror">
                 <option value="">— Sin producto de catálogo —</option>
                 @foreach($productos as $pr)
-                    <option value="{{ $pr->id }}"
+                    <option value="{{ $pr->id }}" data-brand-id="{{ $pr->brand_id }}"
                             {{ old('producto_id', $equipment->producto_id) == $pr->id ? 'selected' : '' }}>
                         {{ $pr->nombre }} ({{ $pr->categoria }})
                     </option>
@@ -91,6 +62,35 @@
             <input name="model_toner" value="{{ old('model_toner', $equipment->model_toner) }}"
                    class="form-input @error('model_toner') border-red-400 @enderror" required>
             @error('model_toner')<p class="form-error">{{ $message }}</p>@enderror
+        </div>
+    </div>
+</div>
+
+{{-- Identificación --}}
+<div class="card">
+    <div class="card-header"><h3 class="text-sm font-semibold text-gray-700">Identificación</h3></div>
+    <div class="card-body space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="form-label">SKU</label>
+                <input name="sku" id="sku_input" value="{{ old('sku', $equipment->sku) }}"
+                       class="form-input @error('sku') border-red-400 @enderror">
+                @error('sku')<p class="form-error">{{ $message }}</p>@enderror
+            </div>
+            <div>
+                <label class="form-label">Serie <span class="text-red-500">*</span></label>
+                <input name="serie" value="{{ old('serie', $equipment->serie) }}"
+                       class="form-input @error('serie') border-red-400 @enderror"
+                       required>
+                @error('serie')<p class="form-error">{{ $message }}</p>@enderror
+            </div>
+        </div>
+        <div>
+            <label class="form-label">Ubicación física</label>
+            <input name="ubicacion_fisica" value="{{ old('ubicacion_fisica', $equipment->ubicacion_fisica) }}"
+                   class="form-input @error('ubicacion_fisica') border-red-400 @enderror"
+                   placeholder="Ej. Piso 2 – Oficina 204">
+            @error('ubicacion_fisica')<p class="form-error">{{ $message }}</p>@enderror
         </div>
     </div>
 </div>
@@ -207,5 +207,26 @@
 
 </form>
 </div>
+
+@push('scripts')
+<script>
+    const productoSelect = document.getElementById('producto_id');
+    const brandSelect = document.querySelector('select[name="brand_id"]');
+    const skuInput = document.getElementById('sku_input');
+    const brands = @json($brands->keyBy('id')->map(fn($b) => $b->name));
+
+    productoSelect.addEventListener('change', function() {
+        const selected = this.options[this.selectedIndex];
+        const brandId = selected.dataset.brandId;
+        if (brandId) {
+            brandSelect.value = brandId;
+            const brandName = (brands[brandId] || '').toUpperCase();
+            const currentSku = skuInput.value;
+            const digits = currentSku.replace(/^[A-Z]+-/, '') || '001';
+            skuInput.value = brandName + '-' + digits;
+        }
+    });
+</script>
+@endpush
 
 @endsection

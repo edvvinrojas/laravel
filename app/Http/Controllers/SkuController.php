@@ -49,7 +49,7 @@ class SkuController extends Controller
             }
             $format->save();
 
-            $code = $format->prefix . str_pad('1', $format->pad, '0', STR_PAD_LEFT);
+            $code = $format->prefix . str_pad('0', $format->pad, '0', STR_PAD_LEFT);
             Sku::create(['code' => $code, 'category' => $request->category]);
             return $code;
         });

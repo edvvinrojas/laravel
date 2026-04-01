@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\TiEquipment;
 use App\Models\TiPeripheral;
 use App\Models\TiLicense;
-use App\Models\Sku;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -31,15 +30,14 @@ class TiEquipmentController extends Controller
     {
         $users    = User::where('is_active', true)->orderBy('full_name')->get();
         $licenses = TiLicense::where('is_active', true)->orderBy('software')->get();
-        $nextCode = $this->nextCode();
-        $skus     = Sku::where('category', 'TI_EQUIPO')->orderBy('code')->get();
-        return view('ti-equipment.create', compact('users', 'licenses', 'nextCode', 'skus'));
+        $skus     = \App\Models\Sku::where('category', 'TI_EQUIPO')->orderBy('code')->get();
+        return view('ti-equipment.create', compact('users', 'licenses', 'skus'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'codigo_interno'    => 'required|string|max:50|unique:ti_equipment',
+            'codigo_interno'    => 'required|string|max:50',
             'marca'             => 'required|string|max:100',
             'modelo'            => 'required|string|max:150',
             'numero_serie'      => 'nullable|string|max:100|unique:ti_equipment',
@@ -64,6 +62,9 @@ class TiEquipmentController extends Controller
         ]);
 
         $data['created_by'] = auth()->id();
+        if (empty($data['codigo_interno'])) {
+            $data['codigo_interno'] = \App\Models\SkuFormat::nextSku('TI_EQUIPO');
+        }
         $licenses = $data['licenses'] ?? [];
         $perifericos = $request->input('perifericos', []);
         unset($data['licenses'], $data['perifericos']);

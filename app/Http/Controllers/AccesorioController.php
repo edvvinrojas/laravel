@@ -13,7 +13,7 @@ class AccesorioController extends Controller
     {
         $request->validate([
             'nombre'          => 'required|string|max:200',
-            'codigo'          => 'required|string|max:50|unique:accesorios,codigo',
+            'codigo'          => 'required|string|max:50',
             'descripcion'     => 'nullable|string',
             'precio'          => 'nullable|numeric|min:0',
             'es_activo'       => 'boolean',
@@ -23,9 +23,9 @@ class AccesorioController extends Controller
             'stock_ubicacion' => 'nullable|string|max:200',
         ]);
 
-        $accesorio = Accesorio::create([
-            'nombre'      => $request->nombre,
-            'codigo'      => strtoupper($request->codigo),
+    $accesorio = Accesorio::create([
+        'nombre'      => $request->nombre,
+        'codigo'      => $request->filled('codigo') ? strtoupper($request->codigo) : \App\Models\SkuFormat::nextSku('ACCESORIO'),
             'descripcion' => $request->descripcion,
             'precio'      => $request->precio,
             'es_activo'   => $request->boolean('es_activo', true),
@@ -46,7 +46,7 @@ class AccesorioController extends Controller
 
     public function create()
     {
-        $skus = Sku::where('category', 'ACCESORIO')->orderBy('code')->get();
+        $skus = \App\Models\Sku::where('category', 'ACCESORIO')->orderBy('code')->get();
         return view('accesorios.create', compact('skus'));
     }
 

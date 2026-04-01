@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Item;
 use App\Models\Brand;
-use App\Models\Sku;
 use App\Models\Supplier;
 use App\Models\Producto;
 use Illuminate\Http\Request;
@@ -14,7 +13,7 @@ class EquipmentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Item::with('brand', 'supplier', 'categoria', 'modelo')
+        $query = Item::with('brand', 'supplier', 'producto')
             ->when($request->search, function ($q, $search) {
                 $q->where(function ($q2) use ($search) {
                     $q2->where('sku', 'like', "%{$search}%")
@@ -40,19 +39,8 @@ class EquipmentController extends Controller
 
     public function create()
     {
-        $skus = Sku::where('category', 'EQUIPO')->orderBy('code')->get();
-        return view('equipment.create', ['nextSku' => $this->nextSku(), 'skus' => $skus] + $this->formData());
-    }
-
-    private function nextSku(): string
-    {
-        $last = Item::where('sku', 'like', 'CM-%')
-            ->orderByRaw("CAST(SUBSTRING(sku, 4) AS UNSIGNED) DESC")
-            ->value('sku');
-
-        $next = $last ? (int) substr($last, 3) + 1 : 1;
-
-        return 'CM-' . str_pad($next, 3, '0', STR_PAD_LEFT);
+        $skus = \App\Models\Sku::where('category', 'EQUIPO')->orderBy('code')->get();
+        return view('equipment.create', ['skus' => $skus] + $this->formData());
     }
 
     public function store(Request $request)
@@ -83,6 +71,19 @@ class EquipmentController extends Controller
         ]);
 
         $validated['is_active'] = $request->boolean('is_active', true);
+        if (empty($validated['sku'])) {
+            $brand = Brand::findOrFail($validated['brand_id']);
+            $prefix = strtoupper($brand->name) . '-';
+            $lastItem = Item::where('sku', 'like', $prefix . '%')->orderByDesc('sku')->first();
+            $nextNumber = 1;
+            if ($lastItem) {
+                $num = intval(str_replace($prefix, '', $lastItem->sku));
+                $nextNumber = $num + 1;
+            }
+            $format = \App\Models\SkuFormat::where('category', 'EQUIPO')->first();
+            $pad = $format->pad ?? 3;
+            $validated['sku'] = $prefix . str_pad($nextNumber, $pad, '0', STR_PAD_LEFT);
+        }
 
         Item::create($validated);
 
@@ -99,7 +100,8 @@ class EquipmentController extends Controller
 
     public function edit(Item $equipment)
     {
-        return view('equipment.edit', ['equipment' => $equipment] + $this->formData());
+        $skus = \App\Models\Sku::where('category', 'EQUIPO')->orderBy('code')->get();
+        return view('equipment.edit', ['equipment' => $equipment, 'skus' => $skus] + $this->formData());
     }
 
     public function update(Request $request, Item $equipment)

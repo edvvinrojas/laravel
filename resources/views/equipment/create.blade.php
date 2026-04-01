@@ -8,49 +8,16 @@
 <form action="{{ route('equipment.store') }}" method="POST" class="space-y-4">
 @csrf
 
-{{-- Identificación --}}
-<div class="card">
-    <div class="card-header"><h3 class="text-sm font-semibold text-gray-700">Identificación</h3></div>
-    <div class="card-body space-y-4">
-        <div class="grid grid-cols-3 gap-4">
-            <div>
-                <label class="form-label">SKU</label>
-                <select name="sku" class="form-select @error('sku') border-red-400 @enderror">
-                    <option value="">— Seleccionar SKU —</option>
-                    @foreach($skus as $s)
-                        <option value="{{ $s->code }}" @selected(old('sku') === $s->code)>{{ $s->code }}</option>
-                    @endforeach
-                </select>
-                @error('sku')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label class="form-label">Serie <span class="text-red-500">*</span></label>
-                <input name="serie" value="{{ old('serie') }}"
-                       class="form-input @error('serie') border-red-400 @enderror"
-                       required>
-                @error('serie')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label class="form-label">Ubicación física</label>
-                <input name="ubicacion_fisica" value="{{ old('ubicacion_fisica') }}"
-                       class="form-input @error('ubicacion_fisica') border-red-400 @enderror"
-                       placeholder="Ej. Piso 2 – Oficina 204">
-                @error('ubicacion_fisica')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
-        </div>
-    </div>
-</div>
-
 {{-- Modelo del catálogo --}}
 <div class="card">
     <div class="card-header"><h3 class="text-sm font-semibold text-gray-700">Producto del catálogo</h3></div>
     <div class="card-body space-y-4">
         <div>
             <label class="form-label">Producto</label>
-            <select name="producto_id" class="form-select @error('producto_id') border-red-400 @enderror">
+            <select name="producto_id" id="producto_id" class="form-select @error('producto_id') border-red-400 @enderror">
                 <option value="">— Sin producto de catálogo —</option>
                 @foreach($productos as $pr)
-                    <option value="{{ $pr->id }}" {{ old('producto_id') == $pr->id ? 'selected' : '' }}>
+                    <option value="{{ $pr->id }}" data-brand-id="{{ $pr->brand_id }}" {{ old('producto_id') == $pr->id ? 'selected' : '' }}>
                         {{ $pr->nombre }} ({{ $pr->categoria }})
                     </option>
                 @endforeach
@@ -93,6 +60,39 @@
                    class="form-input @error('model_toner') border-red-400 @enderror"
                    required placeholder="Ej. TK-1175, CE285A">
             @error('model_toner')<p class="form-error">{{ $message }}</p>@enderror
+        </div>
+    </div>
+</div>
+
+{{-- Identificación --}}
+<div class="card">
+    <div class="card-header"><h3 class="text-sm font-semibold text-gray-700">Identificación</h3></div>
+    <div class="card-body space-y-4">
+        <div class="grid grid-cols-3 gap-4">
+            <div>
+                <label class="form-label">SKU</label>
+                <select name="sku" class="form-select @error('sku') border-red-400 @enderror">
+                    <option value="">— Seleccionar SKU —</option>
+                    @foreach($skus as $s)
+                        <option value="{{ $s->code }}" @selected(old('sku') === $s->code)>{{ $s->code }}</option>
+                    @endforeach
+                </select>
+                @error('sku')<p class="form-error">{{ $message }}</p>@enderror
+            </div>
+            <div>
+                <label class="form-label">Serie <span class="text-red-500">*</span></label>
+                <input name="serie" value="{{ old('serie') }}"
+                       class="form-input @error('serie') border-red-400 @enderror"
+                       required>
+                @error('serie')<p class="form-error">{{ $message }}</p>@enderror
+            </div>
+            <div>
+                <label class="form-label">Ubicación física</label>
+                <input name="ubicacion_fisica" value="{{ old('ubicacion_fisica') }}"
+                       class="form-input @error('ubicacion_fisica') border-red-400 @enderror"
+                       placeholder="Ej. Piso 2 – Oficina 204">
+                @error('ubicacion_fisica')<p class="form-error">{{ $message }}</p>@enderror
+            </div>
         </div>
     </div>
 </div>
@@ -204,5 +204,35 @@
 
 </form>
 </div>
+
+@push('scripts')
+<script>
+    const productoSelect = document.getElementById('producto_id');
+    const brandSelect = document.querySelector('select[name="brand_id"]');
+    const skuSelect = document.querySelector('select[name="sku"]');
+    const brands = @json($brands->keyBy('id')->map(fn($b) => $b->name));
+
+    productoSelect.addEventListener('change', function() {
+        const selected = this.options[this.selectedIndex];
+        const brandId = selected.dataset.brandId;
+        if (brandId) {
+            brandSelect.value = brandId;
+            const brandName = brands[brandId] || '';
+            skuSelect.options[0].text = '— Auto: ' + brandName.toUpperCase() + '-### —';
+        } else {
+            skuSelect.options[0].text = '— Seleccionar SKU —';
+        }
+    });
+
+    brandSelect.addEventListener('change', function() {
+        const brandName = brands[this.value] || '';
+        if (brandName) {
+            skuSelect.options[0].text = '— Auto: ' + brandName.toUpperCase() + '-### —';
+        } else {
+            skuSelect.options[0].text = '— Seleccionar SKU —';
+        }
+    });
+</script>
+@endpush
 
 @endsection

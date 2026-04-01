@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class Sku extends Model
 {
-    protected $fillable = ['code', 'category'];
+    protected $fillable = ['code', 'category', 'prefijo', 'digitos'];
 }
