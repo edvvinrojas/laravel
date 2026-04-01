@@ -42,7 +42,7 @@
         <div class="flex justify-between"><span class="text-gray-500">S.O.</span><span>{{ $tiEquipment->sistema_operativo }}</span></div>
         @endif
         <div class="flex justify-between"><span class="text-gray-500">Asignado a</span>
-            <span>{{ $tiEquipment->assignedUser?->full_name ?? '—' }}</span></div>
+            <span>{{ $tiEquipment->assignedUser ? ($tiEquipment->assignedUser->full_name ?: $tiEquipment->assignedUser->username) : '—' }}</span></div>
         <div class="flex justify-between"><span class="text-gray-500">Ubicación</span>
             <span>{{ $tiEquipment->ubicacion ?? '—' }}</span></div>
         @if($tiEquipment->fecha_compra)

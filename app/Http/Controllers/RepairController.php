@@ -73,6 +73,11 @@ class RepairController extends Controller
             'folio_escaneado'   => 'nullable|string',
         ]);
 
+        // Sync: si estatus es LISTO, estado_taller también debe ser LISTO
+        if ($data['estatus'] === 'LISTO' && $data['estado_taller'] !== 'LISTO') {
+            $data['estado_taller'] = 'LISTO';
+        }
+
         if ($data['estado_taller'] === 'LISTO' && $repair->estado_taller !== 'LISTO') {
             $data['fecha_conclusion'] = now();
             $repair->item->update(['location_status' => 'BODEGA']);

@@ -3,6 +3,10 @@
 @section('page-title','Editar Compra')
 
 @section('content')
+@php
+    $user      = auth()->user();
+    $isCompras = $user->rol === 'administrador' || $user->department === 'administracion';
+@endphp
 <div class="max-w-3xl">
 <form method="POST" action="{{ route('purchases.update',$purchase) }}">
 @csrf @method('PUT')
@@ -21,19 +25,26 @@
             <input name="authorized_amount" type="number" min="0" value="{{ old('authorized_amount',$purchase->authorized_amount) }}" class="form-input">
         </div>
         <div>
-            <label class="form-label">Estado *</label>
-            <select name="status" class="form-select" required>
-                @foreach(['EN_CURSO','FALTA_AUTORIZACION','FALTA_PAGO_PROVEEDOR','FALTA_FACTURA','EN_TRANSITO','SOLICITUD_GUIA_ALMACEN','PAUSADO_BACK_ORDERS','POR_REVISAR','RECHAZADO','FALTA_ORDEN_SERVICIO','CONCLUIDO'] as $s)
-                <option value="{{ $s }}" @selected(old('status',$purchase->status)===$s)>{{ str_replace('_',' ',$s) }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div>
             <label class="form-label">Tipo *</label>
             <select name="type" class="form-select" required>
                 <option value="INTERNA" @selected(old('type',$purchase->type)==='INTERNA')>INTERNA</option>
                 <option value="VENTA" @selected(old('type',$purchase->type)==='VENTA')>VENTA</option>
             </select>
+        </div>
+
+        <div class="col-span-2">
+            <label class="form-label">Justificación</label>
+            <textarea name="justification" class="form-input" rows="2">{{ old('justification',$purchase->justification) }}</textarea>
+        </div>
+        <div class="col-span-2">
+            <label class="form-label">Comentarios</label>
+            <textarea name="comments" class="form-input" rows="2">{{ old('comments',$purchase->comments) }}</textarea>
+        </div>
+
+        @if($isCompras)
+        {{-- Sección solo visible para compras/administración --}}
+        <div class="col-span-2 border-t pt-4 mt-2">
+            <p class="font-semibold text-gray-700 mb-3">Gestión de compras</p>
         </div>
         <div>
             <label class="form-label">Método envío</label>
@@ -78,6 +89,7 @@
             <label class="form-label">Comentarios</label>
             <textarea name="comments" class="form-input" rows="2">{{ old('comments',$purchase->comments) }}</textarea>
         </div>
+        @endif {{-- end isCompras --}}
     </div>
     <div class="px-5 py-4 border-t border-gray-100 flex gap-3">
         <button type="submit" class="btn-primary">Actualizar</button>
@@ -89,6 +101,7 @@
 
 @push('scripts')
 <script>
+@if($isCompras)
 let quoteIdx = {{ $purchase->quotes->count() }};
 document.getElementById('addQuote').addEventListener('click', () => {
     const row = document.createElement('div');
@@ -113,6 +126,7 @@ document.getElementById('addQuote').addEventListener('click', () => {
     document.getElementById('quotesContainer').appendChild(row);
     quoteIdx++;
 });
+@endif
 </script>
 @endpush
 @endsection

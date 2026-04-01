@@ -41,6 +41,9 @@ use App\Http\Controllers\TiEquipmentController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\ClientPortalController;
 use App\Http\Controllers\ItRequestController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SkuController;
 
 // Portal público de cliente (sin autenticación)
 Route::get('/portal/contadores/{token}', [ClientPortalController::class, 'show'])->name('portal.counters');
@@ -150,6 +153,17 @@ Route::middleware('auth')->group(function () {
     // Facturación / Cobranza
     Route::resource('billing', BillingController::class);
     Route::patch('billing/{billing}/pay', [BillingController::class, 'markPaid'])->name('billing.pay');
+
+    // Reportes
+    Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+
+    // Búsqueda global
+    Route::get('api/search', [SearchController::class, 'search'])->name('search');
+
+    // Configuración de SKU (TI)
+    Route::get('sku', [SkuController::class, 'index'])->name('sku.index');
+    Route::put('sku/{skuFormat}', [SkuController::class, 'update'])->name('sku.update');
+    Route::post('sku/{skuFormat}/reset', [SkuController::class, 'reset'])->name('sku.reset');
 
     // Contadores de impresión
     Route::resource('print-counters', PrintCounterController::class);

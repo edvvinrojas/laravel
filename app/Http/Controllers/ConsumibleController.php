@@ -9,6 +9,14 @@ use Illuminate\Http\Request;
 
 class ConsumibleController extends Controller
 {
+    private function nextTonerCode(): string
+    {
+        $last = Consumible::where('codigo_alternativo', 'like', 'TON-%')
+            ->orderByDesc('codigo_alternativo')->value('codigo_alternativo');
+        $seq  = $last ? ((int) substr($last, 4)) + 1 : 1;
+        return 'TON-' . str_pad($seq, 3, '0', STR_PAD_LEFT);
+    }
+
     private function rules(int $ignoreId = 0): array
     {
         return [
@@ -39,10 +47,14 @@ class ConsumibleController extends Controller
     {
         $request->validate($this->rules());
 
+        $codigoAlt = $request->codigo_alternativo
+            ? strtoupper($request->codigo_alternativo)
+            : ($request->tipo === 'TONER' ? $this->nextTonerCode() : null);
+
         $consumible = Consumible::create([
             'nombre'               => $request->nombre,
             'codigo_oem'           => strtoupper($request->codigo_oem),
-            'codigo_alternativo'   => $request->codigo_alternativo ? strtoupper($request->codigo_alternativo) : null,
+            'codigo_alternativo'   => $codigoAlt,
             'brand_id'             => $request->brand_id,
             'tipo'                 => $request->tipo,
             'color'                => $request->color,

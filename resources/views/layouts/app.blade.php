@@ -213,6 +213,12 @@
                         </svg>
                         Cobranza / Facturación
                     </a>
+                    <a href="{{ route('reports.index') }}" class="nav-link @activeRoute('reports.*')">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        Reportes
+                    </a>
                 </div>
             @endif
 
@@ -270,6 +276,12 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                         Inventario TI
+                    </a>
+                    <a href="{{ route('sku.index') }}" class="nav-link @activeRoute('sku.*')">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                        Catálogo SKU
                     </a>
                     <a href="{{ route('it-requests.index') }}" class="nav-link @activeRoute('it-requests.*')">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -329,11 +341,16 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
             </button>
-            <div class="flex-1">
+            <div class="flex-1 flex items-center gap-3">
                 <h1 class="text-base font-semibold text-gray-800">@yield('page-title', 'Dashboard')</h1>
                 @hasSection('breadcrumb')
                     <p class="text-xs text-gray-500">@yield('breadcrumb')</p>
                 @endif
+                {{-- Global search trigger --}}
+                <button onclick="openGlobalSearch()" class="ml-auto hidden sm:flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-100 transition">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    Buscar… <kbd class="ml-2 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-xs font-mono text-gray-400">Ctrl+K</kbd>
+                </button>
             </div>
             <div class="flex items-center gap-2">
                 {{-- Notifications --}}
@@ -352,6 +369,18 @@
                 </a>
             </div>
         </header>
+
+        {{-- Validation errors --}}
+        @if ($errors->any())
+            <div class="mx-6 mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+                <p class="font-semibold mb-1">Por favor corrige los siguientes errores:</p>
+                <ul class="list-disc list-inside space-y-0.5">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         {{-- Flash messages --}}
         @if (session('success'))
@@ -390,6 +419,64 @@
             document.getElementById('sidebar').classList.add('-translate-x-full');
             document.getElementById('sidebar-overlay').classList.add('hidden');
         }
+    </script>
+
+    {{-- Global Search Modal --}}
+    <div id="searchModal" class="fixed inset-0 z-50 hidden" role="dialog">
+        <div class="fixed inset-0 bg-black/40" onclick="closeGlobalSearch()"></div>
+        <div class="relative mx-auto mt-20 w-full max-w-lg rounded-xl bg-white shadow-2xl ring-1 ring-gray-200">
+            <div class="flex items-center gap-3 border-b px-4 py-3">
+                <svg class="h-5 w-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input id="searchInput" type="text" class="flex-1 border-0 bg-transparent text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-0" placeholder="Buscar clientes, equipos, rentas, ventas, tickets…" autocomplete="off">
+                <kbd class="rounded border border-gray-300 bg-gray-50 px-1.5 py-0.5 text-xs font-mono text-gray-400 cursor-pointer" onclick="closeGlobalSearch()">ESC</kbd>
+            </div>
+            <div id="searchResults" class="max-h-80 overflow-y-auto p-2">
+                <p class="px-3 py-6 text-center text-sm text-gray-400">Escribe al menos 2 caracteres para buscar</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let searchTimer = null;
+        function openGlobalSearch() {
+            document.getElementById('searchModal').classList.remove('hidden');
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchResults').innerHTML = '<p class="px-3 py-6 text-center text-sm text-gray-400">Escribe al menos 2 caracteres para buscar</p>';
+            setTimeout(() => document.getElementById('searchInput').focus(), 50);
+        }
+        function closeGlobalSearch() {
+            document.getElementById('searchModal').classList.add('hidden');
+        }
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); openGlobalSearch(); }
+            if (e.key === 'Escape') closeGlobalSearch();
+        });
+        document.getElementById('searchInput').addEventListener('input', function() {
+            clearTimeout(searchTimer);
+            const q = this.value.trim();
+            if (q.length < 2) {
+                document.getElementById('searchResults').innerHTML = '<p class="px-3 py-6 text-center text-sm text-gray-400">Escribe al menos 2 caracteres para buscar</p>';
+                return;
+            }
+            searchTimer = setTimeout(() => {
+                fetch('{{ route("search") }}?q=' + encodeURIComponent(q), {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    const box = document.getElementById('searchResults');
+                    if (!data.length) { box.innerHTML = '<p class="px-3 py-6 text-center text-sm text-gray-400">Sin resultados</p>'; return; }
+                    const typeColors = { Cliente:'bg-blue-100 text-blue-700', Equipo:'bg-green-100 text-green-700', Renta:'bg-purple-100 text-purple-700', Venta:'bg-yellow-100 text-yellow-700', Ticket:'bg-red-100 text-red-700', Compra:'bg-orange-100 text-orange-700', Empleado:'bg-indigo-100 text-indigo-700' };
+                    box.innerHTML = data.map(r =>
+                        `<a href="${r.url}" class="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-50 transition">` +
+                        `<span class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium ${typeColors[r.type]||'bg-gray-100 text-gray-700'}">${r.type}</span>` +
+                        `<span class="flex-1 text-sm text-gray-800 truncate">${r.label}</span>` +
+                        `<span class="text-xs text-gray-400 truncate max-w-[120px]">${r.sub||''}</span>` +
+                        `</a>`
+                    ).join('');
+                });
+            }, 250);
+        });
     </script>
 
     @stack('scripts')

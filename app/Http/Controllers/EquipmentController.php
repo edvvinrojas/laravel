@@ -39,7 +39,18 @@ class EquipmentController extends Controller
 
     public function create()
     {
-        return view('equipment.create', $this->formData());
+        return view('equipment.create', ['nextSku' => $this->nextSku()] + $this->formData());
+    }
+
+    private function nextSku(): string
+    {
+        $last = Item::where('sku', 'like', 'CM-%')
+            ->orderByRaw("CAST(SUBSTRING(sku, 4) AS UNSIGNED) DESC")
+            ->value('sku');
+
+        $next = $last ? (int) substr($last, 3) + 1 : 1;
+
+        return 'CM-' . str_pad($next, 3, '0', STR_PAD_LEFT);
     }
 
     public function store(Request $request)

@@ -85,7 +85,7 @@ class SparepartController extends Controller
 
     public function show(Sparepart $sparepart)
     {
-        $sparepart->load('brandModel', 'supplierModel');
+        $sparepart->load('brandModel', 'supplierModel', 'shelf');
         return view('spareparts.show', compact('sparepart'));
     }
 

@@ -15,7 +15,7 @@
         <div class="grid grid-cols-3 gap-4">
             <div>
                 <label class="form-label">SKU</label>
-                <input name="sku" value="{{ old('sku') }}"
+                <input name="sku" value="{{ old('sku', $nextSku) }}"
                        class="form-input @error('sku') border-red-400 @enderror"
                        placeholder="Ej. CM-001">
                 @error('sku')<p class="form-error">{{ $message }}</p>@enderror
@@ -26,22 +26,6 @@
                        class="form-input @error('serie') border-red-400 @enderror"
                        required>
                 @error('serie')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label class="form-label">Dirección IP</label>
-                <input name="direccion_ip" value="{{ old('direccion_ip') }}"
-                       class="form-input @error('direccion_ip') border-red-400 @enderror"
-                       placeholder="192.168.1.100">
-                @error('direccion_ip')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="form-label">MAC Address</label>
-                <input name="mac_address" value="{{ old('mac_address') }}"
-                       class="form-input @error('mac_address') border-red-400 @enderror"
-                       placeholder="AA:BB:CC:DD:EE:FF">
-                @error('mac_address')<p class="form-error">{{ $message }}</p>@enderror
             </div>
             <div>
                 <label class="form-label">Ubicación física</label>

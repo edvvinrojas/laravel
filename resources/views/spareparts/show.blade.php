@@ -11,9 +11,11 @@
     <div class="card-header"><h3 class="font-semibold">{{ $sparepart->name }}</h3></div>
     <div class="card-body grid grid-cols-2 gap-3 text-sm">
         <div><p class="text-gray-500">Código</p><p class="font-mono">{{ $sparepart->code ?? '—' }}</p></div>
-        <div><p class="text-gray-500">Marca</p><p>{{ $sparepart->brand ?? '—' }}</p></div>
+        <div><p class="text-gray-500">Código interno</p><p class="font-mono">{{ $sparepart->internal_code ?? '—' }}</p></div>
+        <div><p class="text-gray-500">Marca</p><p>{{ $sparepart->brand_name ?? '—' }}</p></div>
         <div><p class="text-gray-500">Color</p><p>{{ $sparepart->color ?? '—' }}</p></div>
-        <div><p class="text-gray-500">Proveedor</p><p>{{ $sparepart->supplier ?? '—' }}</p></div>
+        <div><p class="text-gray-500">Proveedor</p><p>{{ $sparepart->supplier_name ?? '—' }}</p></div>
+        <div><p class="text-gray-500">Anaquel</p><p>{{ $sparepart->shelf?->name ?? '—' }}</p></div>
         <div class="col-span-2"><p class="text-gray-500">Equipo compatible</p><p>{{ $sparepart->equipment ?? '—' }}</p></div>
         @if($sparepart->description)
         <div class="col-span-2"><p class="text-gray-500">Descripción</p><p>{{ $sparepart->description }}</p></div>
