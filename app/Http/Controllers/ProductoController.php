@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Producto;
 use App\Models\Accesorio;
 use App\Models\Consumible;
+use App\Models\Sku;
 use App\Models\Stock;
 use App\Models\Brand;
 use Illuminate\Http\Request;
@@ -32,8 +33,9 @@ class ProductoController extends Controller
         $marcas      = Brand::orderBy('name')->get();
         $accesorios  = Accesorio::where('es_activo', true)->orderBy('nombre')->get();
         $consumibles = Consumible::where('es_activo', true)->orderBy('nombre')->get();
+        $skus        = Sku::where('category', 'PRODUCTO')->orderBy('code')->get();
 
-        return view('productos.create', compact('marcas', 'accesorios', 'consumibles'));
+        return view('productos.create', compact('marcas', 'accesorios', 'consumibles', 'skus'));
     }
 
     public function store(Request $request)

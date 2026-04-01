@@ -21,9 +21,12 @@
             </div>
             <div>
                 <label class="form-label">Código <span class="text-red-500">*</span></label>
-                <input name="codigo" value="{{ old('codigo') }}"
-                       class="form-input @error('codigo') border-red-400 @enderror"
-                       required placeholder="Ej. PROD-001" style="text-transform:uppercase">
+                <select name="codigo" class="form-select @error('codigo') border-red-400 @enderror" required>
+                    <option value="">— Seleccionar SKU —</option>
+                    @foreach($skus as $s)
+                        <option value="{{ $s->code }}" @selected(old('codigo') === $s->code)>{{ $s->code }}</option>
+                    @endforeach
+                </select>
                 @error('codigo')<p class="form-error">{{ $message }}</p>@enderror
             </div>
         </div>

@@ -15,9 +15,12 @@
         <div class="grid grid-cols-3 gap-4">
             <div>
                 <label class="form-label">SKU</label>
-                <input name="sku" value="{{ old('sku', $nextSku) }}"
-                       class="form-input @error('sku') border-red-400 @enderror"
-                       placeholder="Ej. CM-001">
+                <select name="sku" class="form-select @error('sku') border-red-400 @enderror">
+                    <option value="">— Seleccionar SKU —</option>
+                    @foreach($skus as $s)
+                        <option value="{{ $s->code }}" @selected(old('sku') === $s->code)>{{ $s->code }}</option>
+                    @endforeach
+                </select>
                 @error('sku')<p class="form-error">{{ $message }}</p>@enderror
             </div>
             <div>

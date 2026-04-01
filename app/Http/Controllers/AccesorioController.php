@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Accesorio;
+use App\Models\Sku;
 use App\Models\Stock;
 use Illuminate\Http\Request;
 
@@ -45,7 +46,8 @@ class AccesorioController extends Controller
 
     public function create()
     {
-        return view('accesorios.create');
+        $skus = Sku::where('category', 'ACCESORIO')->orderBy('code')->get();
+        return view('accesorios.create', compact('skus'));
     }
 
     public function edit(Accesorio $accesorio)

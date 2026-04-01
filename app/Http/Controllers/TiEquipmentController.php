@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\TiEquipment;
 use App\Models\TiPeripheral;
 use App\Models\TiLicense;
+use App\Models\Sku;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -31,7 +32,8 @@ class TiEquipmentController extends Controller
         $users    = User::where('is_active', true)->orderBy('full_name')->get();
         $licenses = TiLicense::where('is_active', true)->orderBy('software')->get();
         $nextCode = $this->nextCode();
-        return view('ti-equipment.create', compact('users', 'licenses', 'nextCode'));
+        $skus     = Sku::where('category', 'TI_EQUIPO')->orderBy('code')->get();
+        return view('ti-equipment.create', compact('users', 'licenses', 'nextCode', 'skus'));
     }
 
     public function store(Request $request)

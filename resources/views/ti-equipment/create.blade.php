@@ -12,7 +12,12 @@
 
         <div>
             <label class="form-label">Código interno *</label>
-            <input name="codigo_interno" type="text" value="{{ old('codigo_interno', $nextCode) }}" class="form-input font-mono" required>
+            <select name="codigo_interno" class="form-select font-mono" required>
+                <option value="">— Seleccionar SKU —</option>
+                @foreach($skus as $s)
+                    <option value="{{ $s->code }}" @selected(old('codigo_interno') === $s->code)>{{ $s->code }}</option>
+                @endforeach
+            </select>
         </div>
         <div>
             <label class="form-label">Tipo *</label>

@@ -162,8 +162,10 @@ Route::middleware('auth')->group(function () {
 
     // Configuración de SKU (TI)
     Route::get('sku', [SkuController::class, 'index'])->name('sku.index');
+    Route::post('sku', [SkuController::class, 'store'])->name('sku.store');
     Route::put('sku/{skuFormat}', [SkuController::class, 'update'])->name('sku.update');
     Route::post('sku/{skuFormat}/reset', [SkuController::class, 'reset'])->name('sku.reset');
+    Route::delete('sku/{sku}', [SkuController::class, 'destroy'])->name('sku.destroy');
 
     // Contadores de impresión
     Route::resource('print-counters', PrintCounterController::class);

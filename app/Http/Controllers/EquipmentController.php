@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Item;
 use App\Models\Brand;
+use App\Models\Sku;
 use App\Models\Supplier;
 use App\Models\Producto;
 use Illuminate\Http\Request;
@@ -39,7 +40,8 @@ class EquipmentController extends Controller
 
     public function create()
     {
-        return view('equipment.create', ['nextSku' => $this->nextSku()] + $this->formData());
+        $skus = Sku::where('category', 'EQUIPO')->orderBy('code')->get();
+        return view('equipment.create', ['nextSku' => $this->nextSku(), 'skus' => $skus] + $this->formData());
     }
 
     private function nextSku(): string
