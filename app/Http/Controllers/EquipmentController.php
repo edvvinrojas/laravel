@@ -144,6 +144,11 @@ class EquipmentController extends Controller
 
     public function destroy(Item $equipment)
     {
+        if ($equipment->rents()->exists() || $equipment->sales()->exists() || $equipment->repairs()->exists()) {
+            return redirect()->route('equipment.index')
+                ->with('error', 'No se puede eliminar el equipo porque tiene rentas, ventas o reparaciones asociadas.');
+        }
+
         $equipment->delete();
 
         return redirect()->route('equipment.index')
