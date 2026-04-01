@@ -12,7 +12,7 @@
 <div class="card">
     <div class="card-header"><h3 class="text-sm font-semibold text-gray-700">Identificación</h3></div>
     <div class="card-body space-y-4">
-        <div class="grid grid-cols-3 gap-4">
+        <div class="grid grid-cols-2 gap-4">
             <div>
                 <label class="form-label">SKU</label>
                 <input name="sku" value="{{ old('sku', $equipment->sku) }}"
@@ -26,29 +26,13 @@
                        required>
                 @error('serie')<p class="form-error">{{ $message }}</p>@enderror
             </div>
-            <div>
-                <label class="form-label">Dirección IP</label>
-                <input name="direccion_ip" value="{{ old('direccion_ip', $equipment->direccion_ip) }}"
-                       class="form-input @error('direccion_ip') border-red-400 @enderror"
-                       placeholder="192.168.1.100">
-                @error('direccion_ip')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
         </div>
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="form-label">MAC Address</label>
-                <input name="mac_address" value="{{ old('mac_address', $equipment->mac_address) }}"
-                       class="form-input @error('mac_address') border-red-400 @enderror"
-                       placeholder="AA:BB:CC:DD:EE:FF">
-                @error('mac_address')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label class="form-label">Ubicación física</label>
-                <input name="ubicacion_fisica" value="{{ old('ubicacion_fisica', $equipment->ubicacion_fisica) }}"
-                       class="form-input @error('ubicacion_fisica') border-red-400 @enderror"
-                       placeholder="Ej. Piso 2 – Oficina 204">
-                @error('ubicacion_fisica')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
+        <div>
+            <label class="form-label">Ubicación física</label>
+            <input name="ubicacion_fisica" value="{{ old('ubicacion_fisica', $equipment->ubicacion_fisica) }}"
+                   class="form-input @error('ubicacion_fisica') border-red-400 @enderror"
+                   placeholder="Ej. Piso 2 – Oficina 204">
+            @error('ubicacion_fisica')<p class="form-error">{{ $message }}</p>@enderror
         </div>
     </div>
 </div>

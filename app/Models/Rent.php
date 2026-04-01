@@ -31,6 +31,7 @@ class Rent extends Model
     public function creator()       { return $this->belongsTo(User::class, 'created_by'); }
     public function billings()      { return $this->hasMany(Billing::class); }
     public function printCounters() { return $this->hasMany(PrintCounter::class); }
+    public function latestPrintCounter() { return $this->hasOne(PrintCounter::class)->latestOfMany('reading_date'); }
     public function accesorios()    { return $this->belongsToMany(Accesorio::class, 'rent_accesorio')->withPivot('cantidad','notas')->withTimestamps(); }
     public function consumibles()   { return $this->belongsToMany(Consumible::class, 'rent_consumible')->withPivot('cantidad','notas')->withTimestamps(); }
 }

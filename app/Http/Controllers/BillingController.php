@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Billing;
 use App\Models\Client;
+use App\Models\PrintCounter;
 use App\Models\Rent;
 use App\Models\Sale;
 use Illuminate\Http\Request;
@@ -83,7 +84,29 @@ class BillingController extends Controller
         $base['created_by'] = auth()->id();
         $base['status']     = 'PENDIENTE';
 
-        Billing::create($base);
+        // Para rentas con servicio de impresión: recalcular monto server-side
+        // sumando todos los contadores no facturados. Esto evita que el excedente
+        // se pierda si el usuario olvida incluirlo o el JS no lo cargó.
+        $unbilledCounters = collect();
+        $unbilledCounters = collect();
+        if ($base['billing_type'] === 'RENTA' && $source->has_print_service) {
+            $unbilledCounters = PrintCounter::where('rent_id', $source->id)
+                ->where('is_active', true)
+                ->where('is_billed', false)
+                ->with('rent')
+                ->get()
+                ->filter(fn($pc) => $pc->total_excess_amount > 0);
+
+            $excess = $unbilledCounters->sum(fn($pc) => $pc->total_excess_amount);
+            $base['amount'] = round((float) $source->rent + (float) $excess, 2);
+        }
+
+        $billing = Billing::create($base);
+
+        if ($unbilledCounters->isNotEmpty()) {
+            PrintCounter::whereIn('id', $unbilledCounters->pluck('id'))
+                ->update(['is_billed' => true, 'billing_id' => $billing->id]);
+        }
 
         return redirect()->route('billing.index')->with('success', 'Factura creada correctamente.');
     }

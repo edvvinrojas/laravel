@@ -24,8 +24,6 @@ return new class extends Migration
             $table->unsignedInteger('contador_inicial_bn')->default(0)->after('ubicacion_fisica');
             $table->unsignedInteger('contador_inicial_color')->default(0)->after('contador_inicial_bn');
             $table->unsignedInteger('contador_inicial_scan')->default(0)->after('contador_inicial_color');
-            $table->string('direccion_ip', 45)->nullable()->after('contador_inicial_scan');
-            $table->string('mac_address', 17)->nullable()->after('direccion_ip');
         });
 
         // ── Extender contadores de impresión ────────────────────────────────
@@ -81,7 +79,6 @@ return new class extends Migration
                 'fecha_compra','fecha_instalacion','fecha_garantia_fin',
                 'ubicacion_fisica',
                 'contador_inicial_bn','contador_inicial_color','contador_inicial_scan',
-                'direccion_ip','mac_address',
             ]);
         });
     }

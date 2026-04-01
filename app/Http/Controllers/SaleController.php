@@ -24,7 +24,11 @@ class SaleController extends Controller
     public function create()
     {
         $clients = Client::where('is_active', true)->orderBy('name')->get();
-        $items   = Item::where('is_active', true)->with('brand')->orderBy('model')->get();
+        $items   = Item::where('is_active', true)
+            ->whereNotIn('location_status', ['ASIGNADO', 'TALLER'])
+            ->with('brand')
+            ->orderBy('model')
+            ->get();
         return view('sales.create', compact('clients', 'items'));
     }
 
@@ -69,7 +73,14 @@ class SaleController extends Controller
     public function edit(Sale $sale)
     {
         $clients = Client::where('is_active', true)->orderBy('name')->get();
-        $items   = Item::where('is_active', true)->with('brand')->get();
+        $items   = Item::where('is_active', true)
+            ->where(fn($q) => $q
+                ->whereNotIn('location_status', ['ASIGNADO', 'TALLER'])
+                ->orWhere('id', $sale->item_id)  // siempre incluir el equipo actual de la venta
+            )
+            ->with('brand')
+            ->orderBy('model')
+            ->get();
         $sale->load('accesorios', 'consumibles');
         return view('sales.edit', compact('sale', 'clients', 'items'));
     }

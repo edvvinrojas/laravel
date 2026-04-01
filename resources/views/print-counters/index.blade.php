@@ -29,7 +29,7 @@
                 <td>{{ number_format($c->bn_printed) }}</td>
                 <td>{{ number_format($c->color_printed) }}</td>
                 <td class="font-medium">${{ number_format($c->total_excess_amount,2) }}</td>
-                <td>{{ $c->is_billed ? '<span class="badge-green">Sí</span>' : '<span class="badge-gray">No</span>' }}</td>
+                <td>{!! $c->is_billed ? '<span class="badge-green">Sí</span>' : '<span class="badge-gray">No</span>' !!}</td>
                 <td>
                     <a href="{{ route('print-counters.show',$c) }}" class="btn btn-sm btn-secondary">Ver</a>
                 </td>

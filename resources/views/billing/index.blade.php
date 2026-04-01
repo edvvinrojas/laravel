@@ -57,6 +57,7 @@
                     <option value="">Tipo</option>
                     <option value="RENTA" @selected(request('type')==='RENTA')>RENTA</option>
                     <option value="VENTA" @selected(request('type')==='VENTA')>VENTA</option>
+                    <option value="EXCESO" @selected(request('type')==='EXCESO')>EXCESO</option>
                 </select>
                 <input name="date_from" type="date" value="{{ request('date_from') }}" class="form-input w-36" title="Desde">
                 <input name="date_to" type="date" value="{{ request('date_to') }}" class="form-input w-36" title="Hasta">
@@ -86,7 +87,7 @@
                 <tr>
                     <td class="font-mono text-xs">{{ $b->invoice_number ?? '—' }}</td>
                     <td class="font-medium">{{ $b->client->name }}</td>
-                    <td><span class="{{ $b->billing_type==='RENTA'?'badge-blue':'badge-purple' }}">{{ $b->billing_type }}</span></td>
+                    <td><span class="{{ $b->billing_type==='RENTA'?'badge-blue':($b->billing_type==='EXCESO'?'badge-red':'badge-purple') }}">{{ $b->billing_type }}</span></td>
                     <td class="font-medium">${{ number_format($b->amount,2) }}</td>
                     <td class="{{ $b->status==='VENCIDO'?'text-red-600 font-medium':'' }}">{{ $b->due_date->format('d/m/Y') }}</td>
                     <td><span class="{{ $c[$b->status]??'badge-gray' }}">{{ $b->status }}</span></td>

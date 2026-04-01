@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\PrintCounter;
 use App\Models\Rent;
+use App\Models\Billing;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class PrintCounterController extends Controller
 {
@@ -22,37 +24,47 @@ class PrintCounterController extends Controller
 
     public function create()
     {
-        $rents = Rent::where('has_print_service', true)->where('contract_status', 'VIGENTE')->with('client')->get();
-        return view('print-counters.create', compact('rents'));
+        $rents = Rent::where('has_print_service', true)
+            ->where('contract_status', 'VIGENTE')
+            ->with(['client', 'latestPrintCounter'])
+            ->get();
+
+        // Para cada renta: usar el último contador registrado como "anterior",
+        // o el contador inicial de la renta si aún no hay ninguno.
+        $rentDefaults = $rents->mapWithKeys(fn($r) => [
+            $r->id => [
+                'bn'           => $r->latestPrintCounter?->bn_current    ?? $r->contador_inicial_bn    ?? 0,
+                'color'        => $r->latestPrintCounter?->color_current ?? $r->contador_inicial_color ?? 0,
+                'bn_included'  => $r->bn_included    ?? 0,
+                'color_included' => $r->color_included ?? 0,
+                'bn_costo'     => $r->bn_cost_per_excess    ?? 0,
+                'color_costo'  => $r->color_cost_per_excess ?? 0,
+            ],
+        ]);
+
+        return view('print-counters.create', compact('rents', 'rentDefaults'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'rent_id'             => 'required|exists:rents,id',
-            'period_month'        => 'required|integer|min:1|max:12',
-            'period_year'         => 'required|integer|min:2020',
-            'bn_previous'         => 'required|integer|min:0',
-            'bn_current'          => 'required|integer|min:0',
-            'color_previous'      => 'required|integer|min:0',
-            'color_current'       => 'required|integer|min:0',
-            'counter_photo_url'   => 'nullable|string|max:500',
-            'notes'               => 'nullable|string|max:500',
-            'reading_date'        => 'required|date',
+            'rent_id'       => 'required|exists:rents,id',
+            'period_month'  => 'required|integer|min:1|max:12',
+            'period_year'   => 'required|integer|min:2020',
+            'bn_previous'   => 'required|integer|min:0',
+            'bn_current'    => 'required|integer|min:0',
+            'color_previous'=> 'required|integer|min:0',
+            'color_current' => 'required|integer|min:0',
+            'counter_photo' => 'nullable|image|max:5120',
+            'notes'         => 'nullable|string|max:500',
+            'reading_date'  => 'required|date',
         ]);
 
-        $rent = Rent::find($data['rent_id']);
-        $data['bn_included']        = $rent->bn_included ?? 0;
-        $data['bn_cost_per_page']   = $rent->bn_cost_per_excess ?? 0;
-        $data['color_included']     = $rent->color_included ?? 0;
-        $data['color_cost_per_page'] = $rent->color_cost_per_excess ?? 0;
-        $data['bn_printed']         = max(0, $data['bn_current'] - $data['bn_previous']);
-        $data['bn_excess']          = max(0, $data['bn_printed'] - $data['bn_included']);
-        $data['bn_excess_amount']   = $data['bn_excess'] * $data['bn_cost_per_page'];
-        $data['color_printed']      = max(0, $data['color_current'] - $data['color_previous']);
-        $data['color_excess']       = max(0, $data['color_printed'] - $data['color_included']);
-        $data['color_excess_amount'] = $data['color_excess'] * $data['color_cost_per_page'];
-        $data['total_excess_amount'] = $data['bn_excess_amount'] + $data['color_excess_amount'];
+        if ($request->hasFile('counter_photo')) {
+            $data['counter_photo_url'] = $request->file('counter_photo')->store('print-counters', 'public');
+        }
+        unset($data['counter_photo']);
+
         $data['created_by'] = auth()->id();
 
         PrintCounter::create($data);
@@ -79,15 +91,55 @@ class PrintCounterController extends Controller
             'bn_current'     => 'required|integer|min:0',
             'color_previous' => 'required|integer|min:0',
             'color_current'  => 'required|integer|min:0',
+            'counter_photo'  => 'nullable|image|max:5120',
             'notes'          => 'nullable|string|max:500',
             'reading_date'   => 'required|date',
         ]);
 
-        $data['bn_printed']   = max(0, $data['bn_current'] - $data['bn_previous']);
-        $data['color_printed'] = max(0, $data['color_current'] - $data['color_previous']);
+        if ($request->hasFile('counter_photo')) {
+            if ($printCounter->counter_photo_url) {
+                Storage::disk('public')->delete($printCounter->counter_photo_url);
+            }
+            $data['counter_photo_url'] = $request->file('counter_photo')->store('print-counters', 'public');
+        }
+        unset($data['counter_photo']);
+
         $printCounter->update($data);
 
         return redirect()->route('print-counters.show', $printCounter)->with('success', 'Contador actualizado.');
+    }
+
+    public function billExcess(PrintCounter $printCounter)
+    {
+        if ($printCounter->is_billed) {
+            return back()->with('error', 'Este contador ya fue facturado.');
+        }
+        if ($printCounter->total_excess_amount <= 0) {
+            return back()->with('error', 'No hay exceso que facturar para este contador.');
+        }
+
+        $rent  = $printCounter->rent;
+        $month = str_pad($printCounter->period_month, 2, '0', STR_PAD_LEFT);
+
+        $billing = Billing::create([
+            'billing_type' => 'EXCESO',
+            'rent_id'      => $rent->id,
+            'sale_id'      => null,
+            'client_id'    => $rent->client_id,
+            'branch_id'    => $rent->branch_id,
+            'area_id'      => $rent->area_id,
+            'amount'       => $printCounter->total_excess_amount,
+            'target_date'  => now()->startOfMonth(),
+            'due_date'     => now()->endOfMonth(),
+            'status'       => 'PENDIENTE',
+            'comment'      => "Exceso impresión {$month}/{$printCounter->period_year} — BN: {$printCounter->bn_excess} págs × \${$printCounter->bn_cost_per_page} | Color: {$printCounter->color_excess} págs × \${$printCounter->color_cost_per_page}",
+            'created_by'   => auth()->id(),
+        ]);
+
+        $printCounter->update(['is_billed' => true, 'billing_id' => $billing->id]);
+
+        return redirect()->route('print-counters.show', $printCounter)
+            ->with('success', "Cobro de exceso generado por \$" . number_format($billing->amount, 2) . ". Folio: #{$billing->id}");
     }
 
     public function destroy(PrintCounter $printCounter)

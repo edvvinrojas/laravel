@@ -92,7 +92,7 @@ class RentController extends Controller
 
     public function show(Rent $rent)
     {
-        $rent->load(['client', 'branch', 'area', 'item.brand', 'creator', 'billings', 'printCounters', 'accesorios', 'consumibles']);
+        $rent->load(['client', 'branch', 'area', 'item.brand', 'creator', 'billings', 'printCounters.rent', 'accesorios', 'consumibles']);
         return view('rents.show', compact('rent'));
     }
 

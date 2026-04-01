@@ -40,6 +40,21 @@
                 @endforeach
             </select>
         </div>
+        {{-- Servicios incluidos --}}
+        <div class="md:col-span-2 flex items-start gap-4 pt-1">
+            <div class="flex items-center gap-2">
+                <input type="checkbox" name="services_included" value="1" id="servicesCheck"
+                    @checked(old('services_included', $sale->services_included))
+                    onchange="document.getElementById('servicesQtyBox').classList.toggle('hidden', !this.checked)">
+                <label for="servicesCheck" class="text-sm font-medium">Servicios incluidos</label>
+            </div>
+            <div id="servicesQtyBox" class="{{ old('services_included', $sale->services_included) ? '' : 'hidden' }} flex items-center gap-2">
+                <label class="text-sm text-gray-600">Cantidad de servicios:</label>
+                <input name="services_quantity" type="number" min="1"
+                    value="{{ old('services_quantity', $sale->services_quantity) }}"
+                    class="form-input w-24 text-sm" placeholder="0">
+            </div>
+        </div>
     </div>
     <div class="px-5 py-4 border-t border-gray-100 flex gap-3">
         <button type="submit" class="btn-primary">Actualizar</button>

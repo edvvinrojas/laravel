@@ -103,11 +103,20 @@
         <div class="card-header"><h3 class="font-semibold text-sm">Contadores de impresión</h3><a href="{{ route('print-counters.create') }}?rent_id={{ $rent->id }}" class="btn btn-sm btn-primary">+ Contador</a></div>
         <div class="table-wrap rounded-none border-0">
             <table class="table">
-                <thead><tr><th>Período</th><th>BN impreso</th><th>Color impreso</th><th>Exceso BN</th><th>Exceso Color</th><th>Total exceso</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Período</th>
+                        <th>BN impreso</th>
+                        <th>Color impreso</th>
+                        <th>Exceso BN</th>
+                        <th>Exceso Color</th>
+                        <th>Total exceso</th>
+                    </tr>
+                </thead>
                 <tbody>
                 @forelse($rent->printCounters as $pc)
                 <tr>
-                    <td>{{ sprintf('%02d',$pc->period_month) }}/{{ $pc->period_year }}</td>
+                    <td class="font-mono text-xs">{{ sprintf('%02d',$pc->period_month) }}/{{ $pc->period_year }}</td>
                     <td>{{ number_format($pc->bn_printed) }}</td>
                     <td>{{ number_format($pc->color_printed) }}</td>
                     <td>{{ number_format($pc->bn_excess) }}</td>

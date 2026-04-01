@@ -65,8 +65,9 @@
                 value="{{ old('amount') }}" class="form-input" required>
             <div id="amountBreakdown" class="hidden mt-2 p-3 bg-blue-50 rounded text-sm text-blue-800 space-y-1">
                 <div>Renta base: <span id="bdBase" class="font-semibold"></span></div>
-                <div>Excedente contador: <span id="bdExcess" class="font-semibold"></span></div>
-                <div class="border-t border-blue-200 pt-1">Total: <span id="bdTotal" class="font-bold"></span></div>
+                <div>Excedente (contadores sin facturar): <span id="bdExcess" class="font-semibold"></span> <span id="bdCounters" class="text-xs text-blue-600"></span></div>
+                <div class="border-t border-blue-200 pt-1 font-bold">Total: <span id="bdTotal"></span></div>
+                <p class="text-xs text-blue-500 mt-1">El monto se calcula automáticamente; los contadores sin facturar quedarán marcados como cobrados al guardar.</p>
             </div>
         </div>
 
@@ -132,14 +133,18 @@ toggleType();
 
 rentSelect.addEventListener('change', function() {
     setClient(this);
-    if (!this.value) { breakdown.classList.add('hidden'); return; }
+    if (!this.value) { breakdown.classList.add('hidden'); amountInput.readOnly = false; return; }
     fetch(`/api/rents/${this.value}/billing-amount`)
         .then(r => r.json())
         .then(data => {
             amountInput.value = data.total.toFixed(2);
-            document.getElementById('bdBase').textContent   = fmt(data.base);
-            document.getElementById('bdExcess').textContent = fmt(data.excess);
-            document.getElementById('bdTotal').textContent  = fmt(data.total);
+            amountInput.readOnly = true;
+            document.getElementById('bdBase').textContent     = fmt(data.base);
+            document.getElementById('bdExcess').textContent   = fmt(data.excess);
+            document.getElementById('bdCounters').textContent = data.n_contadores > 0
+                ? `(${data.n_contadores} ${data.n_contadores === 1 ? 'contador' : 'contadores'})`
+                : '';
+            document.getElementById('bdTotal').textContent    = fmt(data.total);
             breakdown.classList.remove('hidden');
         });
 });

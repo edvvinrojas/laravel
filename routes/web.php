@@ -111,13 +111,27 @@ Route::middleware('auth')->group(function () {
         return response()->json($items);
     })->name('api.area.items');
     Route::get('api/rents/{rent}/billing-amount', function(\App\Models\Rent $rent) {
-        $lastCounter = $rent->printCounters()->where('is_active', true)->orderByDesc('id')->first();
-        $excess = $lastCounter ? (float) $lastCounter->total_excess_amount : 0;
+        $unbilled = $rent->printCounters()
+            ->where('is_active', true)
+            ->where('is_billed', false)
+            ->get();
+        // Calcular exceso desde los datos crudos + condiciones del contrato
+        $excess = $unbilled->sum(function($pc) use ($rent) {
+            $bnEx    = max(0, ($pc->bn_current - $pc->bn_previous) - $rent->bn_included);
+            $colorEx = max(0, ($pc->color_current - $pc->color_previous) - $rent->color_included);
+            return ($bnEx * $rent->bn_cost_per_excess) + ($colorEx * $rent->color_cost_per_excess);
+        });
+        $nContadores = $unbilled->filter(function($pc) use ($rent) {
+            $bnEx    = max(0, ($pc->bn_current - $pc->bn_previous) - $rent->bn_included);
+            $colorEx = max(0, ($pc->color_current - $pc->color_previous) - $rent->color_included);
+            return ($bnEx + $colorEx) > 0;
+        })->count();
         return response()->json([
-            'base'    => (float) $rent->rent,
-            'excess'  => $excess,
-            'total'   => (float) $rent->rent + $excess,
-            'client_id' => $rent->client_id,
+            'base'         => (float) $rent->rent,
+            'excess'       => (float) $excess,
+            'total'        => (float) $rent->rent + $excess,
+            'n_contadores' => $nContadores,
+            'client_id'    => $rent->client_id,
         ]);
     })->name('api.rent.billing-amount');
     Route::get('api/sales/{sale}/billing-amount', function(\App\Models\Sale $sale) {
@@ -139,6 +153,7 @@ Route::middleware('auth')->group(function () {
 
     // Contadores de impresión
     Route::resource('print-counters', PrintCounterController::class);
+    Route::post('print-counters/{printCounter}/bill-excess', [PrintCounterController::class, 'billExcess'])->name('print-counters.bill-excess');
 
     // Compras
     Route::resource('purchases', PurchaseController::class);
