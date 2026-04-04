@@ -57,9 +57,7 @@
                     <option value="{{ $i->id }}"
                         @selected(old('item_id')==$i->id)
                         @if($noDisponible) disabled class="text-gray-400 bg-gray-100" @endif
-                        data-status="{{ $i->location_status }}"
-                        data-bn="{{ $i->contador_inicial_bn ?? 0 }}"
-                        data-color="{{ $i->contador_inicial_color ?? 0 }}">
+                        data-status="{{ $i->location_status }}">
                         {{ $i->brand->name ?? '' }} {{ $i->model }} — {{ $i->serie }} [{{ $statusLabel }}]
                     </option>
                 @endforeach
@@ -146,10 +144,6 @@
     </div>
 </div>
 
-@include('components.accesorios-consumibles-selector', [
-    'itemSelectId' => 'item_id_select',
-])
-
 </form>
 </div>
 
@@ -162,12 +156,9 @@ document.getElementById('printCheck').addEventListener('change', function() {
 
 // Al seleccionar equipo: mostrar contadores con valores sugeridos
 document.getElementById('item_id_select').addEventListener('change', function() {
-    const selected = this.options[this.selectedIndex];
     const section  = document.getElementById('contadorSection');
     if (!this.value) { section.classList.add('hidden'); return; }
     section.classList.remove('hidden');
-    document.getElementById('contador_bn').value    = selected.dataset.bn    || 0;
-    document.getElementById('contador_color').value = selected.dataset.color || 0;
 });
 
 // Sucursales por cliente

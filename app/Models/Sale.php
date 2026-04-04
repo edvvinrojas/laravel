@@ -26,6 +26,4 @@ class Sale extends Model
     public function item()       { return $this->belongsTo(Item::class); }
     public function creator()    { return $this->belongsTo(User::class, 'created_by'); }
     public function billings()   { return $this->hasMany(Billing::class); }
-    public function accesorios() { return $this->belongsToMany(Accesorio::class, 'sale_accesorio')->withPivot('cantidad','notas')->withTimestamps(); }
-    public function consumibles(){ return $this->belongsToMany(Consumible::class, 'sale_consumible')->withPivot('cantidad','notas')->withTimestamps(); }
 }

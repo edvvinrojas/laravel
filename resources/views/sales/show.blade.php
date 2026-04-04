@@ -27,55 +27,5 @@
         </div>
     </div>
 
-    {{-- Accesorios y consumibles incluidos --}}
-    @if($sale->accesorios->count() || $sale->consumibles->count())
-    <div class="card">
-        <div class="card-header">
-            <h3 class="font-semibold text-sm">Accesorios y consumibles incluidos</h3>
-        </div>
-        <div class="card-body space-y-4">
-
-            @if($sale->accesorios->count())
-            <div>
-                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Accesorios</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    @foreach($sale->accesorios as $acc)
-                    <div class="flex items-center gap-2 text-sm border border-gray-200 rounded px-3 py-2">
-                        <svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        <span class="font-medium">{{ $acc->nombre }}</span>
-                        @if($acc->codigo)<span class="text-gray-400 text-xs">{{ $acc->codigo }}</span>@endif
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-            @endif
-
-            @if($sale->consumibles->count())
-            <div>
-                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Consumibles / Tóner</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    @foreach($sale->consumibles as $con)
-                    <div class="flex items-center gap-2 text-sm border border-gray-200 rounded px-3 py-2">
-                        <svg class="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        <span>
-                            <span class="font-medium">{{ $con->nombre }}</span>
-                            <span class="text-gray-400 text-xs ml-1">
-                                {{ $con->tipo }}{{ $con->color ? ' · '.$con->color : '' }}
-                            </span>
-                        </span>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-            @endif
-
-        </div>
-    </div>
-    @endif
-
 </div>
 @endsection

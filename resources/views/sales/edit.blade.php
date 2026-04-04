@@ -62,12 +62,6 @@
     </div>
 </div>
 
-@include('components.accesorios-consumibles-selector', [
-    'itemSelectId'        => 'item_id_select',
-    'selectedAccesorios'  => $sale->accesorios,
-    'selectedConsumibles' => $sale->consumibles,
-])
-
 </form>
 </div>
 @endsection

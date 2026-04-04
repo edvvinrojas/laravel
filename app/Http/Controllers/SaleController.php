@@ -6,6 +6,7 @@ use App\Models\Sale;
 use App\Models\Client;
 use App\Models\Item;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class SaleController extends Controller
 {
@@ -47,15 +48,12 @@ class SaleController extends Controller
             'services_quantity'  => 'nullable|integer|min:1',
         ]);
 
-        $data['created_by']         = auth()->id();
+        $data['created_by']         = Auth::id();
         $data['is_foreign']         = $request->boolean('is_foreign');
         $data['services_included']  = $request->boolean('services_included');
         $data['services_quantity']  = $data['services_included'] ? ($data['services_quantity'] ?? null) : null;
 
         $sale = Sale::create($data);
-
-        $sale->accesorios()->sync($request->input('accesorios', []));
-        $sale->consumibles()->sync($request->input('consumibles', []));
 
         if ($sale->sale_status === 'ENTREGADA') {
             $sale->item->update(['location_status' => 'VENDIDO']);
@@ -66,7 +64,7 @@ class SaleController extends Controller
 
     public function show(Sale $sale)
     {
-        $sale->load(['client', 'branch', 'area', 'item.brand', 'creator', 'billings', 'accesorios', 'consumibles']);
+        $sale->load(['client', 'branch', 'area', 'item.brand', 'creator', 'billings']);
         return view('sales.show', compact('sale'));
     }
 
@@ -81,7 +79,6 @@ class SaleController extends Controller
             ->with('brand')
             ->orderBy('model')
             ->get();
-        $sale->load('accesorios', 'consumibles');
         return view('sales.edit', compact('sale', 'clients', 'items'));
     }
 
@@ -104,9 +101,6 @@ class SaleController extends Controller
         $data['services_included'] = $request->boolean('services_included');
         $data['services_quantity'] = $data['services_included'] ? ($data['services_quantity'] ?? null) : null;
         $sale->update($data);
-
-        $sale->accesorios()->sync($request->input('accesorios', []));
-        $sale->consumibles()->sync($request->input('consumibles', []));
 
         return redirect()->route('sales.show', $sale)->with('success', 'Venta actualizada.');
     }

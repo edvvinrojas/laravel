@@ -3,6 +3,9 @@
 @section('page-title','Editar Estante')
 
 @section('content')
+<div class="mb-4">
+    <a href="{{ route('shelves.index') }}" class="btn-secondary">← Volver a estantes</a>
+</div>
 <div class="max-w-lg">
 <form method="POST" action="{{ route('shelves.update', $shelf) }}">
 @csrf @method('PUT')

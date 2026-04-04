@@ -5,10 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Item;
 use App\Models\InventoryItem;
 use App\Models\Sparepart;
-use App\Models\Producto;
-use App\Models\Accesorio;
-use App\Models\Consumible;
-use App\Models\Stock;
 use Illuminate\Http\Request;
 
 class AlmacenController extends Controller
@@ -17,7 +13,7 @@ class AlmacenController extends Controller
     {
         $tab = $request->get('tab', 'equipos');
 
-        $equipment = Item::with('brand', 'supplier', 'producto')
+        $equipment = Item::with('brand', 'supplier')
             ->when($request->q_eq, fn($q, $s) =>
                 $q->where(fn($q2) => $q2->where('sku', 'like', "%$s%")
                     ->orWhere('model', 'like', "%$s%")
@@ -25,34 +21,6 @@ class AlmacenController extends Controller
             )
             ->latest()
             ->paginate(15, ['*'], 'eq_page')
-            ->withQueryString();
-
-        $productos = Producto::with('marca', 'stock')
-            ->withCount('accesorios', 'consumibles', 'equipos')
-            ->when($request->q_pr, fn($q, $s) =>
-                $q->where('nombre', 'like', "%$s%")
-                  ->orWhere('codigo', 'like', "%$s%")
-            )
-            ->orderBy('nombre')
-            ->paginate(15, ['*'], 'pr_page')
-            ->withQueryString();
-
-        $accesorios = Accesorio::with('stock')
-            ->when($request->q_ac, fn($q, $s) =>
-                $q->where('nombre', 'like', "%$s%")
-                  ->orWhere('codigo', 'like', "%$s%")
-            )
-            ->orderBy('nombre')
-            ->paginate(15, ['*'], 'ac_page')
-            ->withQueryString();
-
-        $consumibles = Consumible::with('marca', 'stock')
-            ->when($request->q_co, fn($q, $s) =>
-                $q->where('nombre', 'like', "%$s%")
-                  ->orWhere('codigo_oem', 'like', "%$s%")
-            )
-            ->orderBy('nombre')
-            ->paginate(15, ['*'], 'co_page')
             ->withQueryString();
 
         $inventory = InventoryItem::with(['catalog', 'shelf'])
@@ -74,8 +42,7 @@ class AlmacenController extends Controller
             ->withQueryString();
 
         return view('almacen.index', compact(
-            'equipment', 'productos', 'accesorios', 'consumibles',
-            'inventory', 'spareparts', 'tab'
+            'equipment', 'inventory', 'spareparts', 'tab'
         ));
     }
 }

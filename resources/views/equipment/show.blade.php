@@ -66,7 +66,7 @@
                 @foreach($equipment->rents as $rent)
                 <tr>
                     <td><a href="{{ route('rents.show',$rent) }}" class="text-blue-600 hover:underline">{{ $rent->client?->name }}</a></td>
-                    <td><span class="badge-gray text-xs">{{ $rent->status }}</span></td>
+                    <td><span class="badge-gray text-xs">{{ $rent->contract_status }}</span></td>
                     <td class="text-xs text-gray-500">{{ $rent->start_date?->format('d/m/Y') ?? '—' }}</td>
                 </tr>
                 @endforeach
@@ -89,7 +89,7 @@
                 @foreach($equipment->sales as $sale)
                 <tr>
                     <td><a href="{{ route('sales.show',$sale) }}" class="text-blue-600 hover:underline">{{ $sale->client?->name }}</a></td>
-                    <td><span class="badge-gray text-xs">{{ $sale->status }}</span></td>
+                    <td><span class="badge-gray text-xs">{{ $sale->sale_status }}</span></td>
                     <td class="text-xs text-gray-500">{{ $sale->created_at->format('d/m/Y') }}</td>
                 </tr>
                 @endforeach

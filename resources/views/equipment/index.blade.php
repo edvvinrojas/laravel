@@ -10,6 +10,7 @@
 
     {{-- Catálogos rápidos --}}
     <div class="flex flex-wrap gap-2">
+        <a href="{{ route('almacen.index', ['tab' => 'equipos']) }}" class="btn-secondary btn-sm">← Almacén</a>
         <a href="{{ route('brands.index') }}" class="btn-secondary btn-sm">Marcas</a>
         <a href="{{ route('suppliers.index') }}" class="btn-secondary btn-sm">Proveedores</a>
     </div>

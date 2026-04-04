@@ -3,6 +3,9 @@
 @section('page-title','Nuevo Artículo de Catálogo')
 
 @section('content')
+<div class="mb-4">
+    <a href="{{ route('item-catalog.index') }}" class="btn-secondary">← Volver al catálogo</a>
+</div>
 <div class="max-w-2xl">
 <form method="POST" action="{{ route('item-catalog.store') }}">
 @csrf

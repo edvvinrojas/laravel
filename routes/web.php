@@ -34,9 +34,6 @@ use App\Http\Controllers\AlmacenController;
 use App\Http\Controllers\RhController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServiceOrderController;
-use App\Http\Controllers\ProductoController;
-use App\Http\Controllers\AccesorioController;
-use App\Http\Controllers\ConsumibleController;
 use App\Http\Controllers\TiEquipmentController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\ClientPortalController;
@@ -75,17 +72,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('brands', BrandController::class);
     Route::resource('suppliers', SupplierController::class);
 
-    // Productos / Accesorios / Consumibles (dentro de Almacén)
-    Route::resource('productos', ProductoController::class);
-    Route::resource('accesorios', AccesorioController::class)->except(['index','show']);
-    Route::resource('consumibles', ConsumibleController::class)->except(['index','show']);
-
     // Almacén unificado (equipos + inventario)
     Route::get('almacen', [AlmacenController::class, 'index'])->name('almacen.index');
 
     // Equipos
     Route::resource('equipment', EquipmentController::class);
-    Route::get('equipment/{equipment}/producto-detalle', [EquipmentController::class, 'productoDetalle'])->name('equipment.producto-detalle');
 
     // Catálogos de inventario
     Route::resource('shelves', ShelfController::class);

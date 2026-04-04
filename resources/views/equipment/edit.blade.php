@@ -4,35 +4,23 @@
 @section('page-title', 'Editar equipo')
 
 @section('content')
+<div class="mb-4">
+    <a href="{{ route('equipment.index') }}" class="btn-secondary">← Volver a equipos</a>
+</div>
 <div class="max-w-3xl">
 <form action="{{ route('equipment.update', $equipment) }}" method="POST" class="space-y-4">
 @csrf @method('PUT')
 
-{{-- Producto del catálogo --}}
 <div class="card">
-    <div class="card-header"><h3 class="text-sm font-semibold text-gray-700">Producto del catálogo</h3></div>
+    <div class="card-header"><h3 class="text-sm font-semibold text-gray-700">Datos del equipo</h3></div>
     <div class="card-body space-y-4">
-        <div>
-            <label class="form-label">Producto</label>
-            <select name="producto_id" id="producto_id" class="form-select @error('producto_id') border-red-400 @enderror">
-                <option value="">— Sin producto de catálogo —</option>
-                @foreach($productos as $pr)
-                    <option value="{{ $pr->id }}" data-brand-id="{{ $pr->brand_id }}"
-                            {{ old('producto_id', $equipment->producto_id) == $pr->id ? 'selected' : '' }}>
-                        {{ $pr->nombre }} ({{ $pr->categoria }})
-                    </option>
-                @endforeach
-            </select>
-            @error('producto_id')<p class="form-error">{{ $message }}</p>@enderror
-        </div>
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <label class="form-label">Marca <span class="text-red-500">*</span></label>
                 <select name="brand_id" class="form-select @error('brand_id') border-red-400 @enderror" required>
                     <option value="">— Seleccionar marca —</option>
                     @foreach($brands as $brand)
-                        <option value="{{ $brand->id }}"
-                                {{ old('brand_id', $equipment->brand_id) == $brand->id ? 'selected' : '' }}>
+                        <option value="{{ $brand->id }}" {{ old('brand_id', $equipment->brand_id) == $brand->id ? 'selected' : '' }}>
                             {{ $brand->name }}
                         </option>
                     @endforeach
@@ -52,21 +40,20 @@
                 <select name="type" class="form-select @error('type') border-red-400 @enderror" required>
                     <option value="">— Seleccionar —</option>
                     <option value="MONOCROMO" {{ old('type', $equipment->type) === 'MONOCROMO' ? 'selected' : '' }}>Monocromo</option>
-                    <option value="COLOR"     {{ old('type', $equipment->type) === 'COLOR'     ? 'selected' : '' }}>Color</option>
+                    <option value="COLOR" {{ old('type', $equipment->type) === 'COLOR' ? 'selected' : '' }}>Color</option>
                 </select>
                 @error('type')<p class="form-error">{{ $message }}</p>@enderror
             </div>
-        </div>
-        <div>
-            <label class="form-label">Modelo de tóner <span class="text-red-500">*</span></label>
-            <input name="model_toner" value="{{ old('model_toner', $equipment->model_toner) }}"
-                   class="form-input @error('model_toner') border-red-400 @enderror" required>
-            @error('model_toner')<p class="form-error">{{ $message }}</p>@enderror
+            <div>
+                <label class="form-label">Modelo de tóner <span class="text-red-500">*</span></label>
+                <input name="model_toner" value="{{ old('model_toner', $equipment->model_toner) }}"
+                       class="form-input @error('model_toner') border-red-400 @enderror" required>
+                @error('model_toner')<p class="form-error">{{ $message }}</p>@enderror
+            </div>
         </div>
     </div>
 </div>
 
-{{-- Identificación --}}
 <div class="card">
     <div class="card-header"><h3 class="text-sm font-semibold text-gray-700">Identificación</h3></div>
     <div class="card-body space-y-4">
@@ -85,67 +72,9 @@
                 @error('serie')<p class="form-error">{{ $message }}</p>@enderror
             </div>
         </div>
-        <div>
-            <label class="form-label">Ubicación física</label>
-            <input name="ubicacion_fisica" value="{{ old('ubicacion_fisica', $equipment->ubicacion_fisica) }}"
-                   class="form-input @error('ubicacion_fisica') border-red-400 @enderror"
-                   placeholder="Ej. Piso 2 – Oficina 204">
-            @error('ubicacion_fisica')<p class="form-error">{{ $message }}</p>@enderror
-        </div>
     </div>
 </div>
 
-{{-- Fechas y contadores --}}
-<div class="card">
-    <div class="card-header"><h3 class="text-sm font-semibold text-gray-700">Fechas y contadores iniciales</h3></div>
-    <div class="card-body space-y-4">
-        <div class="grid grid-cols-3 gap-4">
-            <div>
-                <label class="form-label">Fecha de compra</label>
-                <input type="date" name="fecha_compra"
-                       value="{{ old('fecha_compra', $equipment->fecha_compra?->format('Y-m-d')) }}"
-                       class="form-input @error('fecha_compra') border-red-400 @enderror">
-                @error('fecha_compra')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label class="form-label">Fecha de instalación</label>
-                <input type="date" name="fecha_instalacion"
-                       value="{{ old('fecha_instalacion', $equipment->fecha_instalacion?->format('Y-m-d')) }}"
-                       class="form-input @error('fecha_instalacion') border-red-400 @enderror">
-                @error('fecha_instalacion')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label class="form-label">Fin de garantía</label>
-                <input type="date" name="fecha_garantia_fin"
-                       value="{{ old('fecha_garantia_fin', $equipment->fecha_garantia_fin?->format('Y-m-d')) }}"
-                       class="form-input @error('fecha_garantia_fin') border-red-400 @enderror">
-                @error('fecha_garantia_fin')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
-        </div>
-        <div class="grid grid-cols-3 gap-4">
-            <div>
-                <label class="form-label">Contador inicial B/N</label>
-                <input type="number" name="contador_inicial_bn"
-                       value="{{ old('contador_inicial_bn', $equipment->contador_inicial_bn ?? 0) }}"
-                       class="form-input" min="0">
-            </div>
-            <div>
-                <label class="form-label">Contador inicial Color</label>
-                <input type="number" name="contador_inicial_color"
-                       value="{{ old('contador_inicial_color', $equipment->contador_inicial_color ?? 0) }}"
-                       class="form-input" min="0">
-            </div>
-            <div>
-                <label class="form-label">Contador inicial Scan</label>
-                <input type="number" name="contador_inicial_scan"
-                       value="{{ old('contador_inicial_scan', $equipment->contador_inicial_scan ?? 0) }}"
-                       class="form-input" min="0">
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- Adquisición y estado --}}
 <div class="card">
     <div class="card-header"><h3 class="text-sm font-semibold text-gray-700">Adquisición y estado</h3></div>
     <div class="card-body space-y-4">
@@ -155,8 +84,7 @@
                 <select name="supplier_id" class="form-select @error('supplier_id') border-red-400 @enderror">
                     <option value="">— Sin proveedor —</option>
                     @foreach($suppliers as $supplier)
-                        <option value="{{ $supplier->id }}"
-                                {{ old('supplier_id', $equipment->supplier_id) == $supplier->id ? 'selected' : '' }}>
+                        <option value="{{ $supplier->id }}" {{ old('supplier_id', $equipment->supplier_id) == $supplier->id ? 'selected' : '' }}>
                             {{ $supplier->name }}
                         </option>
                     @endforeach
@@ -166,8 +94,7 @@
                 <label class="form-label">Estado / Ubicación</label>
                 <select name="location_status" class="form-select @error('location_status') border-red-400 @enderror">
                     @foreach(['BODEGA' => 'Bodega', 'ASIGNADO' => 'Asignado', 'VENDIDO' => 'Vendido', 'TALLER' => 'Taller', 'DESCONOCIDO' => 'Desconocido'] as $val => $lbl)
-                        <option value="{{ $val }}"
-                                {{ old('location_status', $equipment->location_status) === $val ? 'selected' : '' }}>
+                        <option value="{{ $val }}" {{ old('location_status', $equipment->location_status) === $val ? 'selected' : '' }}>
                             {{ $lbl }}
                         </option>
                     @endforeach
@@ -210,21 +137,17 @@
 
 @push('scripts')
 <script>
-    const productoSelect = document.getElementById('producto_id');
     const brandSelect = document.querySelector('select[name="brand_id"]');
     const skuInput = document.getElementById('sku_input');
     const brands = @json($brands->keyBy('id')->map(fn($b) => $b->name));
 
-    productoSelect.addEventListener('change', function() {
-        const selected = this.options[this.selectedIndex];
-        const brandId = selected.dataset.brandId;
-        if (brandId) {
-            brandSelect.value = brandId;
-            const brandName = (brands[brandId] || '').toUpperCase();
-            const currentSku = skuInput.value;
-            const digits = currentSku.replace(/^[A-Z]+-/, '') || '001';
-            skuInput.value = brandName + '-' + digits;
+    brandSelect.addEventListener('change', function() {
+        const brandName = (brands[this.value] || '').toUpperCase();
+        if (!brandName || !skuInput.value) {
+            return;
         }
+        const digits = skuInput.value.replace(/^[A-Z]+-/, '');
+        skuInput.value = brandName + '-' + digits;
     });
 </script>
 @endpush

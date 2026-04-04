@@ -6,6 +6,7 @@
 <div class="space-y-4">
     {{-- Catálogos rápidos --}}
     <div class="flex flex-wrap gap-2">
+        <a href="{{ route('almacen.index', ['tab' => 'inventario']) }}" class="btn-secondary btn-sm">← Almacén</a>
         <a href="{{ route('item-catalog.index') }}" class="btn-secondary btn-sm">Catálogo de artículos</a>
         <a href="{{ route('shelves.index') }}" class="btn-secondary btn-sm">Estantes</a>
         <a href="{{ route('service-types.index') }}" class="btn-secondary btn-sm">Tipos de servicio</a>

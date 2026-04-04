@@ -3,6 +3,9 @@
 @section('page-title','Nuevo Artículo de Inventario')
 
 @section('content')
+<div class="mb-4">
+    <a href="{{ route('inventory.index') }}" class="btn-secondary">← Volver a inventario</a>
+</div>
 <div class="max-w-3xl">
 <form method="POST" action="{{ route('inventory.store') }}">
 @csrf

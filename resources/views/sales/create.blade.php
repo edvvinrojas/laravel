@@ -97,10 +97,6 @@
     </div>
 </div>
 
-@include('components.accesorios-consumibles-selector', [
-    'itemSelectId' => 'item_id_select',
-])
-
 </form>
 </div>
 

@@ -4,26 +4,16 @@
 @section('page-title', 'Nuevo equipo')
 
 @section('content')
+<div class="mb-4">
+    <a href="{{ route('equipment.index') }}" class="btn-secondary">← Volver a equipos</a>
+</div>
 <div class="max-w-3xl">
 <form action="{{ route('equipment.store') }}" method="POST" class="space-y-4">
 @csrf
 
-{{-- Modelo del catálogo --}}
 <div class="card">
-    <div class="card-header"><h3 class="text-sm font-semibold text-gray-700">Producto del catálogo</h3></div>
+    <div class="card-header"><h3 class="text-sm font-semibold text-gray-700">Datos del equipo</h3></div>
     <div class="card-body space-y-4">
-        <div>
-            <label class="form-label">Producto</label>
-            <select name="producto_id" id="producto_id" class="form-select @error('producto_id') border-red-400 @enderror">
-                <option value="">— Sin producto de catálogo —</option>
-                @foreach($productos as $pr)
-                    <option value="{{ $pr->id }}" data-brand-id="{{ $pr->brand_id }}" {{ old('producto_id') == $pr->id ? 'selected' : '' }}>
-                        {{ $pr->nombre }} ({{ $pr->categoria }})
-                    </option>
-                @endforeach
-            </select>
-            @error('producto_id')<p class="form-error">{{ $message }}</p>@enderror
-        </div>
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <label class="form-label">Marca <span class="text-red-500">*</span></label>
@@ -49,26 +39,25 @@
                 <select name="type" class="form-select @error('type') border-red-400 @enderror" required>
                     <option value="">— Seleccionar —</option>
                     <option value="MONOCROMO" {{ old('type') === 'MONOCROMO' ? 'selected' : '' }}>Monocromo</option>
-                    <option value="COLOR"     {{ old('type') === 'COLOR'     ? 'selected' : '' }}>Color</option>
+                    <option value="COLOR" {{ old('type') === 'COLOR' ? 'selected' : '' }}>Color</option>
                 </select>
                 @error('type')<p class="form-error">{{ $message }}</p>@enderror
             </div>
-        </div>
-        <div>
-            <label class="form-label">Modelo de tóner <span class="text-red-500">*</span></label>
-            <input name="model_toner" value="{{ old('model_toner') }}"
-                   class="form-input @error('model_toner') border-red-400 @enderror"
-                   required placeholder="Ej. TK-1175, CE285A">
-            @error('model_toner')<p class="form-error">{{ $message }}</p>@enderror
+            <div>
+                <label class="form-label">Modelo de tóner <span class="text-red-500">*</span></label>
+                <input name="model_toner" value="{{ old('model_toner') }}"
+                       class="form-input @error('model_toner') border-red-400 @enderror"
+                       required placeholder="Ej. TK-1175, CE285A">
+                @error('model_toner')<p class="form-error">{{ $message }}</p>@enderror
+            </div>
         </div>
     </div>
 </div>
 
-{{-- Identificación --}}
 <div class="card">
     <div class="card-header"><h3 class="text-sm font-semibold text-gray-700">Identificación</h3></div>
     <div class="card-body space-y-4">
-        <div class="grid grid-cols-3 gap-4">
+        <div class="grid grid-cols-2 gap-4">
             <div>
                 <label class="form-label">SKU</label>
                 <select name="sku" class="form-select @error('sku') border-red-400 @enderror">
@@ -86,65 +75,10 @@
                        required>
                 @error('serie')<p class="form-error">{{ $message }}</p>@enderror
             </div>
-            <div>
-                <label class="form-label">Ubicación física</label>
-                <input name="ubicacion_fisica" value="{{ old('ubicacion_fisica') }}"
-                       class="form-input @error('ubicacion_fisica') border-red-400 @enderror"
-                       placeholder="Ej. Piso 2 – Oficina 204">
-                @error('ubicacion_fisica')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
         </div>
     </div>
 </div>
 
-{{-- Fechas y contadores iniciales --}}
-<div class="card">
-    <div class="card-header"><h3 class="text-sm font-semibold text-gray-700">Fechas y contadores iniciales</h3></div>
-    <div class="card-body space-y-4">
-        <div class="grid grid-cols-3 gap-4">
-            <div>
-                <label class="form-label">Fecha de compra</label>
-                <input type="date" name="fecha_compra" value="{{ old('fecha_compra') }}"
-                       class="form-input @error('fecha_compra') border-red-400 @enderror">
-                @error('fecha_compra')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label class="form-label">Fecha de instalación</label>
-                <input type="date" name="fecha_instalacion" value="{{ old('fecha_instalacion') }}"
-                       class="form-input @error('fecha_instalacion') border-red-400 @enderror">
-                @error('fecha_instalacion')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label class="form-label">Fin de garantía</label>
-                <input type="date" name="fecha_garantia_fin" value="{{ old('fecha_garantia_fin') }}"
-                       class="form-input @error('fecha_garantia_fin') border-red-400 @enderror">
-                @error('fecha_garantia_fin')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
-        </div>
-        <div class="grid grid-cols-3 gap-4">
-            <div>
-                <label class="form-label">Contador inicial B/N</label>
-                <input type="number" name="contador_inicial_bn" value="{{ old('contador_inicial_bn', 0) }}"
-                       class="form-input @error('contador_inicial_bn') border-red-400 @enderror" min="0">
-                @error('contador_inicial_bn')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label class="form-label">Contador inicial Color</label>
-                <input type="number" name="contador_inicial_color" value="{{ old('contador_inicial_color', 0) }}"
-                       class="form-input @error('contador_inicial_color') border-red-400 @enderror" min="0">
-                @error('contador_inicial_color')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label class="form-label">Contador inicial Scan</label>
-                <input type="number" name="contador_inicial_scan" value="{{ old('contador_inicial_scan', 0) }}"
-                       class="form-input @error('contador_inicial_scan') border-red-400 @enderror" min="0">
-                @error('contador_inicial_scan')<p class="form-error">{{ $message }}</p>@enderror
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- Adquisición --}}
 <div class="card">
     <div class="card-header"><h3 class="text-sm font-semibold text-gray-700">Adquisición y estado</h3></div>
     <div class="card-body space-y-4">
@@ -207,22 +141,9 @@
 
 @push('scripts')
 <script>
-    const productoSelect = document.getElementById('producto_id');
     const brandSelect = document.querySelector('select[name="brand_id"]');
     const skuSelect = document.querySelector('select[name="sku"]');
     const brands = @json($brands->keyBy('id')->map(fn($b) => $b->name));
-
-    productoSelect.addEventListener('change', function() {
-        const selected = this.options[this.selectedIndex];
-        const brandId = selected.dataset.brandId;
-        if (brandId) {
-            brandSelect.value = brandId;
-            const brandName = brands[brandId] || '';
-            skuSelect.options[0].text = '— Auto: ' + brandName.toUpperCase() + '-### —';
-        } else {
-            skuSelect.options[0].text = '— Seleccionar SKU —';
-        }
-    });
 
     brandSelect.addEventListener('change', function() {
         const brandName = brands[this.value] || '';

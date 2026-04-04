@@ -8,6 +8,7 @@ use App\Models\Branch;
 use App\Models\Area;
 use App\Models\Item;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class RentController extends Controller
 {
@@ -40,13 +41,8 @@ class RentController extends Controller
     {
         $clients   = Client::where('is_active', true)->orderBy('name')->get();
         $items     = Item::where('is_active', true)->with('brand')->orderBy('model')->get();
-        $itemsData = $items->keyBy('id')->map(fn($i) => [
-            'contador_inicial_bn'    => $i->contador_inicial_bn ?? 0,
-            'contador_inicial_color' => $i->contador_inicial_color ?? 0,
-            'location_status'        => $i->location_status,
-        ]);
         $nextContract = $this->generateContractNumber();
-        return view('rents.create', compact('clients', 'items', 'itemsData', 'nextContract'));
+        return view('rents.create', compact('clients', 'items', 'nextContract'));
     }
 
     public function store(Request $request)
@@ -72,16 +68,13 @@ class RentController extends Controller
         ]);
 
         $data['contract_number']     = $this->generateContractNumber();
-        $data['created_by']          = auth()->id();
+        $data['created_by']          = Auth::id();
         $data['is_foreign']          = $request->boolean('is_foreign');
         $data['has_print_service']   = $request->boolean('has_print_service');
         $data['contador_inicial_bn']    = $request->input('contador_inicial_bn', 0);
         $data['contador_inicial_color'] = $request->input('contador_inicial_color', 0);
 
         $rent = Rent::create($data);
-
-        $rent->accesorios()->sync($request->input('accesorios', []));
-        $rent->consumibles()->sync($request->input('consumibles', []));
 
         if ($rent->contract_status === 'VIGENTE') {
             $rent->item->update(['location_status' => 'ASIGNADO']);
@@ -92,7 +85,7 @@ class RentController extends Controller
 
     public function show(Rent $rent)
     {
-        $rent->load(['client', 'branch', 'area', 'item.brand', 'creator', 'billings', 'printCounters.rent', 'accesorios', 'consumibles']);
+        $rent->load(['client', 'branch', 'area', 'item.brand', 'creator', 'billings', 'printCounters.rent']);
         return view('rents.show', compact('rent'));
     }
 
@@ -102,11 +95,7 @@ class RentController extends Controller
         $items    = Item::where('is_active', true)->with('brand')->orderBy('model')->get();
         $branches = $rent->client_id ? Branch::where('client_id', $rent->client_id)->get() : collect();
         $areas    = $rent->branch_id  ? Area::where('branch_id', $rent->branch_id)->get()   : collect();
-        $itemsData = $items->keyBy('id')->map(fn($i) => [
-            'location_status' => $i->location_status,
-        ]);
-        $rent->load('accesorios', 'consumibles');
-        return view('rents.edit', compact('rent', 'clients', 'items', 'branches', 'areas', 'itemsData'));
+        return view('rents.edit', compact('rent', 'clients', 'items', 'branches', 'areas'));
     }
 
     public function update(Request $request, Rent $rent)
@@ -132,9 +121,6 @@ class RentController extends Controller
         $data['is_foreign']        = $request->boolean('is_foreign');
         $data['has_print_service'] = $request->boolean('has_print_service');
         $rent->update($data);
-
-        $rent->accesorios()->sync($request->input('accesorios', []));
-        $rent->consumibles()->sync($request->input('consumibles', []));
 
         return redirect()->route('rents.show', $rent)->with('success', 'Renta actualizada.');
     }
