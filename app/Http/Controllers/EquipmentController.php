@@ -61,7 +61,7 @@ class EquipmentController extends Controller
         $validated['is_active'] = $request->boolean('is_active', true);
         if (empty($validated['sku'])) {
             $brand = Brand::findOrFail($validated['brand_id']);
-            $prefix = strtoupper($brand->name) . '-';
+            $prefix = strtoupper($brand->prefix) . '-';
             $lastItem = Item::where('sku', 'like', $prefix . '%')->orderByDesc('sku')->first();
             $nextNumber = 1;
             if ($lastItem) {

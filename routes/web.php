@@ -144,6 +144,8 @@ Route::middleware('auth')->group(function () {
     // Facturación / Cobranza
     Route::resource('billing', BillingController::class);
     Route::patch('billing/{billing}/pay', [BillingController::class, 'markPaid'])->name('billing.pay');
+    Route::post('billing/{billing}/facturacom/stamp', [BillingController::class, 'stampFacturaCom'])->name('billing.facturacom.stamp');
+    Route::post('billing/{billing}/facturacom/sync', [BillingController::class, 'syncFacturaCom'])->name('billing.facturacom.sync');
 
     // Reportes
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');

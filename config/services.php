@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'facturacom' => [
+        'base_url' => env('FACTURACOM_BASE_URL', env('FACTURACOM_MODE', 'sandbox') === 'production'
+            ? 'https://api.factura.com'
+            : 'https://sandbox.factura.com/api'),
+        'api_key' => env('FACTURACOM_API_KEY'),
+        'secret_key' => env('FACTURACOM_SECRET_KEY'),
+        'timeout' => env('FACTURACOM_TIMEOUT', 20),
+    ],
+
 ];

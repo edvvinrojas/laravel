@@ -40,7 +40,11 @@ class RentController extends Controller
     public function create()
     {
         $clients   = Client::where('is_active', true)->orderBy('name')->get();
-        $items     = Item::where('is_active', true)->with('brand')->orderBy('model')->get();
+        $items     = Item::where('is_active', true)
+            ->with('brand')
+            ->orderByRaw("CASE WHEN location_status = 'BODEGA' THEN 0 ELSE 1 END")
+            ->orderBy('model')
+            ->get();
         $nextContract = $this->generateContractNumber();
         return view('rents.create', compact('clients', 'items', 'nextContract'));
     }
@@ -74,6 +78,13 @@ class RentController extends Controller
         $data['contador_inicial_bn']    = $request->input('contador_inicial_bn', 0);
         $data['contador_inicial_color'] = $request->input('contador_inicial_color', 0);
 
+        $item = Item::findOrFail($data['item_id']);
+        if ($item->location_status !== 'BODEGA') {
+            return back()
+                ->withInput()
+                ->withErrors(['item_id' => 'Solo puedes seleccionar equipos con estado BODEGA.']);
+        }
+
         $rent = Rent::create($data);
 
         if ($rent->contract_status === 'VIGENTE') {
@@ -92,7 +103,11 @@ class RentController extends Controller
     public function edit(Rent $rent)
     {
         $clients  = Client::where('is_active', true)->orderBy('name')->get();
-        $items    = Item::where('is_active', true)->with('brand')->orderBy('model')->get();
+        $items    = Item::where('is_active', true)
+            ->with('brand')
+            ->orderByRaw("CASE WHEN location_status = 'BODEGA' THEN 0 ELSE 1 END")
+            ->orderBy('model')
+            ->get();
         $branches = $rent->client_id ? Branch::where('client_id', $rent->client_id)->get() : collect();
         $areas    = $rent->branch_id  ? Area::where('branch_id', $rent->branch_id)->get()   : collect();
         return view('rents.edit', compact('rent', 'clients', 'items', 'branches', 'areas'));
@@ -120,6 +135,14 @@ class RentController extends Controller
 
         $data['is_foreign']        = $request->boolean('is_foreign');
         $data['has_print_service'] = $request->boolean('has_print_service');
+
+        $item = Item::findOrFail($data['item_id']);
+        if ($item->location_status !== 'BODEGA' && $item->id !== $rent->item_id) {
+            return back()
+                ->withInput()
+                ->withErrors(['item_id' => 'Solo puedes seleccionar equipos con estado BODEGA.']);
+        }
+
         $rent->update($data);
 
         return redirect()->route('rents.show', $rent)->with('success', 'Renta actualizada.');

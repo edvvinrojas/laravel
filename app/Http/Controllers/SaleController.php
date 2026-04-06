@@ -26,8 +26,8 @@ class SaleController extends Controller
     {
         $clients = Client::where('is_active', true)->orderBy('name')->get();
         $items   = Item::where('is_active', true)
-            ->whereNotIn('location_status', ['ASIGNADO', 'TALLER'])
             ->with('brand')
+            ->orderByRaw("CASE WHEN location_status = 'BODEGA' THEN 0 ELSE 1 END")
             ->orderBy('model')
             ->get();
         return view('sales.create', compact('clients', 'items'));
@@ -53,6 +53,13 @@ class SaleController extends Controller
         $data['services_included']  = $request->boolean('services_included');
         $data['services_quantity']  = $data['services_included'] ? ($data['services_quantity'] ?? null) : null;
 
+        $item = Item::findOrFail($data['item_id']);
+        if ($item->location_status !== 'BODEGA') {
+            return back()
+                ->withInput()
+                ->withErrors(['item_id' => 'Solo puedes seleccionar equipos con estado BODEGA.']);
+        }
+
         $sale = Sale::create($data);
 
         if ($sale->sale_status === 'ENTREGADA') {
@@ -72,11 +79,8 @@ class SaleController extends Controller
     {
         $clients = Client::where('is_active', true)->orderBy('name')->get();
         $items   = Item::where('is_active', true)
-            ->where(fn($q) => $q
-                ->whereNotIn('location_status', ['ASIGNADO', 'TALLER'])
-                ->orWhere('id', $sale->item_id)  // siempre incluir el equipo actual de la venta
-            )
             ->with('brand')
+            ->orderByRaw("CASE WHEN location_status = 'BODEGA' THEN 0 ELSE 1 END")
             ->orderBy('model')
             ->get();
         return view('sales.edit', compact('sale', 'clients', 'items'));
@@ -100,6 +104,14 @@ class SaleController extends Controller
         $data['is_foreign']        = $request->boolean('is_foreign');
         $data['services_included'] = $request->boolean('services_included');
         $data['services_quantity'] = $data['services_included'] ? ($data['services_quantity'] ?? null) : null;
+
+        $item = Item::findOrFail($data['item_id']);
+        if ($item->location_status !== 'BODEGA' && $item->id !== $sale->item_id) {
+            return back()
+                ->withInput()
+                ->withErrors(['item_id' => 'Solo puedes seleccionar equipos con estado BODEGA.']);
+        }
+
         $sale->update($data);
 
         return redirect()->route('sales.show', $sale)->with('success', 'Venta actualizada.');

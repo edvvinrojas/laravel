@@ -9,6 +9,10 @@
 <div class="card">
     <div class="card-header"><h3 class="font-semibold text-sm">Datos del contrato</h3></div>
     <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-4">
+        @php
+            $availableItems = $items->filter(fn($i) => $i->location_status === 'BODEGA');
+            $unavailableItems = $items->reject(fn($i) => $i->location_status === 'BODEGA');
+        @endphp
 
         <div>
             <label class="form-label">No. Contrato</label>
@@ -43,26 +47,56 @@
 
         <div class="md:col-span-2">
             <label class="form-label">Equipo *</label>
-            <select name="item_id" id="item_id_select" class="form-select" required>
-                <option value="">Seleccionar…</option>
-                @foreach($items as $i)
-                    @php
-                        $noDisponible = in_array($i->location_status, ['ASIGNADO', 'TALLER']);
-                        $statusLabel  = match($i->location_status) {
-                            'ASIGNADO' => 'RENTADO - NO DISPONIBLE',
-                            'TALLER'   => 'EN TALLER - NO DISPONIBLE',
-                            default    => $i->location_status ?? 'BODEGA',
-                        };
-                    @endphp
-                    <option value="{{ $i->id }}"
-                        @selected(old('item_id')==$i->id)
-                        @if($noDisponible) disabled class="text-gray-400 bg-gray-100" @endif
-                        data-status="{{ $i->location_status }}">
-                        {{ $i->brand->name ?? '' }} {{ $i->model }} — {{ $i->serie }} [{{ $statusLabel }}]
-                    </option>
-                @endforeach
-            </select>
-            @error('item_id')<p class="form-error">{{ $message }}</p>@enderror
+            <input type="hidden" name="item_id" id="item_id_input" value="{{ old('item_id') }}" required>
+            <p class="text-xs text-gray-500 mb-2">Selecciona un equipo.</p>
+            @error('item_id')<p class="form-error mb-2">{{ $message }}</p>@enderror
+
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Equipos disponibles</p>
+            <div class="h-[14.75rem] overflow-y-auto pr-1">
+                <div class="grid grid-cols-3 gap-3">
+                    @foreach($availableItems as $i)
+                        @php $price = $i->cost; @endphp
+                        <button
+                            type="button"
+                            class="equipment-card h-28 flex flex-col justify-between text-left border border-gray-200 rounded-lg p-3 hover:border-blue-300 hover:bg-blue-50/40 transition"
+                            data-item-id="{{ $i->id }}"
+                            data-item-price="{{ $price ?? '' }}"
+                            data-selectable="1"
+                        >
+                            <div class="text-sm font-semibold text-gray-900 truncate">{{ $i->brand->name ?? '—' }} {{ $i->model }}</div>
+                            <div class="text-xs text-gray-500 mt-0.5">Serie: {{ $i->serie ?: '—' }}</div>
+                            <div class="mt-2 flex items-center justify-between">
+                                <span class="text-[11px] px-2 py-1 rounded bg-gray-100 text-gray-600">{{ $i->location_status ?? 'BODEGA' }}</span>
+                                <span class="text-sm font-bold text-blue-700">{{ $price !== null ? '$'.number_format($price, 2) : 'Sin precio' }}</span>
+                            </div>
+                        </button>
+                    @endforeach
+                </div>
+
+                @if($unavailableItems->count())
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-4 mb-2">No disponibles</p>
+                <div class="grid grid-cols-3 gap-3">
+                    @foreach($unavailableItems as $i)
+                        @php $price = $i->cost; @endphp
+                        <button
+                            type="button"
+                            disabled
+                            class="equipment-card h-28 flex flex-col justify-between text-left border border-gray-200 rounded-lg p-3 opacity-55 cursor-not-allowed bg-gray-50"
+                            data-item-id="{{ $i->id }}"
+                            data-item-price="{{ $price ?? '' }}"
+                            data-selectable="0"
+                        >
+                            <div class="text-sm font-semibold text-gray-700 truncate">{{ $i->brand->name ?? '—' }} {{ $i->model }}</div>
+                            <div class="text-xs text-gray-500 mt-0.5">Serie: {{ $i->serie ?: '—' }}</div>
+                            <div class="mt-2 flex items-center justify-between">
+                                <span class="text-[11px] px-2 py-1 rounded bg-red-100 text-red-700">{{ $i->location_status ?? 'NO DISPONIBLE' }}</span>
+                                <span class="text-sm font-bold text-gray-500">{{ $price !== null ? '$'.number_format($price, 2) : 'Sin precio' }}</span>
+                            </div>
+                        </button>
+                    @endforeach
+                </div>
+                @endif
+            </div>
         </div>
 
         <div id="contadorSection" class="md:col-span-2 grid grid-cols-2 gap-4 hidden">
@@ -154,12 +188,36 @@ document.getElementById('printCheck').addEventListener('change', function() {
     document.getElementById('printFields').classList.toggle('hidden', !this.checked);
 });
 
-// Al seleccionar equipo: mostrar contadores con valores sugeridos
-document.getElementById('item_id_select').addEventListener('change', function() {
-    const section  = document.getElementById('contadorSection');
-    if (!this.value) { section.classList.add('hidden'); return; }
+const itemInput = document.getElementById('item_id_input');
+const salePriceHintCards = document.querySelectorAll('.equipment-card');
+
+function updateEquipmentCardSelection() {
+    const selectedId = itemInput.value;
+    salePriceHintCards.forEach(card => {
+        const active = card.dataset.itemId === selectedId;
+        card.classList.toggle('border-blue-500', active);
+        card.classList.toggle('bg-blue-50', active);
+        card.classList.toggle('ring-1', active);
+        card.classList.toggle('ring-blue-200', active);
+    });
+
+    const section = document.getElementById('contadorSection');
+    if (!selectedId) {
+        section.classList.add('hidden');
+        return;
+    }
     section.classList.remove('hidden');
+}
+
+salePriceHintCards.forEach(card => {
+    card.addEventListener('click', function () {
+        if (this.dataset.selectable !== '1') return;
+        itemInput.value = this.dataset.itemId;
+        updateEquipmentCardSelection();
+    });
 });
+
+updateEquipmentCardSelection();
 
 // Sucursales por cliente
 document.getElementById('clientSelect').addEventListener('change', function() {

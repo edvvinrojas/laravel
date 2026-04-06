@@ -13,6 +13,8 @@ class Billing extends Model
         'invoice_number', 'amount', 'target_date', 'due_date', 'payment_date',
         'status', 'follow_up', 'payment_term', 'payment_day', 'comment',
         'is_active', 'created_by',
+        'facturacom_uid', 'facturacom_uuid', 'facturacom_folio',
+        'facturacom_status', 'facturacom_synced_at', 'facturacom_last_response',
     ];
 
     protected $casts = [
@@ -22,6 +24,8 @@ class Billing extends Model
         'target_date'  => 'date',
         'due_date'     => 'date',
         'payment_date' => 'date',
+        'facturacom_synced_at' => 'datetime',
+        'facturacom_last_response' => 'array',
     ];
 
     public function rent()         { return $this->belongsTo(Rent::class); }
