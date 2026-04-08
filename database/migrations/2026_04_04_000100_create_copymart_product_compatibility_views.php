@@ -49,7 +49,7 @@ return new class extends Migration
                 item_type,
                 brand_id,
                 color,
-                `usage`,
+                \"usage\",
                 created_at,
                 is_active
             FROM item_catalog");
