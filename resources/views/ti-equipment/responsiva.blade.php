@@ -53,7 +53,7 @@
 
 <h2>Datos del Responsable</h2>
 <div class="grid-2">
-    <div class="field"><span class="label">Nombre:</span><span class="value">{{ $tiEquipment->assignedUser?->full_name ?? '—' }}</span></div>
+    <div class="field"><span class="label">Nombre:</span><span class="value">{{ $tiEquipment->assignedUser ? ($tiEquipment->assignedUser->full_name ?: $tiEquipment->assignedUser->username) : '—' }}</span></div>
     <div class="field"><span class="label">Ubicación:</span><span class="value">{{ $tiEquipment->ubicacion ?? '—' }}</span></div>
     <div class="field"><span class="label">Fecha de asignación:</span><span class="value">{{ now()->format('d/m/Y') }}</span></div>
     <div class="field"><span class="label">Estatus:</span><span class="value">{{ $tiEquipment->status }}</span></div>
@@ -144,7 +144,7 @@
     <div class="firma-box">
         <div style="height:50px;"></div>
         <div class="firma-line">Firma del responsable</div>
-        <div style="font-size:11px;color:#555;">{{ $tiEquipment->assignedUser?->full_name ?? 'Nombre' }}</div>
+        <div style="font-size:11px;color:#555;">{{ $tiEquipment->assignedUser ? ($tiEquipment->assignedUser->full_name ?: $tiEquipment->assignedUser->username) : 'Nombre' }}</div>
     </div>
     <div class="firma-box">
         <div style="height:50px;"></div>

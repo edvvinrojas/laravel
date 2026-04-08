@@ -5,6 +5,7 @@
 @section('content')
 <div class="flex gap-3 mb-4">
     <a href="{{ route('rents.edit',$rent) }}" class="btn-primary">Editar</a>
+    <a href="{{ route('rents.pdf',$rent) }}" target="_blank" class="btn-secondary">PDF</a>
     <a href="{{ route('rents.index') }}" class="btn-secondary">← Volver</a>
 </div>
 

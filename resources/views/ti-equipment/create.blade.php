@@ -68,7 +68,7 @@
             <select name="assigned_user_id" class="form-select">
                 <option value="">Sin asignar</option>
                 @foreach($users as $u)
-                <option value="{{ $u->id }}" @selected(old('assigned_user_id')==$u->id)>{{ $u->full_name }}</option>
+                <option value="{{ $u->id }}" @selected(old('assigned_user_id')==$u->id)>{{ $u->full_name ?: $u->username }}</option>
                 @endforeach
             </select>
         </div>
@@ -111,6 +111,7 @@
         <button type="button" id="addPeri" class="text-blue-600 text-sm">+ Agregar</button>
     </div>
     <div class="card-body" id="periContainer">
+        <p class="text-xs text-gray-500 mb-2">ID automático por tipo: MONITOR = LCD###, TECLADO = TEC###, MOUSE = MOU###, ELIMINADOR = ELI###.</p>
         <p id="noPeri" class="text-sm text-gray-400">Sin periféricos registrados. Pulsa "+ Agregar".</p>
     </div>
 </div>
@@ -133,7 +134,7 @@ document.getElementById('addPeri').addEventListener('click', () => {
         <div>
             <label class="form-label text-xs">Tipo *</label>
             <select name="perifericos[${periIdx}][tipo]" class="form-select text-sm">
-                ${['MONITOR','TECLADO','MOUSE','CARGADOR','DOCKING','HEADSET','CAMARA','OTRO'].map(t=>`<option>${t}</option>`).join('')}
+                ${['MONITOR','TECLADO','MOUSE','CARGADOR','DOCKING','HEADSET','CAMARA','ELIMINADOR','OTRO'].map(t=>`<option>${t}</option>`).join('')}
             </select>
         </div>
         <div>

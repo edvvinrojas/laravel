@@ -119,6 +119,12 @@ class BillingController extends Controller
         return view('billing.show', compact('billing'));
     }
 
+    public function pdf(Billing $billing)
+    {
+        $billing->load(['client', 'branch', 'area', 'rent.item.brand', 'sale.item.brand', 'creator', 'printCounter']);
+        return view('pdf.billing', compact('billing'));
+    }
+
     public function edit(Billing $billing)
     {
         $clients = Client::where('is_active', true)->orderBy('name')->get();

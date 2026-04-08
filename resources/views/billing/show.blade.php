@@ -7,6 +7,7 @@
     @if($billing->status !== 'PAGADO')
     <a href="{{ route('billing.edit',$billing) }}" class="btn-primary">Editar</a>
     @endif
+    <a href="{{ route('billing.pdf',$billing) }}" target="_blank" class="btn-secondary">PDF</a>
     <a href="{{ route('billing.index') }}" class="btn-secondary">← Volver</a>
 </div>
 

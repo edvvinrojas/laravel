@@ -42,7 +42,7 @@
             <select name="assigned_user_id" class="form-select">
                 <option value="">Sin asignar</option>
                 @foreach($users as $u)
-                <option value="{{ $u->id }}" @selected(old('assigned_user_id',$tiEquipment->assigned_user_id)==$u->id)>{{ $u->full_name }}</option>
+                <option value="{{ $u->id }}" @selected(old('assigned_user_id',$tiEquipment->assigned_user_id)==$u->id)>{{ $u->full_name ?: $u->username }}</option>
                 @endforeach
             </select>
         </div>

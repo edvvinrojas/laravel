@@ -100,6 +100,12 @@ class RentController extends Controller
         return view('rents.show', compact('rent'));
     }
 
+    public function pdf(Rent $rent)
+    {
+        $rent->load(['client', 'branch', 'area', 'item.brand', 'creator', 'billings', 'printCounters']);
+        return view('pdf.rent', compact('rent'));
+    }
+
     public function edit(Rent $rent)
     {
         $clients  = Client::where('is_active', true)->orderBy('name')->get();

@@ -7,6 +7,9 @@
 <form method="POST" action="{{ route('service-orders.store') }}" enctype="multipart/form-data">
 @csrf
 
+<input type="hidden" name="area_id" id="areaIdInput" value="{{ old('area_id') }}">
+<input type="hidden" name="item_id" id="itemIdInput" value="{{ old('item_id') }}">
+
 {{-- Sección 1: Datos generales --}}
 <div class="card mb-4">
     <div class="card-header"><h3 class="font-semibold text-sm">Datos del servicio</h3></div>
@@ -25,6 +28,7 @@
         <div>
             <label class="form-label">Tipo de orden *</label>
             <select name="tipo_orden" class="form-select" required>
+                <option value="">Seleccionar…</option>
                 @foreach(['PREVENTIVO','CORRECTIVO','ENTREGA','INSTALACION','CAMBIO_EQUIPO','DIGITALIZACION','INSTALACION_DRIVERS'] as $t)
                 <option value="{{ $t }}" @selected(old('tipo_orden')===$t)>{{ str_replace('_',' ',$t) }}</option>
                 @endforeach
@@ -42,24 +46,18 @@
         </div>
 
         <div>
-            <label class="form-label">Sucursal</label>
-            <select name="branch_id" id="branchSel" class="form-select">
+            <label class="form-label">Sucursal *</label>
+            <select name="branch_id" id="branchSel" class="form-select" required>
                 <option value="">Seleccione cliente primero…</option>
             </select>
         </div>
 
-        <div>
-            <label class="form-label">Ubicación / Área</label>
-            <select name="area_id" id="areaSel" class="form-select" onchange="loadAreaItem(this.value)">
+        <div class="md:col-span-2">
+            <label class="form-label">Ubicación *</label>
+            <select id="locationSel" class="form-select" required>
                 <option value="">Seleccione sucursal primero…</option>
             </select>
-        </div>
-
-        <div>
-            <label class="form-label">Equipo (auto al seleccionar área)</label>
-            <select name="item_id" id="itemSel" class="form-select">
-                <option value="">Sin equipo</option>
-            </select>
+            <p class="text-xs text-gray-500 mt-1">Se muestran las impresoras activas de la sucursal por ubicación (área).</p>
         </div>
 
         <div class="col-span-2 grid grid-cols-3 gap-3 text-sm">
@@ -106,14 +104,15 @@
             <textarea name="diagnostico_accion" class="form-input" rows="4">{{ old('diagnostico_accion') }}</textarea>
         </div>
 
-        <div class="flex items-center gap-3">
-            <label class="flex items-center gap-2 text-sm font-medium">
-                <input type="checkbox" name="entrego_toner" value="1" id="entregaToner" class="form-checkbox" @checked(old('entrego_toner'))>
-                Se entregó tóner
-            </label>
+        <div>
+            <label class="form-label">Se entregó tóner *</label>
+            <select name="entrego_toner" id="entregaToner" class="form-select" required>
+                <option value="0" @selected(old('entrego_toner', '0')==='0')>No</option>
+                <option value="1" @selected(old('entrego_toner')==='1')>Sí</option>
+            </select>
         </div>
 
-        <div id="tonerCodes" class="{{ old('entrego_toner') ? '' : 'hidden' }}">
+        <div id="tonerCodes" class="{{ old('entrego_toner')==='1' ? '' : 'hidden' }}">
             <label class="form-label">Código(s) de tóner entregado</label>
             <input name="codigos_toner" value="{{ old('codigos_toner') }}" class="form-input" placeholder="TON-001, TON-002…">
         </div>
@@ -157,14 +156,15 @@
             <input type="file" name="pagina_estado_foto" accept="image/*" class="form-input">
         </div>
 
-        <div class="flex items-center gap-3">
-            <label class="flex items-center gap-2 text-sm font-medium">
-                <input type="checkbox" name="tiene_stock" value="1" id="tieneStock" class="form-checkbox" @checked(old('tiene_stock'))>
-                ¿Tiene stock disponible?
-            </label>
+        <div>
+            <label class="form-label">Tiene stock *</label>
+            <select name="tiene_stock" id="tieneStock" class="form-select" required>
+                <option value="0" @selected(old('tiene_stock', '0')==='0')>No</option>
+                <option value="1" @selected(old('tiene_stock')==='1')>Sí</option>
+            </select>
         </div>
 
-        <div id="stockPhoto" class="{{ old('tiene_stock') ? '' : 'hidden' }}">
+        <div id="stockPhoto" class="{{ old('tiene_stock')==='1' ? '' : 'hidden' }}">
             <label class="form-label">Foto del stock</label>
             <input type="file" name="foto_stock" accept="image/*" class="form-input">
         </div>
@@ -178,18 +178,19 @@
     <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-4">
 
         <div>
-            <label class="form-label">Nombre de quien firma</label>
-            <input name="firma_nombre" value="{{ old('firma_nombre') }}" class="form-input" placeholder="Nombre completo">
+            <label class="form-label">Nombre de quien firma el servicio *</label>
+            <input name="firma_nombre" value="{{ old('firma_nombre') }}" class="form-input" placeholder="Nombre completo" required>
         </div>
 
-        <div class="flex items-center gap-3 pt-5">
-            <label class="flex items-center gap-2 text-sm font-medium">
-                <input type="checkbox" name="queda_pendiente" value="1" id="quedaPendiente" class="form-checkbox" @checked(old('queda_pendiente'))>
-                ¿Queda algo pendiente?
-            </label>
+        <div>
+            <label class="form-label">¿Queda algo pendiente? *</label>
+            <select name="queda_pendiente" id="quedaPendiente" class="form-select" required>
+                <option value="0" @selected(old('queda_pendiente', '0')==='0')>No</option>
+                <option value="1" @selected(old('queda_pendiente')==='1')>Sí</option>
+            </select>
         </div>
 
-        <div class="col-span-2" id="pendienteDesc" style="{{ old('queda_pendiente') ? '' : 'display:none' }}">
+        <div class="col-span-2" id="pendienteDesc" style="{{ old('queda_pendiente')==='1' ? '' : 'display:none' }}">
             <label class="form-label">Descripción de lo pendiente</label>
             <textarea name="descripcion_pendiente" class="form-input" rows="2">{{ old('descripcion_pendiente') }}</textarea>
         </div>
@@ -216,70 +217,126 @@
 
 @push('scripts')
 <script>
-// Sucursales/áreas/equipos dinámicos
-document.getElementById('clientSel').addEventListener('change', function() {
-    const id = this.value;
-    const bSel = document.getElementById('branchSel');
-    const aSel = document.getElementById('areaSel');
-    bSel.innerHTML = '<option value="">Cargando…</option>';
-    aSel.innerHTML = '<option value="">Seleccione sucursal…</option>';
-    clearItemInfo();
-    if (!id) { bSel.innerHTML = '<option value="">Sin sucursal</option>'; return; }
-    fetch(`/api/clients/${id}/branches`)
-        .then(r => r.json())
-        .then(data => {
-            bSel.innerHTML = '<option value="">Sin sucursal</option>';
-            data.forEach(b => bSel.innerHTML += `<option value="${b.id}">${b.name}</option>`);
-        });
+const clientSel = document.getElementById('clientSel');
+const branchSel = document.getElementById('branchSel');
+const locationSel = document.getElementById('locationSel');
+const areaInput = document.getElementById('areaIdInput');
+const itemInput = document.getElementById('itemIdInput');
+
+const oldBranch = "{{ old('branch_id') }}";
+const oldArea = "{{ old('area_id') }}";
+const oldItem = "{{ old('item_id') }}";
+const oldLocation = oldArea && oldItem ? `${oldArea}:${oldItem}` : '';
+let canUseOldBranch = true;
+
+clientSel.addEventListener('change', async function() {
+    await loadBranches(this.value);
 });
 
-document.getElementById('branchSel').addEventListener('change', function() {
-    const id = this.value;
-    const aSel = document.getElementById('areaSel');
-    aSel.innerHTML = '<option value="">Cargando…</option>';
-    clearItemInfo();
-    if (!id) { aSel.innerHTML = '<option value="">Sin área</option>'; return; }
-    fetch(`/api/branches/${id}/areas`)
-        .then(r => r.json())
-        .then(data => {
-            aSel.innerHTML = '<option value="">Sin área</option>';
-            data.forEach(a => aSel.innerHTML += `<option value="${a.id}">${a.name}</option>`);
-        });
+branchSel.addEventListener('change', async function() {
+    await loadLocations(this.value);
 });
 
-function loadAreaItem(areaId) {
-    const iSel = document.getElementById('itemSel');
+locationSel.addEventListener('change', function() {
+    syncSelectedLocation();
+});
+
+async function loadBranches(clientId) {
+    branchSel.innerHTML = '<option value="">Cargando…</option>';
+    resetLocationSelect('Seleccione sucursal primero…');
     clearItemInfo();
-    if (!areaId) { iSel.innerHTML = '<option value="">Sin equipo</option>'; return; }
-    fetch(`/api/areas/${areaId}/items`)
-        .then(r => r.json())
-        .then(data => {
-            iSel.innerHTML = '<option value="">Sin equipo</option>';
-            data.forEach(i => iSel.innerHTML += `<option value="${i.id}" data-model="${i.model}" data-serie="${i.serie}" data-sku="${i.sku ?? ''}">${i.brand} ${i.model} — ${i.serie}</option>`);
-        });
+
+    if (!clientId) {
+        branchSel.innerHTML = '<option value="">Seleccione cliente primero…</option>';
+        return;
+    }
+
+    const response = await fetch(`/api/clients/${clientId}/branches`);
+    const branches = await response.json();
+
+    branchSel.innerHTML = '<option value="">Seleccionar sucursal…</option>';
+    branches.forEach((branch) => {
+        const opt = document.createElement('option');
+        opt.value = branch.id;
+        opt.textContent = branch.name;
+        branchSel.appendChild(opt);
+    });
+
+    if (canUseOldBranch && oldBranch) {
+        branchSel.value = oldBranch;
+        await loadLocations(oldBranch, true);
+        canUseOldBranch = false;
+    }
 }
 
-document.getElementById('itemSel').addEventListener('change', function() {
-    const opt = this.options[this.selectedIndex];
-    document.getElementById('itemModel').textContent = opt.dataset.model || '—';
-    document.getElementById('itemSerie').textContent = opt.dataset.serie || '—';
-    document.getElementById('itemSku').textContent   = opt.dataset.sku   || '—';
-});
+async function loadLocations(branchId, useOld = false) {
+    resetLocationSelect('Cargando…');
+    clearItemInfo();
+
+    if (!branchId) {
+        resetLocationSelect('Seleccione sucursal primero…');
+        return;
+    }
+
+    const response = await fetch(`/api/branches/${branchId}/service-locations`);
+    const locations = await response.json();
+
+    resetLocationSelect('Seleccionar ubicación…');
+    locations.forEach((row) => {
+        const opt = document.createElement('option');
+        opt.value = `${row.area_id}:${row.item_id}`;
+        opt.textContent = `${row.area_name} - ${row.brand} ${row.model} (${row.serie})`;
+        opt.dataset.areaId = row.area_id;
+        opt.dataset.itemId = row.item_id;
+        opt.dataset.model = row.model || '';
+        opt.dataset.serie = row.serie || '';
+        opt.dataset.sku = row.sku || '';
+        locationSel.appendChild(opt);
+    });
+
+    if (useOld && oldLocation) {
+        locationSel.value = oldLocation;
+    }
+
+    syncSelectedLocation();
+}
+
+function syncSelectedLocation() {
+    const selected = locationSel.options[locationSel.selectedIndex];
+
+    if (!selected || !selected.dataset.areaId) {
+        areaInput.value = '';
+        itemInput.value = '';
+        clearItemInfo();
+        return;
+    }
+
+    areaInput.value = selected.dataset.areaId;
+    itemInput.value = selected.dataset.itemId;
+    document.getElementById('itemModel').textContent = selected.dataset.model || '—';
+    document.getElementById('itemSerie').textContent = selected.dataset.serie || '—';
+    document.getElementById('itemSku').textContent = selected.dataset.sku || '—';
+}
+
+function resetLocationSelect(message) {
+    locationSel.innerHTML = `<option value="">${message}</option>`;
+}
 
 function clearItemInfo() {
-    ['itemModel','itemSerie','itemSku'].forEach(id => document.getElementById(id).textContent = '—');
-    document.getElementById('itemSel').innerHTML = '<option value="">Sin equipo</option>';
+    document.getElementById('itemModel').textContent = '—';
+    document.getElementById('itemSerie').textContent = '—';
+    document.getElementById('itemSku').textContent = '—';
 }
 
 // Toggles
 document.getElementById('entregaToner').addEventListener('change', function() {
-    document.getElementById('tonerCodes').classList.toggle('hidden', !this.checked);
+    document.getElementById('tonerCodes').classList.toggle('hidden', this.value !== '1');
 });
 document.getElementById('tieneStock').addEventListener('change', function() {
-    document.getElementById('stockPhoto').classList.toggle('hidden', !this.checked);
+    document.getElementById('stockPhoto').classList.toggle('hidden', this.value !== '1');
 });
 document.getElementById('quedaPendiente').addEventListener('change', function() {
-    document.getElementById('pendienteDesc').style.display = this.checked ? '' : 'none';
+    document.getElementById('pendienteDesc').style.display = this.value === '1' ? '' : 'none';
 });
 
 // Firma digital (canvas)
@@ -308,6 +365,10 @@ function saveSignature() {
 function clearSignature() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     document.getElementById('firmaImagen').value = '';
+}
+
+if (clientSel.value) {
+    loadBranches(clientSel.value);
 }
 </script>
 @endpush

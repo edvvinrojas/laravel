@@ -46,7 +46,7 @@
         <td class="px-4 py-2 font-mono font-semibold">{{ $eq->codigo_interno }}</td>
         <td class="px-4 py-2">{{ $eq->tipo }}</td>
         <td class="px-4 py-2">{{ $eq->marca }} {{ $eq->modelo }}</td>
-        <td class="px-4 py-2">{{ $eq->assignedUser?->name ?? '—' }}</td>
+        <td class="px-4 py-2">{{ $eq->assignedUser ? ($eq->assignedUser->full_name ?: $eq->assignedUser->username) : '—' }}</td>
         <td class="px-4 py-2 text-gray-500">{{ $eq->ubicacion ?? '—' }}</td>
         <td class="px-4 py-2"><span class="{{ $sc[$eq->status]??'badge-gray' }}">{{ $eq->status }}</span></td>
         <td class="px-4 py-2 text-right">

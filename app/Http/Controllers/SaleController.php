@@ -75,6 +75,12 @@ class SaleController extends Controller
         return view('sales.show', compact('sale'));
     }
 
+    public function pdf(Sale $sale)
+    {
+        $sale->load(['client', 'branch', 'area', 'item.brand', 'creator', 'billings']);
+        return view('pdf.sale', compact('sale'));
+    }
+
     public function edit(Sale $sale)
     {
         $clients = Client::where('is_active', true)->orderBy('name')->get();

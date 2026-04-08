@@ -92,6 +92,52 @@ Route::middleware('auth')->group(function () {
     Route::get('api/branches/{branch}/areas', fn(\App\Models\Branch $branch) =>
         $branch->areas()->select('id','name')->orderBy('name')->get()
     )->name('api.branch.areas');
+    Route::get('api/branches/{branch}/service-locations', function(\App\Models\Branch $branch) {
+        $rentLocations = \App\Models\Rent::query()
+            ->where('branch_id', $branch->id)
+            ->whereNotNull('area_id')
+            ->whereNotNull('item_id')
+            ->with(['area:id,name', 'item.brand:id,name'])
+            ->get()
+            ->map(function ($rent) {
+                return [
+                    'area_id'   => $rent->area_id,
+                    'item_id'   => $rent->item_id,
+                    'area_name' => $rent->area?->name,
+                    'model'     => $rent->item?->model,
+                    'serie'     => $rent->item?->serie,
+                    'sku'       => $rent->item?->sku,
+                    'brand'     => $rent->item?->brand?->name ?? '',
+                ];
+            });
+
+        $saleLocations = \App\Models\Sale::query()
+            ->where('branch_id', $branch->id)
+            ->whereNotNull('area_id')
+            ->whereNotNull('item_id')
+            ->with(['area:id,name', 'item.brand:id,name'])
+            ->get()
+            ->map(function ($sale) {
+                return [
+                    'area_id'   => $sale->area_id,
+                    'item_id'   => $sale->item_id,
+                    'area_name' => $sale->area?->name,
+                    'model'     => $sale->item?->model,
+                    'serie'     => $sale->item?->serie,
+                    'sku'       => $sale->item?->sku,
+                    'brand'     => $sale->item?->brand?->name ?? '',
+                ];
+            });
+
+        $locations = $rentLocations
+            ->concat($saleLocations)
+            ->filter(fn($row) => $row['area_id'] && $row['item_id'])
+            ->unique(fn($row) => $row['area_id'].'-'.$row['item_id'])
+            ->sortBy(['area_name', 'brand', 'model'])
+            ->values();
+
+        return response()->json($locations);
+    })->name('api.branch.service-locations');
     Route::get('api/areas/{area}/items', function(\App\Models\Area $area) {
         $items = \App\Models\Item::whereHas('rents', fn($q) =>
             $q->where('area_id', $area->id)->where('contract_status', 'VIGENTE')
@@ -137,12 +183,15 @@ Route::middleware('auth')->group(function () {
 
     // Rentas
     Route::resource('rents', RentController::class);
+    Route::get('rents/{rent}/pdf', [RentController::class, 'pdf'])->name('rents.pdf');
 
     // Ventas
     Route::resource('sales', SaleController::class);
+    Route::get('sales/{sale}/pdf', [SaleController::class, 'pdf'])->name('sales.pdf');
 
     // Facturación / Cobranza
     Route::resource('billing', BillingController::class);
+    Route::get('billing/{billing}/pdf', [BillingController::class, 'pdf'])->name('billing.pdf');
     Route::patch('billing/{billing}/pay', [BillingController::class, 'markPaid'])->name('billing.pay');
     Route::post('billing/{billing}/facturacom/stamp', [BillingController::class, 'stampFacturaCom'])->name('billing.facturacom.stamp');
     Route::post('billing/{billing}/facturacom/sync', [BillingController::class, 'syncFacturaCom'])->name('billing.facturacom.sync');
