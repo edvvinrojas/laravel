@@ -78,6 +78,12 @@
             <tbody>
             @forelse($vacations as $v)
             @php $sc=['PENDIENTE'=>'badge-yellow','APROBADO'=>'badge-green','RECHAZADO'=>'badge-red','ACTIVO'=>'badge-blue','PAGADO'=>'badge-purple']; @endphp
+            @php
+                $u = auth()->user();
+                $canApprove = $u->hasFullRhAccess()
+                    || $u->department === 'rh'
+                    || $v->employee?->direct_manager_user_id === $u->id;
+            @endphp
             <tr>
                 <td class="font-medium">{{ $v->employee->nombre }}</td>
                 <td>{{ $v->vacation_days }}</td>
@@ -87,7 +93,7 @@
                 <td><span class="{{ $sc[$v->status]??'badge-gray' }}">{{ $v->status }}</span></td>
                 <td class="flex gap-1 flex-wrap">
                     <a href="{{ route('vacations.show',$v) }}" class="btn btn-sm btn-secondary">Ver</a>
-                    @if(in_array(auth()->user()->rol, ['administrador','gerencia']) && $v->status === 'PENDIENTE')
+                    @if($canApprove && $v->status === 'PENDIENTE')
                     <form action="{{ route('vacations.approve',$v) }}" method="POST">
                         @csrf @method('PATCH')
                         <button class="btn btn-sm btn-success">Aprobar</button>
@@ -98,7 +104,9 @@
                         <button class="btn btn-sm btn-danger">Rechazar</button>
                     </form>
                     @endif
+                    @if($v->status === 'PENDIENTE')
                     <a href="{{ route('vacations.edit',$v) }}" class="btn btn-sm btn-primary">Editar</a>
+                    @endif
                 </td>
             </tr>
             @empty

@@ -29,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
             \App\Models\Ticket::class,
             \App\Models\Repair::class,
             \App\Models\Employee::class,
+            \App\Models\EmployeeCredit::class,
             \App\Models\User::class,
         ];
 

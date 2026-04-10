@@ -19,7 +19,7 @@
     </div>
     <div class="table-wrap rounded-none border-0">
         <table class="table">
-            <thead><tr><th>Empleado</th><th>Fecha pago</th><th>Salario</th><th>Bono</th><th>Comisión</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <thead><tr><th>Empleado</th><th>Fecha pago</th><th>Salario</th><th>Bono</th><th>Comisión</th><th>Desc. crédito</th><th>Total</th><th>Neto</th><th>Estado</th><th>Acciones</th></tr></thead>
             <tbody>
             @forelse($payrolls as $p)
             @php $sc=['PENDIENTE'=>'badge-yellow','APROBADO'=>'badge-blue','RECHAZADO'=>'badge-red','ACTIVO'=>'badge-purple','PAGADO'=>'badge-green']; @endphp
@@ -29,7 +29,9 @@
                 <td>${{ number_format($p->salary,2) }}</td>
                 <td>${{ number_format($p->bonus,2) }}</td>
                 <td>${{ number_format($p->commission,2) }}</td>
+                <td class="text-red-600">-${{ number_format($p->credit_discount ?? 0,2) }}</td>
                 <td class="font-bold">${{ number_format($p->total_pay,2) }}</td>
+                <td class="font-bold text-green-700">${{ number_format($p->net_pay ?? $p->total_pay,2) }}</td>
                 <td><span class="{{ $sc[$p->status]??'badge-gray' }}">{{ $p->status }}</span></td>
                 <td class="flex gap-1">
                     <a href="{{ route('payrolls.show',$p) }}" class="btn btn-sm btn-secondary">Ver</a>
@@ -37,7 +39,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="8" class="text-center py-8 text-gray-400">Sin registros</td></tr>
+            <tr><td colspan="10" class="text-center py-8 text-gray-400">Sin registros</td></tr>
             @endforelse
             </tbody>
         </table>

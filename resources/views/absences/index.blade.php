@@ -17,6 +17,12 @@
             <thead><tr><th>Empleado</th><th>Tipo</th><th>Inicio</th><th>Fin</th><th>Justificado</th><th>Estado</th><th>Acciones</th></tr></thead>
             <tbody>
             @forelse($absences as $a)
+            @php
+                $u = auth()->user();
+                $canApprove = $u->hasFullRhAccess()
+                    || $u->department === 'rh'
+                    || $a->employee?->direct_manager_user_id === $u->id;
+            @endphp
             <tr>
                 <td class="font-medium">{{ $a->employee->nombre }}</td>
                 <td><span class="badge-blue text-xs">{{ str_replace('_',' ',$a->absence_type) }}</span></td>
@@ -26,7 +32,7 @@
                 <td>@php $sc=['PENDIENTE'=>'badge-yellow','APROBADO'=>'badge-green','RECHAZADO'=>'badge-red']; @endphp<span class="{{ $sc[$a->status]??'badge-gray' }}">{{ $a->status }}</span></td>
                 <td class="flex gap-1 flex-wrap">
                     <a href="{{ route('absences.show',$a) }}" class="btn btn-sm btn-secondary">Ver</a>
-                    @if(in_array(auth()->user()->rol, ['administrador','gerencia']) && $a->status === 'PENDIENTE')
+                    @if($canApprove && $a->status === 'PENDIENTE')
                     <form action="{{ route('absences.approve',$a) }}" method="POST">
                         @csrf @method('PATCH')
                         <button class="btn btn-sm btn-success">Aprobar</button>
@@ -37,7 +43,9 @@
                         <button class="btn btn-sm btn-danger">Rechazar</button>
                     </form>
                     @endif
+                    @if($a->status === 'PENDIENTE')
                     <a href="{{ route('absences.edit',$a) }}" class="btn btn-sm btn-primary">Editar</a>
+                    @endif
                 </td>
             </tr>
             @empty

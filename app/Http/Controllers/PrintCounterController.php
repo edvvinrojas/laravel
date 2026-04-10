@@ -52,13 +52,29 @@ class PrintCounterController extends Controller
             'period_month'  => 'required|integer|min:1|max:12',
             'period_year'   => 'required|integer|min:2020',
             'bn_previous'   => 'required|integer|min:0',
-            'bn_current'    => 'required|integer|min:0',
+            'bn_current'    => 'required|integer|min:0|gte:bn_previous',
             'color_previous'=> 'required|integer|min:0',
-            'color_current' => 'required|integer|min:0',
+            'color_current' => 'required|integer|min:0|gte:color_previous',
             'counter_photo' => 'nullable|image|max:5120',
             'notes'         => 'nullable|string|max:500',
             'reading_date'  => 'required|date',
+        ], [
+            'bn_current.gte' => 'El contador BN actual no puede ser menor que el anterior.',
+            'color_current.gte' => 'El contador Color actual no puede ser menor que el anterior.',
         ]);
+
+        // Validar que no exista otro contador para el mismo mes/año de la misma renta
+        $existing = PrintCounter::where('rent_id', $data['rent_id'])
+            ->where('period_month', $data['period_month'])
+            ->where('period_year', $data['period_year'])
+            ->where('is_active', true)
+            ->first();
+
+        if ($existing) {
+            return back()
+                ->withInput()
+                ->withErrors(['period' => 'Ya existe un contador activo para este mes en esta renta.']);
+        }
 
         if ($request->hasFile('counter_photo')) {
             $data['counter_photo_url'] = $request->file('counter_photo')->store('print-counters', 'public');

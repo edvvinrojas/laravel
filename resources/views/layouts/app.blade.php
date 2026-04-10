@@ -249,10 +249,10 @@
             @endif
 
             {{-- RECURSOS HUMANOS --}}
-            @if ($rol === 'administrador' || in_array($dept, ['rh', 'administracion']))
+            @if ($rol === 'administrador' || $rol === 'gerencia' || in_array($dept, ['rh', 'administracion']))
                 <div class="pt-3">
                     <p class="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">RH</p>
-                    <a href="{{ route('rh.index') }}" class="nav-link @activeRoute('rh.*') @activeRoute('employees.*') @activeRoute('payrolls.*') @activeRoute('vacations.*') @activeRoute('absences.*') @activeRoute('administrative-records.*')">
+                    <a href="{{ route('rh.index') }}" class="nav-link @activeRoute('rh.*') @activeRoute('employees.*') @activeRoute('payrolls.*') @activeRoute('vacations.*') @activeRoute('absences.*') @activeRoute('administrative-records.*') @activeRoute('credits.*')">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>

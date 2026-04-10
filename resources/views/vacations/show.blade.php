@@ -3,7 +3,10 @@
 @section('page-title','Detalle de Vacaciones')
 
 @section('content')
-@php $isApprover = in_array(auth()->user()->rol, ['gerencia','administrador']); @endphp
+@php
+    $u = auth()->user();
+    $isApprover = $u->hasFullRhAccess() || $u->department === 'rh' || $vacation->employee?->direct_manager_user_id === $u->id;
+@endphp
 
 <div class="flex gap-3 mb-4 flex-wrap">
     @if($isApprover && $vacation->status === 'PENDIENTE')
@@ -16,6 +19,9 @@
             @csrf @method('PATCH')
             <button type="submit" class="btn-danger">✗ Rechazar</button>
         </form>
+    @endif
+    @if($vacation->status === 'PENDIENTE')
+    <a href="{{ route('vacations.edit',$vacation) }}" class="btn-secondary">Editar</a>
     @endif
     <a href="{{ route('vacations.index') }}" class="btn-secondary">← Volver</a>
 </div>

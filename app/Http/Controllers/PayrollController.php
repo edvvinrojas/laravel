@@ -38,7 +38,11 @@ class PayrollController extends Controller
 
         $data['bonus']     = $data['bonus'] ?? 0;
         $data['commission'] = $data['commission'] ?? 0;
+        $employee = Employee::findOrFail($data['employee_id']);
+
+        $data['credit_discount'] = $employee->currentCreditDiscount($data['pay_day']);
         $data['total_pay'] = $data['salary'] + $data['bonus'] + $data['commission'];
+        $data['net_pay'] = max(0, $data['total_pay'] - $data['credit_discount']);
 
         Payroll::create($data);
         return redirect()->route('payrolls.index')->with('success', 'Nómina registrada.');
@@ -68,7 +72,11 @@ class PayrollController extends Controller
 
         $data['bonus']     = $data['bonus'] ?? 0;
         $data['commission'] = $data['commission'] ?? 0;
+        $employee = $payroll->employee;
+
+        $data['credit_discount'] = $employee ? $employee->currentCreditDiscount($data['pay_day']) : 0;
         $data['total_pay'] = $data['salary'] + $data['bonus'] + $data['commission'];
+        $data['net_pay'] = max(0, $data['total_pay'] - $data['credit_discount']);
 
         $payroll->update($data);
         return redirect()->route('payrolls.show', $payroll)->with('success', 'Nómina actualizada.');

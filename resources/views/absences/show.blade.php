@@ -3,7 +3,10 @@
 @section('page-title','Detalle de Ausencia')
 
 @section('content')
-@php $isApprover = in_array(auth()->user()->rol, ['gerencia','administrador']); @endphp
+@php
+    $u = auth()->user();
+    $isApprover = $u->hasFullRhAccess() || $u->department === 'rh' || $absence->employee?->direct_manager_user_id === $u->id;
+@endphp
 <div class="flex gap-3 mb-4 flex-wrap">
     @if($isApprover && $absence->status === 'PENDIENTE')
         <form action="{{ route('absences.approve', $absence) }}" method="POST">
@@ -16,7 +19,9 @@
             <button type="submit" class="btn-danger">✗ Rechazar</button>
         </form>
     @endif
+    @if($absence->status === 'PENDIENTE')
     <a href="{{ route('absences.edit',$absence) }}" class="btn-secondary">Editar</a>
+    @endif
     <a href="{{ route('absences.index') }}" class="btn-secondary">← Volver</a>
 </div>
 <div class="card max-w-md">

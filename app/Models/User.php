@@ -48,7 +48,26 @@ class User extends Authenticatable
         return in_array($permission, $perms) || ($perms[$permission] ?? false);
     }
 
+    public function hasFullRhAccess(): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        $rhPerms = ($this->permissions ?? [])['recursos_humanos'] ?? null;
+
+        if (!is_array($rhPerms)) {
+            return false;
+        }
+
+        return !empty($rhPerms['view'])
+            && !empty($rhPerms['create'])
+            && !empty($rhPerms['edit'])
+            && !empty($rhPerms['delete']);
+    }
+
     public function employee()       { return $this->hasOne(Employee::class); }
+    public function managedEmployees(){ return $this->hasMany(Employee::class, 'direct_manager_user_id'); }
     public function notifications()  { return $this->hasMany(Notification::class); }
     public function auditLogs()      { return $this->hasMany(AuditLog::class); }
     public function clients()        { return $this->hasMany(Client::class, 'user_id'); }

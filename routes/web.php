@@ -41,6 +41,7 @@ use App\Http\Controllers\ItRequestController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SkuController;
+use App\Http\Controllers\EmployeeCreditController;
 
 // Portal público de cliente (sin autenticación)
 Route::get('/portal/contadores/{token}', [ClientPortalController::class, 'show'])->name('portal.counters');
@@ -74,6 +75,7 @@ Route::middleware('auth')->group(function () {
 
     // Almacén unificado (equipos + inventario)
     Route::get('almacen', [AlmacenController::class, 'index'])->name('almacen.index');
+    Route::post('almacen/movements', [AlmacenController::class, 'storeMovement'])->name('almacen.movements.store');
 
     // Equipos
     Route::resource('equipment', EquipmentController::class);
@@ -250,6 +252,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('absences/{absence}/approve', [AbsenceController::class, 'approve'])->name('absences.approve');
     Route::patch('absences/{absence}/reject',  [AbsenceController::class, 'reject'])->name('absences.reject');
     Route::resource('administrative-records', AdministrativeRecordController::class);
+    Route::resource('credits', EmployeeCreditController::class)->middleware('role:administrador,gerencia,dept:rh');
 
     // Usuarios (admin o departamento TI)
     Route::resource('users', UserController::class)->middleware('role:administrador,dept:ti');

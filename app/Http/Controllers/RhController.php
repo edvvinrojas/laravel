@@ -6,6 +6,7 @@ use App\Models\Employee;
 use App\Models\Payroll;
 use App\Models\Vacation;
 use App\Models\Absence;
+use App\Models\EmployeeCredit;
 
 class RhController extends Controller
 {
@@ -18,6 +19,7 @@ class RhController extends Controller
             'payroll_month'      => Payroll::where('status', 'PAGADO')->whereMonth('pay_day', now()->month)->sum('total_pay'),
             'vacations_pending'  => Vacation::where('status', 'PENDIENTE')->count(),
             'absences_month'     => Absence::whereMonth('start_date', now()->month)->count(),
+            'credits_authorized' => EmployeeCredit::where('status', 'AUTORIZADO')->count(),
         ];
 
         $recent_employees = Employee::with('user')->where('is_active', true)->latest()->take(5)->get();

@@ -8,8 +8,8 @@
 @csrf @method('PUT')
 <div class="card">
     <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div><label class="form-label">Tipo *</label><select name="absence_type" class="form-select" required>@foreach(['ENFERMEDAD','AUSENTISMO','PERMISO_PERSONAL','OTRO'] as $t)<option value="{{ $t }}" @selected(old('absence_type',$absence->absence_type)===$t)>{{ str_replace('_',' ',$t) }}</option>@endforeach</select></div>
-        <div><label class="form-label">Estado *</label><select name="status" class="form-select" required>@foreach(['PENDIENTE','APROBADO','RECHAZADO','ACTIVO','PAGADO'] as $s)<option value="{{ $s }}" @selected(old('status',$absence->status)===$s)>{{ $s }}</option>@endforeach</select></div>
+        <div><label class="form-label">Tipo *</label><select name="absence_type" class="form-select" required>@foreach(['ENFERMEDAD','AUSENTISMO','PERMISO_PERSONAL','SALIDA_TEMPRANA','LLEGADA_TARDE','OTRO'] as $t)<option value="{{ $t }}" @selected(old('absence_type',$absence->absence_type)===$t)>{{ str_replace('_',' ',$t) }}</option>@endforeach</select></div>
+        <div><label class="form-label">Estado</label><input value="{{ $absence->status }}" class="form-input bg-gray-50" readonly></div>
         <div><label class="form-label">Inicio *</label><input name="start_date" type="date" value="{{ old('start_date',$absence->start_date?->format('Y-m-d')) }}" class="form-input" required></div>
         <div><label class="form-label">Fin *</label><input name="end_date" type="date" value="{{ old('end_date',$absence->end_date?->format('Y-m-d')) }}" class="form-input" required></div>
         <div class="flex items-center gap-2 pt-3"><input type="checkbox" name="is_justified" value="1" @checked(old('is_justified',$absence->is_justified))><label class="text-sm">Justificado</label></div>

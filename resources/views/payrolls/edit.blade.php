@@ -12,6 +12,7 @@
         <div><label class="form-label">Fecha pago *</label><input name="pay_day" type="date" value="{{ old('pay_day',$payroll->pay_day?->format('Y-m-d')) }}" class="form-input" required></div>
         <div><label class="form-label">Bono</label><input name="bonus" type="number" step="0.01" value="{{ old('bonus',$payroll->bonus) }}" class="form-input"></div>
         <div><label class="form-label">Comisión</label><input name="commission" type="number" step="0.01" value="{{ old('commission',$payroll->commission) }}" class="form-input"></div>
+        <div class="col-span-2"><p class="text-xs text-gray-500">Descuento por crédito actual: ${{ number_format($payroll->credit_discount ?? 0,2) }} (se recalcula al guardar).</p></div>
         <div><label class="form-label">Estado *</label><select name="status" class="form-select" required>@foreach(['PENDIENTE','APROBADO','RECHAZADO','ACTIVO','PAGADO'] as $s)<option value="{{ $s }}" @selected(old('status',$payroll->status)===$s)>{{ $s }}</option>@endforeach</select></div>
     </div>
     <div class="px-5 py-4 border-t border-gray-100 flex gap-3">

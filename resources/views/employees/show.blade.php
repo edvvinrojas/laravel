@@ -28,9 +28,11 @@
             <div><p class="text-gray-500">CURP</p><p class="font-mono text-xs">{{ $employee->curp }}</p></div>
             <div><p class="text-gray-500">Nacimiento</p><p>{{ $employee->birthday->format('d/m/Y') }}</p></div>
             <div><p class="text-gray-500">Ingreso</p><p>{{ $employee->hire_date->format('d/m/Y') }}</p></div>
+            <div><p class="text-gray-500">Fecha de baja</p><p>{{ $employee->termination_date?->format('d/m/Y') ?? 'N/A' }}</p></div>
             <div><p class="text-gray-500">Tel. emergencia</p><p>{{ $employee->phone_emergency }}</p></div>
             <div class="col-span-2"><p class="text-gray-500">Contacto emergencia</p><p>{{ $employee->contact_emergency }}</p></div>
             @if($employee->user)<div class="col-span-2"><p class="text-gray-500">Usuario sistema</p><p>{{ $employee->user->full_name }} ({{ $employee->user->email }})</p></div>@endif
+            @if($employee->directManager)<div class="col-span-2"><p class="text-gray-500">Jefe directo</p><p>{{ $employee->directManager->full_name }} ({{ strtoupper($employee->directManager->department) }})</p></div>@endif
         </div>
     </div>
     <div class="space-y-4">
@@ -48,6 +50,14 @@
                 @forelse($employee->vacations->take(3) as $v)
                 <li class="px-4 py-2 flex justify-between text-sm"><span>{{ $v->start_date->format('d/m') }}–{{ $v->end_date->format('d/m/Y') }}</span><span class="{{ $v->status==='APROBADO'?'badge-green':'badge-yellow' }}">{{ $v->status }}</span></li>
                 @empty<li class="px-4 py-4 text-center text-sm text-gray-400">Sin vacaciones</li>@endforelse
+            </ul>
+        </div>
+        <div class="card">
+            <div class="card-header"><h4 class="text-sm font-semibold">Créditos</h4><a href="{{ route('credits.create') }}?employee_id={{ $employee->id }}" class="btn btn-sm btn-primary">+ Crédito</a></div>
+            <ul class="divide-y divide-gray-100">
+                @forelse($employee->credits->take(3) as $c)
+                <li class="px-4 py-2 flex justify-between text-sm"><span>${{ number_format($c->pending_amount,2) }}</span><span class="{{ $c->status==='AUTORIZADO'?'badge-blue':'badge-yellow' }}">{{ $c->status }}</span></li>
+                @empty<li class="px-4 py-4 text-center text-sm text-gray-400">Sin créditos</li>@endforelse
             </ul>
         </div>
     </div>

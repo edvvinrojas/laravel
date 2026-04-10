@@ -13,6 +13,7 @@
         <div><label class="form-label">Fecha de pago *</label><input name="pay_day" type="date" value="{{ old('pay_day',date('Y-m-d')) }}" class="form-input" required></div>
         <div><label class="form-label">Bono</label><input name="bonus" type="number" step="0.01" min="0" value="{{ old('bonus',0) }}" class="form-input"></div>
         <div><label class="form-label">Comisión</label><input name="commission" type="number" step="0.01" min="0" value="{{ old('commission',0) }}" class="form-input"></div>
+        <div class="col-span-2"><p class="text-xs text-gray-500">El descuento por crédito se calcula automáticamente para créditos autorizados vigentes.</p></div>
         <div><label class="form-label">Estado *</label><select name="status" class="form-select" required>@foreach(['PENDIENTE','APROBADO','RECHAZADO','ACTIVO','PAGADO'] as $s)<option value="{{ $s }}" @selected(old('status','PENDIENTE')===$s)>{{ $s }}</option>@endforeach</select></div>
     </div>
     <div class="px-5 py-4 border-t border-gray-100 flex gap-3">

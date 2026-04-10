@@ -44,21 +44,25 @@
         </div>
         <div>
             <label class="form-label">Contador BN anterior *</label>
-            <input name="bn_previous" id="bn_previous" type="number" min="0" value="{{ old('bn_previous',0) }}" class="form-input" required>
-            <p class="text-xs text-gray-400 mt-1">Lectura del equipo al inicio del período</p>
+            <input name="bn_previous" id="bn_previous" type="number" min="0" value="{{ old('bn_previous',0) }}" class="form-input bg-gray-50" readonly>
+            <p class="text-xs text-gray-400 mt-1">Lectura del equipo al inicio del período (automático)</p>
         </div>
         <div>
             <label class="form-label">Contador BN actual *</label>
             <input name="bn_current" id="bn_current" type="number" min="0" value="{{ old('bn_current',0) }}" class="form-input" required>
             <p class="text-xs text-gray-400 mt-1">Lectura del equipo al final del período</p>
+            @error('bn_current')<span class="text-red-500 text-xs">{{ $message }}</span>@enderror
         </div>
         <div>
             <label class="form-label">Contador Color anterior *</label>
-            <input name="color_previous" id="color_previous" type="number" min="0" value="{{ old('color_previous',0) }}" class="form-input" required>
+            <input name="color_previous" id="color_previous" type="number" min="0" value="{{ old('color_previous',0) }}" class="form-input bg-gray-50" readonly>
+            <p class="text-xs text-gray-400 mt-1">Lectura del equipo al inicio del período (automático)</p>
         </div>
         <div>
             <label class="form-label">Contador Color actual *</label>
             <input name="color_current" id="color_current" type="number" min="0" value="{{ old('color_current',0) }}" class="form-input" required>
+            <p class="text-xs text-gray-400 mt-1">Lectura del equipo al final del período</p>
+            @error('color_current')<span class="text-red-500 text-xs">{{ $message }}</span>@enderror
         </div>
 
         {{-- Preview en tiempo real --}}
@@ -92,92 +96,71 @@
             <textarea name="notes" class="form-input" rows="2">{{ old('notes') }}</textarea>
         </div>
     </div>
+
+    {{-- Mostrar errores de validación --}}
+    @if($errors->any())
+    <div class="px-5 py-4 border-t border-gray-100 bg-red-50 border-red-200">
+        <p class="text-red-700 font-medium text-sm mb-2">Errores en el formulario:</p>
+        <ul class="list-disc list-inside text-red-600 text-sm">
+            @foreach($errors->all() as $err)
+            <li>{{ $err }}</li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
+
     <div class="px-5 py-4 border-t border-gray-100 flex gap-3">
         <button type="submit" class="btn-primary">Guardar</button>
         <a href="{{ route('print-counters.index') }}" class="btn-secondary">Cancelar</a>
     </div>
 </div>
 </form>
-</div>
 
-@push('scripts')
 <script>
-const rentDefaults = @json($rentDefaults);
+const rentDefaults = {!! json_encode($rentDefaults) !!};
 
-function applyRentDefaults(rentId) {
-    const d = rentDefaults[rentId];
-    if (!d) {
+document.getElementById('rentSelect').addEventListener('change', function() {
+    const rentId = this.value;
+    if (!rentId || !rentDefaults[rentId]) {
         document.getElementById('rentInfo').classList.add('hidden');
         return;
     }
-    document.querySelector('[name="bn_previous"]').value    = d.bn;
-    document.querySelector('[name="color_previous"]').value = d.color;
-
-    // Panel info
-    document.getElementById('infobnIncluded').textContent    = d.bn_included;
-    document.getElementById('infoColorIncluded').textContent  = d.color_included;
-    document.getElementById('infoBnCosto').textContent        = parseFloat(d.bn_costo).toFixed(4);
-    document.getElementById('infoColorCosto').textContent     = parseFloat(d.color_costo).toFixed(4);
-    document.getElementById('rentInfo').classList.remove('hidden');
-}
-
-document.getElementById('rentSelect').addEventListener('change', function () {
-    applyRentDefaults(this.value);
-    calcPreview();
+    
+    const defaults = rentDefaults[rentId];
+    document.getElementById('bn_previous').value = defaults.bn || 0;
+    document.getElementById('color_previous').value = defaults.color || 0;
+    
+    // Mostrar info
+    const rentInfo = document.getElementById('rentInfo');
+    document.getElementById('infobnIncluded').textContent = defaults.bn_included || 0;
+    document.getElementById('infoColorIncluded').textContent = defaults.color_included || 0;
+    document.getElementById('infoBnCosto').textContent = (defaults.bn_costo || 0).toFixed(2);
+    document.getElementById('infoColorCosto').textContent = (defaults.color_costo || 0).toFixed(2);
+    rentInfo.classList.remove('hidden');
 });
 
-// Preview en tiempo real al cambiar cualquier contador
-['bn_previous','bn_current','color_previous','color_current'].forEach(id => {
-    document.getElementById(id).addEventListener('input', calcPreview);
-});
-
-function calcPreview() {
-    const rentId = document.getElementById('rentSelect').value;
-    const d = rentDefaults[rentId];
-    if (!d) { document.getElementById('excessPreview').classList.add('hidden'); return; }
-
-    const bnPrev   = parseInt(document.getElementById('bn_previous').value)    || 0;
-    const bnCur    = parseInt(document.getElementById('bn_current').value)      || 0;
-    const colPrev  = parseInt(document.getElementById('color_previous').value)  || 0;
-    const colCur   = parseInt(document.getElementById('color_current').value)   || 0;
-
-    const bnPrinted    = Math.max(0, bnCur - bnPrev);
-    const colPrinted   = Math.max(0, colCur - colPrev);
-    const bnExcess     = Math.max(0, bnPrinted  - (d.bn_included    || 0));
-    const colExcess    = Math.max(0, colPrinted - (d.color_included  || 0));
-    const bnAmount     = bnExcess  * (parseFloat(d.bn_costo)    || 0);
-    const colAmount    = colExcess * (parseFloat(d.color_costo)  || 0);
-    const total        = bnAmount + colAmount;
-
-    const fmt = n => '$' + parseFloat(n).toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2});
-
-    document.getElementById('pvBnPrinted').textContent    = bnPrinted;
-    document.getElementById('pvBnIncluded').textContent   = d.bn_included ?? 0;
-    document.getElementById('pvBnExcess').textContent     = bnExcess;
-    document.getElementById('pvBnCosto').textContent      = parseFloat(d.bn_costo).toFixed(4);
-    document.getElementById('pvBnAmount').textContent     = fmt(bnAmount);
-    document.getElementById('pvColorPrinted').textContent = colPrinted;
-    document.getElementById('pvColorIncluded').textContent= d.color_included ?? 0;
-    document.getElementById('pvColorExcess').textContent  = colExcess;
-    document.getElementById('pvColorCosto').textContent   = parseFloat(d.color_costo).toFixed(4);
-    document.getElementById('pvColorAmount').textContent  = fmt(colAmount);
-
-    const bar = document.getElementById('pvTotalBar');
-    if (total > 0) {
-        bar.className = 'px-4 py-2 border-t text-sm font-bold text-red-700 bg-red-50';
-        bar.textContent = `⚠ Exceso a cobrar: ${fmt(total)}`;
-    } else {
-        bar.className = 'px-4 py-2 border-t text-sm font-bold text-green-700 bg-green-50';
-        bar.textContent = `✓ Sin exceso — dentro del límite incluido`;
+// Validación: contador actual >= anterior
+document.getElementById('bn_current').addEventListener('blur', function() {
+    const prev = parseInt(document.getElementById('bn_previous').value) || 0;
+    const curr = parseInt(this.value) || 0;
+    if (curr < prev) {
+        alert(`El contador BN actual (${curr}) no puede ser menor que el anterior (${prev})`);
+        this.value = prev;
     }
-    document.getElementById('excessPreview').classList.remove('hidden');
-}
+});
 
-// Auto-fill al cargar si hay valor seleccionado (old input)
-(function () {
-    const sel = document.getElementById('rentSelect');
-    if (sel.value) { applyRentDefaults(sel.value); calcPreview(); }
-})();
+document.getElementById('color_current').addEventListener('blur', function() {
+    const prev = parseInt(document.getElementById('color_previous').value) || 0;
+    const curr = parseInt(this.value) || 0;
+    if (curr < prev) {
+        alert(`El contador Color actual (${curr}) no puede ser menor que el anterior (${prev})`);
+        this.value = prev;
+    }
+});
+
+// Si ya hay una renta seleccionada, llenar valores
+if (document.getElementById('rentSelect').value) {
+    document.getElementById('rentSelect').dispatchEvent(new Event('change'));
+}
 </script>
-@endpush
 @endsection

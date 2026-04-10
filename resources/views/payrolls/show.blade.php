@@ -17,7 +17,9 @@
         <div class="flex justify-between"><span class="text-gray-500">Salario base</span><span>${{ number_format($payroll->salary,2) }}</span></div>
         <div class="flex justify-between"><span class="text-gray-500">Bono</span><span>${{ number_format($payroll->bonus,2) }}</span></div>
         <div class="flex justify-between"><span class="text-gray-500">Comisión</span><span>${{ number_format($payroll->commission,2) }}</span></div>
+        <div class="flex justify-between text-red-600"><span>Descuento crédito</span><span>-${{ number_format($payroll->credit_discount ?? 0,2) }}</span></div>
         <div class="flex justify-between border-t pt-2 font-bold text-base"><span>Total</span><span>${{ number_format($payroll->total_pay,2) }}</span></div>
+        <div class="flex justify-between font-bold text-base text-green-700"><span>Neto a pagar</span><span>${{ number_format($payroll->net_pay ?? $payroll->total_pay,2) }}</span></div>
     </div>
 </div>
 @endsection

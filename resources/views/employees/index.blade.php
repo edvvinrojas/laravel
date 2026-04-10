@@ -13,7 +13,7 @@
     </div>
     <div class="table-wrap rounded-none border-0">
         <table class="table">
-            <thead><tr><th>Nombre</th><th>NSS</th><th>RFC</th><th>Ingreso</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <thead><tr><th>Nombre</th><th>NSS</th><th>RFC</th><th>Ingreso</th><th>Fecha baja</th><th>Estado</th><th>Acciones</th></tr></thead>
             <tbody>
             @forelse($employees as $e)
             <tr>
@@ -21,6 +21,7 @@
                 <td class="font-mono text-xs">{{ $e->nss }}</td>
                 <td class="font-mono text-xs">{{ $e->rfc }}</td>
                 <td>{{ $e->hire_date->format('d/m/Y') }}</td>
+                <td>{{ $e->termination_date?->format('d/m/Y') ?? 'N/A' }}</td>
                 <td>@if($e->is_active)<span class="badge-green">Activo</span>@else<span class="badge-gray">Inactivo</span>@endif</td>
                 <td class="flex gap-1">
                     <a href="{{ route('employees.show',$e) }}" class="btn btn-sm btn-secondary">Ver</a>
@@ -28,7 +29,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="6" class="text-center py-8 text-gray-400">Sin registros</td></tr>
+            <tr><td colspan="7" class="text-center py-8 text-gray-400">Sin registros</td></tr>
             @endforelse
             </tbody>
         </table>

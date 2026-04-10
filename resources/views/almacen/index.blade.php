@@ -11,6 +11,7 @@
             'equipos' => 'Equipos',
             'refacciones' => 'Refacciones',
             'inventario' => 'Inventario tóner',
+            'movimientos' => 'Entradas / Salidas',
         ] as $slug => $label)
         <a href="{{ route('almacen.index', ['tab' => $slug]) }}"
            class="px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors whitespace-nowrap
@@ -222,6 +223,205 @@
         </div>
         @if($inventory->hasPages())
         <div class="flex justify-end">{{ $inventory->appends(['tab' => 'inventario'])->links() }}</div>
+        @endif
+    </div>
+    @endif
+
+    @if($tab === 'movimientos')
+    <div class="space-y-4">
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-base font-semibold text-gray-900">Registrar salida</h3>
+                </div>
+                <div class="card-body space-y-3">
+                    <form method="POST" action="{{ route('almacen.movements.store') }}" class="space-y-3">
+                        @csrf
+                        <input type="hidden" name="movement_type" value="SALIDA">
+
+                        <div>
+                            <label class="form-label">Quién se lo llevó</label>
+                            <input
+                                type="text"
+                                name="person_name"
+                                value="{{ old('movement_type') === 'SALIDA' ? old('person_name') : '' }}"
+                                class="form-input"
+                                placeholder="Nombre del responsable"
+                                required
+                            >
+                        </div>
+
+                        <div>
+                            <label class="form-label">Equipo (opcional)</label>
+                            <select name="equipment_id" class="form-select">
+                                <option value="">Seleccionar equipo</option>
+                                @foreach($equipmentOptions as $eq)
+                                <option
+                                    value="{{ $eq->id }}"
+                                    @selected(old('movement_type') === 'SALIDA' && (string) old('equipment_id') === (string) $eq->id)
+                                >
+                                    {{ $eq->sku ?: 'SIN-SKU' }} | {{ $eq->model }} | {{ $eq->serie }} ({{ $eq->location_status }})
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="form-label">Tóner / inventario (opcional)</label>
+                            <select name="inventory_id" class="form-select">
+                                <option value="">Seleccionar tóner</option>
+                                @foreach($inventoryOptions as $inv)
+                                <option
+                                    value="{{ $inv->id }}"
+                                    @selected(old('movement_type') === 'SALIDA' && (string) old('inventory_id') === (string) $inv->id)
+                                >
+                                    {{ $inv->item_code }} | {{ $inv->catalog?->item_name ?? 'Sin artículo' }} ({{ $inv->is_available ? 'Disponible' : 'No disponible' }})
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="form-label">Motivo / descripción</label>
+                            <textarea
+                                name="reason"
+                                rows="3"
+                                class="form-input"
+                                placeholder="Ejemplo: Se entregó para instalación en sucursal Centro"
+                                required
+                            >{{ old('movement_type') === 'SALIDA' ? old('reason') : '' }}</textarea>
+                        </div>
+
+                        <div class="pt-1">
+                            <button type="submit" class="btn-primary">Registrar salida</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-base font-semibold text-gray-900">Registrar entrada</h3>
+                </div>
+                <div class="card-body space-y-3">
+                    <form method="POST" action="{{ route('almacen.movements.store') }}" class="space-y-3">
+                        @csrf
+                        <input type="hidden" name="movement_type" value="ENTRADA">
+
+                        <div>
+                            <label class="form-label">Quién lo devolvió</label>
+                            <input
+                                type="text"
+                                name="person_name"
+                                value="{{ old('movement_type') === 'ENTRADA' ? old('person_name') : '' }}"
+                                class="form-input"
+                                placeholder="Nombre del responsable"
+                                required
+                            >
+                        </div>
+
+                        <div>
+                            <label class="form-label">Equipo que volvió (opcional)</label>
+                            <select name="equipment_id" class="form-select">
+                                <option value="">Seleccionar equipo</option>
+                                @foreach($equipmentOptions as $eq)
+                                <option
+                                    value="{{ $eq->id }}"
+                                    @selected(old('movement_type') === 'ENTRADA' && (string) old('equipment_id') === (string) $eq->id)
+                                >
+                                    {{ $eq->sku ?: 'SIN-SKU' }} | {{ $eq->model }} | {{ $eq->serie }} ({{ $eq->location_status }})
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="form-label">Tóner devuelto (opcional)</label>
+                            <select name="inventory_id" class="form-select">
+                                <option value="">Seleccionar tóner</option>
+                                @foreach($inventoryOptions as $inv)
+                                <option
+                                    value="{{ $inv->id }}"
+                                    @selected(old('movement_type') === 'ENTRADA' && (string) old('inventory_id') === (string) $inv->id)
+                                >
+                                    {{ $inv->item_code }} | {{ $inv->catalog?->item_name ?? 'Sin artículo' }} ({{ $inv->is_available ? 'Disponible' : 'No disponible' }})
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="form-label">Motivo de devolución</label>
+                            <textarea
+                                name="reason"
+                                rows="3"
+                                class="form-input"
+                                placeholder="Ejemplo: Se devolvió por fin de contrato"
+                                required
+                            >{{ old('movement_type') === 'ENTRADA' ? old('reason') : '' }}</textarea>
+                        </div>
+
+                        <div class="pt-1">
+                            <button type="submit" class="btn-success">Registrar entrada</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="text-sm text-gray-500">{{ $movements->total() }} movimiento(s) registrados</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Responsable</th>
+                                <th>Equipo</th>
+                                <th>Tóner</th>
+                                <th>Motivo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($movements as $mv)
+                            <tr>
+                                <td class="text-sm">{{ $mv->created_at?->format('d/m/Y H:i') }}</td>
+                                <td>
+                                    <span class="{{ $mv->movement_type === 'SALIDA' ? 'badge-yellow' : 'badge-green' }}">
+                                        {{ $mv->movement_type }}
+                                    </span>
+                                </td>
+                                <td class="font-medium text-gray-900">{{ $mv->person_name }}</td>
+                                <td class="text-sm text-gray-700">
+                                    @if($mv->equipment)
+                                        {{ $mv->equipment->sku ?: 'SIN-SKU' }} / {{ $mv->equipment->model }} / {{ $mv->equipment->serie }}
+                                    @else
+                                        —
+                                    @endif
+                                </td>
+                                <td class="text-sm text-gray-700">
+                                    @if($mv->inventory)
+                                        {{ $mv->inventory->item_code }} / {{ $mv->inventory->catalog?->item_name ?? 'Sin artículo' }}
+                                    @else
+                                        —
+                                    @endif
+                                </td>
+                                <td class="text-sm text-gray-600 max-w-md">{{ $mv->reason }}</td>
+                            </tr>
+                            @empty
+                            <tr><td colspan="6" class="text-center text-gray-400 py-10">Aún no hay movimientos registrados.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        @if($movements->hasPages())
+        <div class="flex justify-end">{{ $movements->appends(['tab' => 'movimientos'])->links() }}</div>
         @endif
     </div>
     @endif

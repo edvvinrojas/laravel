@@ -9,7 +9,7 @@
 <div class="card">
     <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="col-span-2"><label class="form-label">Empleado *</label><select name="employee_id" class="form-select" required><option value="">Seleccionar…</option>@foreach($employees as $e)<option value="{{ $e->id }}" @selected(old('employee_id')==$e->id)>{{ $e->nombre }}</option>@endforeach</select></div>
-        <div><label class="form-label">Tipo *</label><select name="absence_type" class="form-select" required>@foreach(['ENFERMEDAD','AUSENTISMO','PERMISO_PERSONAL','OTRO'] as $t)<option value="{{ $t }}" @selected(old('absence_type')===$t)>{{ str_replace('_',' ',$t) }}</option>@endforeach</select></div>
+        <div><label class="form-label">Tipo *</label><select name="absence_type" class="form-select" required>@foreach(['ENFERMEDAD','AUSENTISMO','PERMISO_PERSONAL','SALIDA_TEMPRANA','LLEGADA_TARDE','OTRO'] as $t)<option value="{{ $t }}" @selected(old('absence_type')===$t)>{{ str_replace('_',' ',$t) }}</option>@endforeach</select></div>
         <div><label class="form-label">Inicio *</label><input name="start_date" type="date" value="{{ old('start_date') }}" class="form-input" required></div>
         <div><label class="form-label">Fin *</label><input name="end_date" type="date" value="{{ old('end_date') }}" class="form-input" required></div>
         <div class="flex items-center gap-2 pt-3"><input type="checkbox" name="is_justified" value="1" @checked(old('is_justified'))><label class="text-sm">Justificado</label></div>
