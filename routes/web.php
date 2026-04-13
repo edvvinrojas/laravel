@@ -57,17 +57,41 @@ Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Clientes
-    Route::resource('clients', ClientController::class);
-    Route::delete('clients/{client}/contacts/{contact}', [ClientController::class, 'destroyContact'])->name('clients.contacts.destroy');
-    Route::post('clients/{client}/documents', [ClientController::class, 'uploadDocument'])->name('clients.documents.upload');
-    Route::delete('clients/{client}/documents/{docType}', [ClientController::class, 'destroyDocument'])->name('clients.documents.destroy');
-    Route::get('clients/{client}/branches', [BranchController::class, 'index'])->name('branches.index');
-    Route::post('clients/{client}/branches', [BranchController::class, 'store'])->name('branches.store');
-    Route::delete('branches/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
-    Route::post('clients/{client}/portal-token',   [ClientPortalController::class, 'generateToken'])->name('clients.portal.generate');
-    Route::delete('clients/{client}/portal-token', [ClientPortalController::class, 'revokeToken'])->name('clients.portal.revoke');
-    Route::post('branches/{branch}/areas', [AreaController::class, 'store'])->name('branches.areas.store');
-    Route::delete('branches/{branch}/areas/{area}', [AreaController::class, 'destroy'])->name('branches.areas.destroy');
+    Route::resource('clients', ClientController::class)
+        ->middlewareFor(['index', 'show'], 'permission:clientes.view')
+        ->middlewareFor(['create', 'store'], 'permission:clientes.create')
+        ->middlewareFor(['edit', 'update'], 'permission:clientes.edit')
+        ->middlewareFor('destroy', 'permission:clientes.delete');
+    Route::delete('clients/{client}/contacts/{contact}', [ClientController::class, 'destroyContact'])
+        ->name('clients.contacts.destroy')
+        ->middleware('permission:clientes.delete');
+    Route::post('clients/{client}/documents', [ClientController::class, 'uploadDocument'])
+        ->name('clients.documents.upload')
+        ->middleware('permission:clientes.edit');
+    Route::delete('clients/{client}/documents/{docType}', [ClientController::class, 'destroyDocument'])
+        ->name('clients.documents.destroy')
+        ->middleware('permission:clientes.delete');
+    Route::get('clients/{client}/branches', [BranchController::class, 'index'])
+        ->name('branches.index')
+        ->middleware('permission:clientes.view');
+    Route::post('clients/{client}/branches', [BranchController::class, 'store'])
+        ->name('branches.store')
+        ->middleware('permission:clientes.edit');
+    Route::delete('branches/{branch}', [BranchController::class, 'destroy'])
+        ->name('branches.destroy')
+        ->middleware('permission:clientes.delete');
+    Route::post('clients/{client}/portal-token',   [ClientPortalController::class, 'generateToken'])
+        ->name('clients.portal.generate')
+        ->middleware('permission:clientes.edit');
+    Route::delete('clients/{client}/portal-token', [ClientPortalController::class, 'revokeToken'])
+        ->name('clients.portal.revoke')
+        ->middleware('permission:clientes.delete');
+    Route::post('branches/{branch}/areas', [AreaController::class, 'store'])
+        ->name('branches.areas.store')
+        ->middleware('permission:clientes.edit');
+    Route::delete('branches/{branch}/areas/{area}', [AreaController::class, 'destroy'])
+        ->name('branches.areas.destroy')
+        ->middleware('permission:clientes.delete');
 
     // Catálogos
     Route::resource('brands', BrandController::class);
@@ -184,19 +208,42 @@ Route::middleware('auth')->group(function () {
     })->name('api.sale.billing-amount');
 
     // Rentas
-    Route::resource('rents', RentController::class);
-    Route::get('rents/{rent}/pdf', [RentController::class, 'pdf'])->name('rents.pdf');
+    Route::resource('rents', RentController::class)
+        ->middlewareFor(['index', 'show'], 'permission:rentas.view')
+        ->middlewareFor(['create', 'store'], 'permission:rentas.create')
+        ->middlewareFor(['edit', 'update'], 'permission:rentas.edit')
+        ->middlewareFor('destroy', 'permission:rentas.delete');
+    Route::get('rents/{rent}/pdf', [RentController::class, 'pdf'])
+        ->name('rents.pdf')
+        ->middleware('permission:rentas.view');
 
     // Ventas
-    Route::resource('sales', SaleController::class);
-    Route::get('sales/{sale}/pdf', [SaleController::class, 'pdf'])->name('sales.pdf');
+    Route::resource('sales', SaleController::class)
+        ->middlewareFor(['index', 'show'], 'permission:ventas.view')
+        ->middlewareFor(['create', 'store'], 'permission:ventas.create')
+        ->middlewareFor(['edit', 'update'], 'permission:ventas.edit')
+        ->middlewareFor('destroy', 'permission:ventas.delete');
+    Route::get('sales/{sale}/pdf', [SaleController::class, 'pdf'])
+        ->name('sales.pdf')
+        ->middleware('permission:ventas.view');
 
     // Facturación / Cobranza
-    Route::resource('billing', BillingController::class);
-    Route::get('billing/{billing}/pdf', [BillingController::class, 'pdf'])->name('billing.pdf');
-    Route::patch('billing/{billing}/pay', [BillingController::class, 'markPaid'])->name('billing.pay');
-    Route::post('billing/{billing}/facturacom/stamp', [BillingController::class, 'stampFacturaCom'])->name('billing.facturacom.stamp');
-    Route::post('billing/{billing}/facturacom/sync', [BillingController::class, 'syncFacturaCom'])->name('billing.facturacom.sync');
+    Route::resource('billing', BillingController::class)
+        ->middlewareFor(['index', 'show'], 'permission:facturacion.view')
+        ->middlewareFor(['create', 'store'], 'permission:facturacion.create')
+        ->middlewareFor(['edit', 'update'], 'permission:facturacion.edit');
+    Route::get('billing/{billing}/pdf', [BillingController::class, 'pdf'])
+        ->name('billing.pdf')
+        ->middleware('permission:facturacion.view');
+    Route::patch('billing/{billing}/pay', [BillingController::class, 'markPaid'])
+        ->name('billing.pay')
+        ->middleware('permission:facturacion.edit');
+    Route::post('billing/{billing}/facturacom/stamp', [BillingController::class, 'stampFacturaCom'])
+        ->name('billing.facturacom.stamp')
+        ->middleware('permission:facturacion.edit');
+    Route::post('billing/{billing}/facturacom/sync', [BillingController::class, 'syncFacturaCom'])
+        ->name('billing.facturacom.sync')
+        ->middleware('permission:facturacion.edit');
 
     // Reportes
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
@@ -216,9 +263,17 @@ Route::middleware('auth')->group(function () {
     Route::post('print-counters/{printCounter}/bill-excess', [PrintCounterController::class, 'billExcess'])->name('print-counters.bill-excess');
 
     // Compras
-    Route::resource('purchases', PurchaseController::class);
-    Route::patch('purchases/{purchase}/approve', [PurchaseController::class, 'approve'])->name('purchases.approve');
-    Route::patch('purchases/{purchase}/status',  [PurchaseController::class, 'updateStatus'])->name('purchases.status');
+    Route::resource('purchases', PurchaseController::class)
+        ->middlewareFor(['index', 'show'], 'permission:compras.view')
+        ->middlewareFor(['create', 'store'], 'permission:compras.create')
+        ->middlewareFor(['edit', 'update'], 'permission:compras.edit')
+        ->middlewareFor('destroy', 'permission:compras.delete');
+    Route::patch('purchases/{purchase}/approve', [PurchaseController::class, 'approve'])
+        ->name('purchases.approve')
+        ->middleware('permission:compras.edit');
+    Route::patch('purchases/{purchase}/status',  [PurchaseController::class, 'updateStatus'])
+        ->name('purchases.status')
+        ->middleware('permission:compras.edit');
 
     // Refacciones
     Route::resource('spareparts', SparepartController::class);
@@ -228,36 +283,87 @@ Route::middleware('auth')->group(function () {
     Route::patch('tickets/{ticket}/close', [TicketController::class, 'close'])->name('tickets.close');
 
     // Taller / Reparaciones
-    Route::resource('repairs', RepairController::class);
-    Route::patch('repairs/{repair}/listo', [RepairController::class, 'markListo'])->name('repairs.listo');
+    Route::resource('repairs', RepairController::class)
+        ->middlewareFor(['index', 'show'], 'permission:taller.view')
+        ->middlewareFor(['create', 'store'], 'permission:taller.create')
+        ->middlewareFor(['edit', 'update'], 'permission:taller.edit')
+        ->middlewareFor('destroy', 'permission:taller.delete');
+    Route::patch('repairs/{repair}/listo', [RepairController::class, 'markListo'])
+        ->name('repairs.listo')
+        ->middleware('permission:taller.edit');
 
     // Rutas
-    Route::resource('routes', RouteController::class);
-    Route::post('routes/{route}/stops',                       [RouteController::class, 'storeStop'])->name('routes.stops.store');
-    Route::patch('routes/{route}/stops/{stop}/complete',      [RouteController::class, 'completeStop'])->name('routes.stops.complete');
-    Route::patch('routes/{route}/stops/{stop}/postpone',      [RouteController::class, 'postponeStop'])->name('routes.stops.postpone');
-    Route::delete('routes/{route}/stops/{stop}',              [RouteController::class, 'destroyStop'])->name('routes.stops.destroy');
-    Route::patch('routes/{route}/complete',                   [RouteController::class, 'completeRoute'])->name('routes.complete');
+    Route::resource('routes', RouteController::class)
+        ->middlewareFor(['index', 'show'], 'permission:rutas.view')
+        ->middlewareFor(['create', 'store'], 'permission:rutas.create')
+        ->middlewareFor(['edit', 'update'], 'permission:rutas.edit')
+        ->middlewareFor('destroy', 'permission:rutas.delete');
+    Route::post('routes/{route}/stops',                       [RouteController::class, 'storeStop'])
+        ->name('routes.stops.store')
+        ->middleware('permission:rutas.edit');
+    Route::patch('routes/{route}/stops/{stop}/complete',      [RouteController::class, 'completeStop'])
+        ->name('routes.stops.complete')
+        ->middleware('permission:rutas.edit');
+    Route::patch('routes/{route}/stops/{stop}/postpone',      [RouteController::class, 'postponeStop'])
+        ->name('routes.stops.postpone')
+        ->middleware('permission:rutas.edit');
+    Route::delete('routes/{route}/stops/{stop}',              [RouteController::class, 'destroyStop'])
+        ->name('routes.stops.destroy')
+        ->middleware('permission:rutas.delete');
+    Route::patch('routes/{route}/complete',                   [RouteController::class, 'completeRoute'])
+        ->name('routes.complete')
+        ->middleware('permission:rutas.edit');
 
     // RH hub
     Route::get('rh', [RhController::class, 'index'])->name('rh.index');
 
     // RH
-    Route::resource('employees', EmployeeController::class);
-    Route::resource('payrolls', PayrollController::class);
-    Route::resource('vacations', VacationController::class);
-    Route::patch('vacations/{vacation}/approve', [VacationController::class, 'approve'])->name('vacations.approve');
-    Route::patch('vacations/{vacation}/reject',  [VacationController::class, 'reject'])->name('vacations.reject');
-    Route::resource('absences', AbsenceController::class);
-    Route::patch('absences/{absence}/approve', [AbsenceController::class, 'approve'])->name('absences.approve');
-    Route::patch('absences/{absence}/reject',  [AbsenceController::class, 'reject'])->name('absences.reject');
-    Route::resource('administrative-records', AdministrativeRecordController::class);
-    Route::resource('credits', EmployeeCreditController::class)->middleware('role:administrador,gerencia,dept:rh');
+    Route::resource('employees', EmployeeController::class)
+        ->middlewareFor(['index', 'show'], 'permission:empleados.view')
+        ->middlewareFor(['create', 'store'], 'permission:empleados.create')
+        ->middlewareFor(['edit', 'update'], 'permission:empleados.edit')
+        ->middlewareFor('destroy', 'permission:empleados.delete');
+    Route::resource('payrolls', PayrollController::class)
+        ->middlewareFor(['index', 'show'], 'permission:nomina.view')
+        ->middlewareFor(['create', 'store'], 'permission:nomina.create')
+        ->middlewareFor(['edit', 'update'], 'permission:nomina.edit')
+        ->middlewareFor('destroy', 'permission:nomina.delete');
+    Route::resource('vacations', VacationController::class)
+        ->middlewareFor(['index', 'show'], 'permission:vacaciones.view')
+        ->middlewareFor(['create', 'store'], 'permission:vacaciones.create')
+        ->middlewareFor(['edit', 'update'], 'permission:vacaciones.edit');
+    Route::patch('vacations/{vacation}/approve', [VacationController::class, 'approve'])
+        ->name('vacations.approve')
+        ->middleware('permission:vacaciones.edit');
+    Route::patch('vacations/{vacation}/reject',  [VacationController::class, 'reject'])
+        ->name('vacations.reject')
+        ->middleware('permission:vacaciones.edit');
+    Route::resource('absences', AbsenceController::class)
+        ->middlewareFor(['index', 'show'], 'permission:ausentismo.view')
+        ->middlewareFor(['create', 'store'], 'permission:ausentismo.create')
+        ->middlewareFor(['edit', 'update'], 'permission:ausentismo.edit');
+    Route::patch('absences/{absence}/approve', [AbsenceController::class, 'approve'])
+        ->name('absences.approve')
+        ->middleware('permission:ausentismo.edit');
+    Route::patch('absences/{absence}/reject',  [AbsenceController::class, 'reject'])
+        ->name('absences.reject')
+        ->middleware('permission:ausentismo.edit');
+    Route::resource('administrative-records', AdministrativeRecordController::class)
+        ->middlewareFor(['index', 'show'], 'permission:empleados.view')
+        ->middlewareFor(['create', 'store'], 'permission:empleados.create')
+        ->middlewareFor(['edit', 'update'], 'permission:empleados.edit')
+        ->middlewareFor('destroy', 'permission:empleados.delete');
+    Route::resource('credits', EmployeeCreditController::class)->middleware('permission:empleados.edit');
 
-    // Usuarios (admin o departamento TI)
-    Route::resource('users', UserController::class)->middleware('role:administrador,dept:ti');
+    // Usuarios (estricto por permisos granulares)
+    Route::resource('users', UserController::class)
+        ->middlewareFor(['index', 'show'], 'permission:usuarios.view')
+        ->middlewareFor(['create', 'store'], 'permission:usuarios.create')
+        ->middlewareFor(['edit', 'update'], 'permission:usuarios.edit')
+        ->middlewareFor('destroy', 'permission:usuarios.delete');
 
     // Órdenes de Servicio
+    Route::get('service-orders/{serviceOrder}/pdf', [ServiceOrderController::class, 'pdf'])->name('service-orders.pdf');
     Route::resource('service-orders', ServiceOrderController::class);
 
     // Producción (planes mensuales)

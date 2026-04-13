@@ -31,8 +31,12 @@
                 <td>{{ $r->ubicacion ?? '—' }}</td>
                 <td class="text-xs text-gray-500">{{ $r->fecha_alta->format('d/m/Y') }}</td>
                 <td class="flex gap-1">
-                    <a href="{{ route('repairs.show',$r) }}" class="btn btn-sm btn-secondary">Ver</a>
-                    <a href="{{ route('repairs.edit',$r) }}" class="btn btn-sm btn-primary">Editar</a>
+                    @if(auth()->user()->hasPermission('taller.view'))
+                        <a href="{{ route('repairs.show',$r) }}" class="btn btn-sm btn-secondary">Ver</a>
+                    @endif
+                    @if(auth()->user()->hasPermission('taller.edit'))
+                        <a href="{{ route('repairs.edit',$r) }}" class="btn btn-sm btn-primary">Editar</a>
+                    @endif
                 </td>
             </tr>
             @empty

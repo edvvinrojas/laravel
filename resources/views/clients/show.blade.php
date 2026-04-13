@@ -47,7 +47,9 @@
                 </button>
             </form>
             @endif
-            <a href="{{ route('clients.edit', $client) }}" class="btn-secondary btn-sm">Editar</a>
+            @if(auth()->user()->hasPermission('clientes.edit'))
+                <a href="{{ route('clients.edit', $client) }}" class="btn-secondary btn-sm">Editar</a>
+            @endif
             <a href="{{ route('clients.index') }}" class="btn-secondary btn-sm">Volver</a>
         </div>
     </div>

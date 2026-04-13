@@ -139,21 +139,18 @@ function toggleArea(area, active) {
     if (!active) {
         panel.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
     } else {
-        // Activar TODAS las acciones visibles al marcar el área
+        // Activar TODAS las acciones al marcar el área
         panel.querySelectorAll('input[type=checkbox]').forEach(cb => {
-            if (cb.closest('label').style.display !== 'none') cb.checked = true;
+            cb.checked = true;
         });
     }
     syncRolRestrictions();
 }
 
-// Ocultar Eliminar para rol Gerencia
+// Sin restricciones por rol: todo se controla por checkboxes de permisos.
 function syncRolRestrictions() {
-    const isGerencia = document.getElementById('rolSelect').value === 'gerencia';
     document.querySelectorAll('.delete-perm').forEach(label => {
-        const cb = label.querySelector('input');
-        label.style.display = isGerencia ? 'none' : '';
-        if (isGerencia && cb) cb.checked = false;
+        label.style.display = '';
     });
 }
 
@@ -185,9 +182,9 @@ function selectAll() {
     document.querySelectorAll('.area-toggle').forEach(cb => {
         cb.checked = true;
         toggleArea(cb.dataset.area, true);
-        // Activar todas las acciones visibles
+        // Activar todas las acciones
         document.querySelectorAll('[data-area="' + cb.dataset.area + '"].action-checkbox').forEach(a => {
-            if (a.closest('label').style.display !== 'none') a.checked = true;
+            a.checked = true;
         });
     });
 }

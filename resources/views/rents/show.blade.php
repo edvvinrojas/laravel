@@ -4,8 +4,12 @@
 
 @section('content')
 <div class="flex gap-3 mb-4">
-    <a href="{{ route('rents.edit',$rent) }}" class="btn-primary">Editar</a>
-    <a href="{{ route('rents.pdf',$rent) }}" target="_blank" class="btn-secondary">PDF</a>
+    @if(auth()->user()->hasPermission('rentas.edit'))
+        <a href="{{ route('rents.edit',$rent) }}" class="btn-primary">Editar</a>
+    @endif
+    @if(auth()->user()->hasPermission('rentas.view'))
+        <a href="{{ route('rents.pdf',$rent) }}" target="_blank" class="btn-secondary">PDF</a>
+    @endif
     <a href="{{ route('rents.index') }}" class="btn-secondary">← Volver</a>
 </div>
 
@@ -35,7 +39,11 @@
     </div>
 
     <div class="card">
-        <div class="card-header"><h3 class="font-semibold text-sm">Últimas facturas</h3><a href="{{ route('billing.create') }}?rent_id={{ $rent->id }}" class="btn btn-sm btn-primary">+ Factura</a></div>
+        <div class="card-header"><h3 class="font-semibold text-sm">Últimas facturas</h3>
+            @if(auth()->user()->hasPermission('facturacion.create'))
+                <a href="{{ route('billing.create') }}?rent_id={{ $rent->id }}" class="btn btn-sm btn-primary">+ Factura</a>
+            @endif
+        </div>
         <ul class="divide-y divide-gray-100">
             @forelse($rent->billings->take(5) as $b)
             <li class="px-4 py-2.5 flex justify-between text-sm">
@@ -51,7 +59,11 @@
 
     @if($rent->has_print_service)
     <div class="card lg:col-span-3">
-        <div class="card-header"><h3 class="font-semibold text-sm">Contadores de impresión</h3><a href="{{ route('print-counters.create') }}?rent_id={{ $rent->id }}" class="btn btn-sm btn-primary">+ Contador</a></div>
+        <div class="card-header"><h3 class="font-semibold text-sm">Contadores de impresión</h3>
+            @if(auth()->user()->hasPermission('facturacion.create'))
+                <a href="{{ route('print-counters.create') }}?rent_id={{ $rent->id }}" class="btn btn-sm btn-primary">+ Contador</a>
+            @endif
+        </div>
         <div class="table-wrap rounded-none border-0">
             <table class="table">
                 <thead>

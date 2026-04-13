@@ -106,6 +106,12 @@ class ServiceOrderController extends Controller
         return view('service-orders.show', compact('serviceOrder'));
     }
 
+    public function pdf(ServiceOrder $serviceOrder)
+    {
+        $serviceOrder->load(['engineer', 'client', 'branch', 'area', 'item.brand', 'creator']);
+        return view('pdf.service-order', compact('serviceOrder'));
+    }
+
     public function edit(ServiceOrder $serviceOrder)
     {
         $engineers = User::where('is_active', true)->orderBy('full_name')->get();

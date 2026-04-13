@@ -4,7 +4,9 @@
 
 @section('content')
 <div class="flex gap-3 mb-4">
-    <a href="{{ route('users.edit',$user) }}" class="btn-primary">Editar</a>
+    @if(auth()->user()->hasPermission('usuarios.edit'))
+        <a href="{{ route('users.edit',$user) }}" class="btn-primary">Editar</a>
+    @endif
     <a href="{{ route('users.index') }}" class="btn-secondary">← Volver</a>
 </div>
 <div class="card max-w-md">

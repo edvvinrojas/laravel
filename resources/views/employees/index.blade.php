@@ -24,8 +24,12 @@
                 <td>{{ $e->termination_date?->format('d/m/Y') ?? 'N/A' }}</td>
                 <td>@if($e->is_active)<span class="badge-green">Activo</span>@else<span class="badge-gray">Inactivo</span>@endif</td>
                 <td class="flex gap-1">
-                    <a href="{{ route('employees.show',$e) }}" class="btn btn-sm btn-secondary">Ver</a>
-                    <a href="{{ route('employees.edit',$e) }}" class="btn btn-sm btn-primary">Editar</a>
+                    @if(auth()->user()->hasPermission('empleados.view'))
+                        <a href="{{ route('employees.show',$e) }}" class="btn btn-sm btn-secondary">Ver</a>
+                    @endif
+                    @if(auth()->user()->hasPermission('empleados.edit'))
+                        <a href="{{ route('employees.edit',$e) }}" class="btn btn-sm btn-primary">Editar</a>
+                    @endif
                 </td>
             </tr>
             @empty

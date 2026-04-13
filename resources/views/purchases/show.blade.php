@@ -4,9 +4,8 @@
 
 @section('content')
 @php
-    $user      = auth()->user();
-    $isCompras = $user->rol === 'administrador' || $user->department === 'administracion';
-    $isGerencia= in_array($user->rol, ['gerencia','administrador']);
+    $user = auth()->user();
+    $canEditCompras = $user->hasPermission('compras.edit');
     $statusColors = [
         'SOLICITADO' => 'bg-yellow-100 text-yellow-800',
         'AUTORIZADO' => 'bg-blue-100 text-blue-800',
@@ -19,7 +18,7 @@
 @endphp
 
 <div class="flex gap-3 mb-4 flex-wrap">
-    @if($isGerencia && $purchase->status === 'SOLICITADO')
+    @if($canEditCompras && $purchase->status === 'SOLICITADO')
         <form action="{{ route('purchases.approve', $purchase) }}" method="POST"
               onsubmit="return confirm('¿Autorizar esta solicitud de compra?')">
             @csrf @method('PATCH')
@@ -27,7 +26,7 @@
         </form>
     @endif
 
-    @if($isCompras && $purchase->status === 'AUTORIZADO')
+    @if($canEditCompras && $purchase->status === 'AUTORIZADO')
         <form action="{{ route('purchases.status', $purchase) }}" method="POST">
             @csrf @method('PATCH')
             <input type="hidden" name="status" value="PEDIDO">
@@ -35,7 +34,7 @@
         </form>
     @endif
 
-    @if($isCompras && $purchase->status === 'PEDIDO')
+    @if($canEditCompras && $purchase->status === 'PEDIDO')
         <form action="{{ route('purchases.status', $purchase) }}" method="POST">
             @csrf @method('PATCH')
             <input type="hidden" name="status" value="LLEGO">
@@ -43,7 +42,7 @@
         </form>
     @endif
 
-    @if($isCompras && $purchase->status === 'LLEGO')
+    @if($canEditCompras && $purchase->status === 'LLEGO')
         <form action="{{ route('purchases.status', $purchase) }}" method="POST">
             @csrf @method('PATCH')
             <input type="hidden" name="status" value="ENTREGADO">
@@ -51,7 +50,7 @@
         </form>
     @endif
 
-    @if($isCompras || $purchase->user_id === $user->id)
+    @if($canEditCompras || $purchase->user_id === $user->id)
         <a href="{{ route('purchases.edit', $purchase) }}" class="btn-secondary">Editar</a>
     @endif
     <a href="{{ route('purchases.index') }}" class="btn-secondary">← Volver</a>

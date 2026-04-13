@@ -15,7 +15,9 @@
             </select>
             <button class="btn-secondary">Buscar</button>
         </form>
-        <a href="{{ route('routes.create') }}" class="btn-primary">+ Nueva ruta</a>
+        @if(auth()->user()->hasPermission('rutas.create'))
+            <a href="{{ route('routes.create') }}" class="btn-primary">+ Nueva ruta</a>
+        @endif
     </div>
     <div class="table-wrap rounded-none border-0">
         <table class="table">
@@ -31,8 +33,12 @@
                 <td>{{ $r->completed_stops }}/{{ $r->total_stops }}</td>
                 <td><span class="{{ $sc[$r->status]??'badge-gray' }}">{{ str_replace('_',' ',$r->status) }}</span></td>
                 <td class="flex gap-1">
-                    <a href="{{ route('routes.show',$r) }}" class="btn btn-sm btn-secondary">Ver</a>
-                    <a href="{{ route('routes.edit',$r) }}" class="btn btn-sm btn-primary">Editar</a>
+                    @if(auth()->user()->hasPermission('rutas.view'))
+                        <a href="{{ route('routes.show', $r) }}" class="btn btn-sm btn-secondary">Ver</a>
+                    @endif
+                    @if(auth()->user()->hasPermission('rutas.edit'))
+                        <a href="{{ route('routes.edit', $r) }}" class="btn btn-sm btn-primary">Editar</a>
+                    @endif
                 </td>
             </tr>
             @empty

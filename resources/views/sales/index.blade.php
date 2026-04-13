@@ -15,7 +15,9 @@
             </select>
             <button class="btn-secondary">Buscar</button>
         </form>
-        <a href="{{ route('sales.create') }}" class="btn-primary">+ Nueva venta</a>
+        @if(auth()->user()->hasPermission('ventas.create'))
+            <a href="{{ route('sales.create') }}" class="btn-primary">+ Nueva venta</a>
+        @endif
     </div>
     <div class="table-wrap rounded-none border-0">
         <table class="table">
@@ -32,8 +34,12 @@
                     <span class="{{ $c[$s->sale_status]??'badge-gray' }}">{{ $s->sale_status }}</span>
                 </td>
                 <td class="flex gap-1">
-                    <a href="{{ route('sales.show',$s) }}" class="btn btn-sm btn-secondary">Ver</a>
-                    <a href="{{ route('sales.edit',$s) }}" class="btn btn-sm btn-primary">Editar</a>
+                    @if(auth()->user()->hasPermission('ventas.view'))
+                        <a href="{{ route('sales.show',$s) }}" class="btn btn-sm btn-secondary">Ver</a>
+                    @endif
+                    @if(auth()->user()->hasPermission('ventas.edit'))
+                        <a href="{{ route('sales.edit',$s) }}" class="btn btn-sm btn-primary">Editar</a>
+                    @endif
                 </td>
             </tr>
             @empty

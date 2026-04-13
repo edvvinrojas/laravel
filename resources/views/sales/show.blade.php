@@ -4,8 +4,12 @@
 
 @section('content')
 <div class="flex gap-3 mb-4">
-    <a href="{{ route('sales.edit',$sale) }}" class="btn-primary">Editar</a>
-    <a href="{{ route('sales.pdf',$sale) }}" target="_blank" class="btn-secondary">PDF</a>
+    @if(auth()->user()->hasPermission('ventas.edit'))
+        <a href="{{ route('sales.edit',$sale) }}" class="btn-primary">Editar</a>
+    @endif
+    @if(auth()->user()->hasPermission('ventas.view'))
+        <a href="{{ route('sales.pdf',$sale) }}" target="_blank" class="btn-secondary">PDF</a>
+    @endif
     <a href="{{ route('sales.index') }}" class="btn-secondary">← Volver</a>
 </div>
 

@@ -43,9 +43,24 @@ class User extends Authenticatable
 
     public function hasPermission(string $permission): bool
     {
-        if ($this->isAdmin()) return true;
         $perms = $this->permissions ?? [];
-        return in_array($permission, $perms) || ($perms[$permission] ?? false);
+
+        if (!is_array($perms) || $permission === '') {
+            return false;
+        }
+
+        // Soporta permisos granulares en formato "area.action".
+        if (str_contains($permission, '.')) {
+            [$area, $action] = explode('.', $permission, 2);
+            return !empty($perms[$area])
+                && is_array($perms[$area])
+                && !empty($perms[$area][$action]);
+        }
+
+        // Compatibilidad: permiso de area completa equivale a tener "view".
+        return !empty($perms[$permission])
+            && is_array($perms[$permission])
+            && !empty($perms[$permission]['view']);
     }
 
     public function hasFullRhAccess(): bool

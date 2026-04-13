@@ -20,7 +20,9 @@
                 @endif
             </form>
         </div>
-        <a href="{{ route('rents.create') }}" class="btn-primary">+ Nueva renta</a>
+        @if(auth()->user()->hasPermission('rentas.create'))
+            <a href="{{ route('rents.create') }}" class="btn-primary">+ Nueva renta</a>
+        @endif
     </div>
     <div class="table-wrap rounded-none border-0">
         <table class="table">
@@ -40,12 +42,18 @@
                     <span class="{{ $colors[$r->contract_status]??'badge-gray' }}">{{ $r->contract_status }}</span>
                 </td>
                 <td class="flex gap-1">
-                    <a href="{{ route('rents.show',$r) }}" class="btn btn-sm btn-secondary">Ver</a>
-                    <a href="{{ route('rents.edit',$r) }}" class="btn btn-sm btn-primary">Editar</a>
-                    <form method="POST" action="{{ route('rents.destroy',$r) }}" onsubmit="return confirm('¿Desactivar?')">
-                        @csrf @method('DELETE')
-                        <button class="btn btn-sm btn-danger">Eliminar</button>
-                    </form>
+                    @if(auth()->user()->hasPermission('rentas.view'))
+                        <a href="{{ route('rents.show',$r) }}" class="btn btn-sm btn-secondary">Ver</a>
+                    @endif
+                    @if(auth()->user()->hasPermission('rentas.edit'))
+                        <a href="{{ route('rents.edit',$r) }}" class="btn btn-sm btn-primary">Editar</a>
+                    @endif
+                    @if(auth()->user()->hasPermission('rentas.delete'))
+                        <form method="POST" action="{{ route('rents.destroy',$r) }}" onsubmit="return confirm('¿Desactivar?')">
+                            @csrf @method('DELETE')
+                            <button class="btn btn-sm btn-danger">Eliminar</button>
+                        </form>
+                    @endif
                 </td>
             </tr>
             @empty

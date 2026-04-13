@@ -156,140 +156,193 @@
             </a> --}}
 
             @php
-                $dept = auth()->user()->department;
-                $rol = auth()->user()->rol;
+                $user = auth()->user();
+
+                $canVentas = $user->hasPermission('ventas.view');
+                $canRentas = $user->hasPermission('rentas.view');
+                $canClientes = $user->hasPermission('clientes.view');
+                $canProduccion = $user->hasPermission('produccion.view');
+
+                $canCompras = $user->hasPermission('compras.view');
+                $canAlmacen = $user->hasPermission('almacen.view');
+                $canFacturacion = $user->hasPermission('facturacion.view') || $user->hasPermission('cobranza.view');
+                $canReportes = $user->hasPermission('reportes.view');
+
+                $canRutas = $user->hasPermission('rutas.view');
+                $canOrdenes = $user->hasPermission('ordenes_servicio.view');
+                $canTaller = $user->hasPermission('taller.view');
+
+                $canRH = $user->hasPermission('recursos_humanos.view');
+
+                $canUsuarios = $user->hasPermission('usuarios.view');
+                $canTiEquip = $user->hasPermission('ti.view');
+                $canSku = $user->hasPermission('configuracion.view') || $user->hasPermission('migraciones.view');
+                $canMesaAyuda = $user->hasPermission('ti.view');
+                $canAuditoria = $user->hasPermission('auditoria.view');
             @endphp
 
             {{-- COMERCIAL --}}
-            @if ($rol === 'administrador' || in_array($dept, ['comercial', 'administracion', 'operaciones']))
+            @if ($canVentas || $canRentas || $canClientes || $canProduccion)
                 <div class="pt-3">
                     <p class="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">Comercial</p>
-                    <a href="{{ route('sales.index') }}" class="nav-link @activeRoute('sales.*')">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                        </svg>
-                        Ventas
-                    </a>
-                    <a href="{{ route('rents.index') }}" class="nav-link @activeRoute('rents.*')">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Rentas
-                    </a>
-                    <a href="{{ route('clients.index') }}" class="nav-link @activeRoute('clients.*')">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        Clientes
-                    </a>
-                    <a href="{{ route('production.index') }}" class="nav-link @activeRoute('production.*')">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
-                        Producción
-                    </a>
+                    @if ($canVentas)
+                        <a href="{{ route('sales.index') }}" class="nav-link @activeRoute('sales.*')">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                            </svg>
+                            Ventas
+                        </a>
+                    @endif
+                    @if ($canRentas)
+                        <a href="{{ route('rents.index') }}" class="nav-link @activeRoute('rents.*')">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Rentas
+                        </a>
+                    @endif
+                    @if ($canClientes)
+                        <a href="{{ route('clients.index') }}" class="nav-link @activeRoute('clients.*')">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Clientes
+                        </a>
+                    @endif
+                    @if ($canProduccion)
+                        <a href="{{ route('production.index') }}" class="nav-link @activeRoute('production.*')">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            Producción
+                        </a>
+                    @endif
                 </div>
             @endif
 
             {{-- ADMINISTRACIÓN --}}
-            @if ($rol === 'administrador' || $dept === 'administracion')
+            @if ($canCompras || $canAlmacen || $canFacturacion || $canReportes)
                 <div class="pt-3">
                     <p class="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">Administración</p>
-                    <a href="{{ route('purchases.index') }}" class="nav-link @activeRoute('purchases.*')">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        Compras
-                    </a>
-                    <a href="{{ route('almacen.index') }}" class="nav-link @activeRoute('almacen.*') @activeRoute('equipment.*') @activeRoute('inventory.*') @activeRoute('spareparts.*') @activeRoute('item-catalog.*') @activeRoute('shelves.*')">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                        Almacén
-                    </a>
-                    <a href="{{ route('billing.index', ['tab' => 'cobranza']) }}" class="nav-link @activeRoute('billing.*')">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        Cobranza / Facturación
-                    </a>
-                    <a href="{{ route('reports.index') }}" class="nav-link @activeRoute('reports.*')">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                        Reportes
-                    </a>
+                    @if ($canCompras)
+                        <a href="{{ route('purchases.index') }}" class="nav-link @activeRoute('purchases.*')">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            Compras
+                        </a>
+                    @endif
+                    @if ($canAlmacen)
+                        <a href="{{ route('almacen.index') }}" class="nav-link @activeRoute('almacen.*') @activeRoute('equipment.*') @activeRoute('inventory.*') @activeRoute('spareparts.*') @activeRoute('item-catalog.*') @activeRoute('shelves.*')">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            Almacén
+                        </a>
+                    @endif
+                    @if ($canFacturacion)
+                        <a href="{{ route('billing.index', ['tab' => 'cobranza']) }}" class="nav-link @activeRoute('billing.*')">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            Cobranza / Facturación
+                        </a>
+                    @endif
+                    @if ($canReportes)
+                        <a href="{{ route('reports.index') }}" class="nav-link @activeRoute('reports.*')">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            Reportes
+                        </a>
+                    @endif
                 </div>
             @endif
 
             {{-- OPERACIONES --}}
-            @if ($rol === 'administrador' || in_array($dept, ['operaciones', 'administracion']))
+            @if ($canRutas || $canOrdenes || $canTaller)
                 <div class="pt-3">
                     <p class="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">Operaciones</p>
-                    <a href="{{ route('routes.index') }}" class="nav-link @activeRoute('routes.*')">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                        </svg>
-                        Rutas
-                    </a>
-                    <a href="{{ route('service-orders.index') }}" class="nav-link @activeRoute('service-orders.*')">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        Órdenes de Servicio
-                    </a>
-                    <a href="{{ route('repairs.index') }}" class="nav-link @activeRoute('repairs.*')">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 11-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
-                        </svg>
-                        Taller
-                    </a>
+                    @if ($canRutas)
+                        <a href="{{ route('routes.index') }}" class="nav-link @activeRoute('routes.*')">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                            </svg>
+                            Rutas
+                        </a>
+                    @endif
+                    @if ($canOrdenes)
+                        <a href="{{ route('service-orders.index') }}" class="nav-link @activeRoute('service-orders.*')">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Órdenes de Servicio
+                        </a>
+                    @endif
+                    @if ($canTaller)
+                        <a href="{{ route('repairs.index') }}" class="nav-link @activeRoute('repairs.*')">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 11-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+                            </svg>
+                            Taller
+                        </a>
+                    @endif
                 </div>
             @endif
 
             {{-- RECURSOS HUMANOS --}}
-            @if ($rol === 'administrador' || $rol === 'gerencia' || in_array($dept, ['rh', 'administracion']))
+            @if ($canRH)
                 <div class="pt-3">
                     <p class="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">RH</p>
-                    <a href="{{ route('rh.index') }}" class="nav-link @activeRoute('rh.*') @activeRoute('employees.*') @activeRoute('payrolls.*') @activeRoute('vacations.*') @activeRoute('absences.*') @activeRoute('administrative-records.*') @activeRoute('credits.*')">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                        Recursos Humanos
-                    </a>
+                    @if ($canRH)
+                        <a href="{{ route('rh.index') }}" class="nav-link @activeRoute('rh.*') @activeRoute('employees.*') @activeRoute('payrolls.*') @activeRoute('vacations.*') @activeRoute('absences.*') @activeRoute('administrative-records.*') @activeRoute('credits.*')">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                            Recursos Humanos
+                        </a>
+                    @endif
                 </div>
             @endif
 
             {{-- TI --}}
-            @if ($rol === 'administrador' || $dept === 'ti')
+            @if ($canUsuarios || $canTiEquip || $canSku || $canMesaAyuda || $canAuditoria)
                 <div class="pt-3">
                     <p class="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">TI</p>
-                    <a href="{{ route('users.index') }}" class="nav-link @activeRoute('users.*')">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                        Usuarios
-                    </a>
-                    <a href="{{ route('ti-equipment.index') }}" class="nav-link @activeRoute('ti-equipment.*')">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                        Inventario TI
-                    </a>
-                    <a href="{{ route('sku.index') }}" class="nav-link @activeRoute('sku.*')">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
-                        </svg>
-                        Catálogo SKU
-                    </a>
-                    <a href="{{ route('it-requests.index') }}" class="nav-link @activeRoute('it-requests.*')">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                        Mesa de Ayuda
-                    </a>
-                    @if ($rol === 'administrador')
+                    @if ($canUsuarios)
+                        <a href="{{ route('users.index') }}" class="nav-link @activeRoute('users.*')">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                            Usuarios
+                        </a>
+                    @endif
+                    @if ($canTiEquip)
+                        <a href="{{ route('ti-equipment.index') }}" class="nav-link @activeRoute('ti-equipment.*')">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            Inventario TI
+                        </a>
+                    @endif
+                    @if ($canSku)
+                        <a href="{{ route('sku.index') }}" class="nav-link @activeRoute('sku.*')">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
+                            </svg>
+                            Catálogo SKU
+                        </a>
+                    @endif
+                    @if ($canMesaAyuda)
+                        <a href="{{ route('it-requests.index') }}" class="nav-link @activeRoute('it-requests.*')">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                            Mesa de Ayuda
+                        </a>
+                    @endif
+                    @if ($canAuditoria)
                         <a href="{{ route('audit.index') }}" class="nav-link @activeRoute('audit.*')">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />

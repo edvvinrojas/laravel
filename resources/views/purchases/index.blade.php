@@ -15,7 +15,9 @@
             </select>
             <button class="btn-secondary">Buscar</button>
         </form>
-        <a href="{{ route('purchases.create') }}" class="btn-primary">+ Nueva compra</a>
+        @if(auth()->user()->hasPermission('compras.create'))
+            <a href="{{ route('purchases.create') }}" class="btn-primary">+ Nueva compra</a>
+        @endif
     </div>
     <div class="table-wrap rounded-none border-0">
         <table class="table">
@@ -30,8 +32,12 @@
                 <td><span class="badge-gray text-xs">{{ str_replace('_',' ',$p->status) }}</span></td>
                 <td class="text-xs text-gray-500">{{ $p->created_at->format('d/m/Y') }}</td>
                 <td class="flex gap-1">
-                    <a href="{{ route('purchases.show',$p) }}" class="btn btn-sm btn-secondary">Ver</a>
-                    <a href="{{ route('purchases.edit',$p) }}" class="btn btn-sm btn-primary">Editar</a>
+                    @if(auth()->user()->hasPermission('compras.view'))
+                        <a href="{{ route('purchases.show',$p) }}" class="btn btn-sm btn-secondary">Ver</a>
+                    @endif
+                    @if(auth()->user()->hasPermission('compras.edit'))
+                        <a href="{{ route('purchases.edit',$p) }}" class="btn btn-sm btn-primary">Editar</a>
+                    @endif
                 </td>
             </tr>
             @empty

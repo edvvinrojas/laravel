@@ -23,9 +23,11 @@
                 <a href="{{ route('clients.index') }}" class="btn-secondary btn-sm">Limpiar</a>
             @endif
         </form>
-        <a href="{{ route('clients.create') }}" class="btn-primary">
-            + Nuevo cliente
-        </a>
+        @if(auth()->user()->hasPermission('clientes.create'))
+            <a href="{{ route('clients.create') }}" class="btn-primary">
+                + Nuevo cliente
+            </a>
+        @endif
     </div>
 
     {{-- Table --}}
@@ -73,17 +75,23 @@
                             </td>
                             <td class="text-right">
                                 <div class="flex items-center justify-end gap-1">
-                                    <a href="{{ route('clients.show', $client) }}"
-                                       class="btn-secondary btn-sm">Ver</a>
-                                    <a href="{{ route('clients.edit', $client) }}"
-                                       class="btn-secondary btn-sm">Editar</a>
-                                    <form action="{{ route('clients.destroy', $client) }}"
-                                          method="POST"
-                                          onsubmit="return confirm('¿Eliminar cliente «{{ addslashes($client->name) }}»?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn-danger btn-sm">Eliminar</button>
-                                    </form>
+                                    @if(auth()->user()->hasPermission('clientes.view'))
+                                        <a href="{{ route('clients.show', $client) }}"
+                                           class="btn-secondary btn-sm">Ver</a>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('clientes.edit'))
+                                        <a href="{{ route('clients.edit', $client) }}"
+                                           class="btn-secondary btn-sm">Editar</a>
+                                    @endif
+                                    @if(auth()->user()->hasPermission('clientes.delete'))
+                                        <form action="{{ route('clients.destroy', $client) }}"
+                                              method="POST"
+                                              onsubmit="return confirm('¿Eliminar cliente «{{ addslashes($client->name) }}»?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn-danger btn-sm">Eliminar</button>
+                                        </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

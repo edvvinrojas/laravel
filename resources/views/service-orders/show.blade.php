@@ -13,6 +13,7 @@
 
 <div class="flex gap-3 mb-4">
     <a href="{{ route('service-orders.index') }}" class="btn-secondary">← Volver</a>
+    <a href="{{ route('service-orders.pdf', $serviceOrder) }}" target="_blank" class="btn-secondary">PDF</a>
     @if($serviceOrder->status === 'PENDIENTE')
     <form action="{{ route('service-orders.update', $serviceOrder) }}" method="POST">
         @csrf @method('PUT')

@@ -12,8 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role'       => \App\Http\Middleware\CheckRole::class,
-            'department' => \App\Http\Middleware\CheckDepartment::class,
+            'role'        => \App\Http\Middleware\CheckRole::class,
+            'department'  => \App\Http\Middleware\CheckDepartment::class,
+            'permission'  => \App\Http\Middleware\CheckPermission::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
