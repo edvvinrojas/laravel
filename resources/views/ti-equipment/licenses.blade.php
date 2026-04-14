@@ -19,11 +19,7 @@
         </div>
         <div>
             <label class="form-label">Tipo *</label>
-            <select name="tipo" class="form-select" required>
-                @foreach(['OFFICE','ANTIVIRUS','OS','OTRO'] as $t)
-                <option value="{{ $t }}" @selected(old('tipo')===$t)>{{ $t }}</option>
-                @endforeach
-            </select>
+            <input name="tipo" type="text" value="{{ old('tipo') }}" class="form-input" required placeholder="Ej: OFFICE, ANTIVIRUS, OS…">
         </div>
         <div>
             <label class="form-label">Cantidad de licencias *</label>

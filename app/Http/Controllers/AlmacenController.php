@@ -93,11 +93,6 @@ class AlmacenController extends Controller
                 $equipment = Item::query()->lockForUpdate()->findOrFail($data['equipment_id']);
 
                 if ($data['movement_type'] === 'SALIDA') {
-                    if ($equipment->location_status !== 'BODEGA') {
-                        throw ValidationException::withMessages([
-                            'equipment_id' => 'El equipo seleccionado no está disponible en bodega.',
-                        ]);
-                    }
                     $equipment->update(['location_status' => 'ASIGNADO']);
                 } else {
                     $equipment->update(['location_status' => 'BODEGA']);
