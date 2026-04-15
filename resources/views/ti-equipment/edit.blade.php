@@ -9,6 +9,35 @@
 <div class="card mb-4">
     <div class="card-header font-semibold">Datos del equipo <span class="font-mono text-blue-700">{{ $tiEquipment->codigo_interno }}</span></div>
     <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="md:col-span-2 rounded-lg border border-gray-200 p-4 bg-gray-50 space-y-3">
+            <div>
+                <label class="form-label">Código interno</label>
+                <div class="flex flex-wrap gap-4 mt-2">
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="radio" name="codigo_mode" value="keep" class="js-code-mode" @checked(old('codigo_mode', 'keep') === 'keep')>
+                        Conservar actual
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="radio" name="codigo_mode" value="auto" class="js-code-mode" @checked(old('codigo_mode') === 'auto')>
+                        Nuevo default
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="radio" name="codigo_mode" value="custom" class="js-code-mode" @checked(old('codigo_mode') === 'custom')>
+                        Personalizado
+                    </label>
+                </div>
+            </div>
+            <div class="text-sm text-gray-600 js-code-keep-help {{ old('codigo_mode', 'keep') === 'keep' ? '' : 'hidden' }}">
+                Se conservará el código actual: <span class="font-mono font-semibold">{{ $tiEquipment->codigo_interno }}</span>
+            </div>
+            <div class="text-sm text-gray-600 js-code-auto-help {{ old('codigo_mode') === 'auto' ? '' : 'hidden' }}">
+                Se asignará el siguiente código por default: <span class="font-mono font-semibold">{{ $nextEquipmentCode }}</span>
+            </div>
+            <div class="js-code-custom-field {{ old('codigo_mode') === 'custom' ? '' : 'hidden' }}">
+                <label class="form-label">Código personalizado *</label>
+                <input name="codigo_interno" type="text" value="{{ old('codigo_interno', $tiEquipment->codigo_interno) }}" class="form-input font-mono">
+            </div>
+        </div>
         <div>
             <label class="form-label">Tipo *</label>
             <select name="tipo" class="form-select" required>
@@ -100,4 +129,21 @@
 </div>
 </form>
 </div>
+
+@push('scripts')
+<script>
+function syncEditEquipmentCodeMode() {
+    const selectedMode = document.querySelector('input[name="codigo_mode"]:checked')?.value;
+    document.querySelector('.js-code-keep-help')?.classList.toggle('hidden', selectedMode !== 'keep');
+    document.querySelector('.js-code-auto-help')?.classList.toggle('hidden', selectedMode !== 'auto');
+    document.querySelector('.js-code-custom-field')?.classList.toggle('hidden', selectedMode !== 'custom');
+}
+
+document.querySelectorAll('.js-code-mode').forEach((radio) => {
+    radio.addEventListener('change', syncEditEquipmentCodeMode);
+});
+
+syncEditEquipmentCodeMode();
+</script>
+@endpush
 @endsection

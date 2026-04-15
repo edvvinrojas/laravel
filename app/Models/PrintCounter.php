@@ -62,4 +62,25 @@ class PrintCounter extends Model
     {
         return $this->bn_excess_amount + $this->color_excess_amount;
     }
+
+    // ── Valores que provienen de la renta (para evitar null en vistas) ──
+    public function getBnIncludedAttribute(): int
+    {
+        return (int) ($this->rent?->bn_included ?? 0);
+    }
+
+    public function getColorIncludedAttribute(): int
+    {
+        return (int) ($this->rent?->color_included ?? 0);
+    }
+
+    public function getBnCostPerPageAttribute(): float
+    {
+        return (float) ($this->rent?->bn_cost_per_excess ?? 0);
+    }
+
+    public function getColorCostPerPageAttribute(): float
+    {
+        return (float) ($this->rent?->color_cost_per_excess ?? 0);
+    }
 }

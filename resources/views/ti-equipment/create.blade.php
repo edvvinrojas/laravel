@@ -10,14 +10,29 @@
     <div class="card-header font-semibold">Datos del equipo</div>
     <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-4">
 
-        <div>
-            <label class="form-label">Código interno *</label>
-            <select name="codigo_interno" class="form-select font-mono" required>
-                <option value="">— Seleccionar SKU —</option>
-                @foreach($skus as $s)
-                    <option value="{{ $s->code }}" @selected(old('codigo_interno') === $s->code)>{{ $s->code }}</option>
-                @endforeach
-            </select>
+        <div class="md:col-span-2 rounded-lg border border-gray-200 p-4 bg-gray-50 space-y-3">
+            <div>
+                <label class="form-label">Código interno</label>
+                <div class="flex flex-wrap gap-4 mt-2">
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="radio" name="codigo_mode" value="auto" class="js-code-mode" @checked(old('codigo_mode', 'auto') === 'auto')>
+                        Automático
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="radio" name="codigo_mode" value="custom" class="js-code-mode" @checked(old('codigo_mode') === 'custom')>
+                        Personalizado
+                    </label>
+                </div>
+            </div>
+
+            <div class="js-code-auto-help text-sm text-gray-600">
+                Se generará automáticamente el siguiente código por default: <span class="font-mono font-semibold">{{ $nextEquipmentCode }}</span>
+            </div>
+
+            <div class="js-code-custom-field {{ old('codigo_mode') === 'custom' ? '' : 'hidden' }}">
+                <label class="form-label">Código personalizado *</label>
+                <input name="codigo_interno" type="text" value="{{ old('codigo_interno') }}" class="form-input font-mono" placeholder="Ej. TIC-ESPECIAL-001">
+            </div>
         </div>
         <div>
             <label class="form-label">Tipo *</label>
@@ -111,7 +126,7 @@
         <button type="button" id="addPeri" class="text-blue-600 text-sm">+ Agregar</button>
     </div>
     <div class="card-body" id="periContainer">
-        <p class="text-xs text-gray-500 mb-2">ID automático por tipo: MONITOR = LCD###, TECLADO = TEC###, MOUSE = MOU###, ELIMINADOR = ELI###.</p>
+        <p class="text-xs text-gray-500 mb-2">Puedes usar código automático por default o capturar uno personalizado para cada periférico.</p>
         <p id="noPeri" class="text-sm text-gray-400">Sin periféricos registrados. Pulsa "+ Agregar".</p>
     </div>
 </div>
@@ -126,34 +141,75 @@
 @push('scripts')
 <script>
 let periIdx = 0;
+function syncEquipmentCodeMode() {
+    const selectedMode = document.querySelector('input[name="codigo_mode"]:checked')?.value;
+    document.querySelector('.js-code-auto-help')?.classList.toggle('hidden', selectedMode !== 'auto');
+    document.querySelector('.js-code-custom-field')?.classList.toggle('hidden', selectedMode !== 'custom');
+}
+
+document.querySelectorAll('.js-code-mode').forEach((radio) => {
+    radio.addEventListener('change', syncEquipmentCodeMode);
+});
+
+syncEquipmentCodeMode();
+
+function syncPeripheralCodeMode(row) {
+    const selectedMode = row.querySelector('.js-peri-code-mode:checked')?.value;
+    row.querySelector('.js-peri-auto-help')?.classList.toggle('hidden', selectedMode !== 'auto');
+    row.querySelector('.js-peri-custom-field')?.classList.toggle('hidden', selectedMode !== 'custom');
+}
+
 document.getElementById('addPeri').addEventListener('click', () => {
     document.getElementById('noPeri')?.remove();
     const row = document.createElement('div');
-    row.className = 'grid grid-cols-2 md:grid-cols-5 gap-2 mb-2 items-end';
+    row.className = 'border border-gray-200 rounded-lg p-3 mb-3';
     row.innerHTML = `
-        <div>
-            <label class="form-label text-xs">Tipo *</label>
-            <select name="perifericos[${periIdx}][tipo]" class="form-select text-sm">
-                ${['MONITOR','TECLADO','MOUSE','CARGADOR','DOCKING','HEADSET','CAMARA','ELIMINADOR','OTRO'].map(t=>`<option>${t}</option>`).join('')}
-            </select>
-        </div>
-        <div>
-            <label class="form-label text-xs">Marca</label>
-            <input name="perifericos[${periIdx}][marca]" class="form-input text-sm" type="text">
-        </div>
-        <div>
-            <label class="form-label text-xs">Modelo</label>
-            <input name="perifericos[${periIdx}][modelo]" class="form-input text-sm" type="text">
-        </div>
-        <div>
-            <label class="form-label text-xs">No. serie</label>
-            <input name="perifericos[${periIdx}][numero_serie]" class="form-input text-sm" type="text">
-        </div>
-        <div class="flex items-end">
-            <button type="button" class="btn-danger text-xs w-full" onclick="this.closest('div.grid').remove()">✕ Quitar</button>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+                <label class="form-label text-xs">Tipo *</label>
+                <select name="perifericos[${periIdx}][tipo]" class="form-select text-sm">
+                    ${['MONITOR','TECLADO','MOUSE','CARGADOR','DOCKING','HEADSET','CAMARA','ELIMINADOR','OTRO'].map(t=>`<option>${t}</option>`).join('')}
+                </select>
+            </div>
+            <div>
+                <label class="form-label text-xs">Modo de código</label>
+                <div class="flex flex-wrap gap-4 mt-2">
+                    <label class="inline-flex items-center gap-2 text-xs">
+                        <input type="radio" name="perifericos[${periIdx}][codigo_mode]" value="auto" class="js-peri-code-mode" checked>
+                        Default
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-xs">
+                        <input type="radio" name="perifericos[${periIdx}][codigo_mode]" value="custom" class="js-peri-code-mode">
+                        Personalizado
+                    </label>
+                </div>
+                <p class="js-peri-auto-help text-xs text-gray-500 mt-2">Se generará código automático según el tipo del periférico.</p>
+                <div class="js-peri-custom-field hidden mt-2">
+                    <input name="perifericos[${periIdx}][codigo]" class="form-input text-sm font-mono" type="text" placeholder="Ej. PER-ESP-001">
+                </div>
+            </div>
+            <div>
+                <label class="form-label text-xs">Marca</label>
+                <input name="perifericos[${periIdx}][marca]" class="form-input text-sm" type="text">
+            </div>
+            <div>
+                <label class="form-label text-xs">Modelo</label>
+                <input name="perifericos[${periIdx}][modelo]" class="form-input text-sm" type="text">
+            </div>
+            <div>
+                <label class="form-label text-xs">No. serie</label>
+                <input name="perifericos[${periIdx}][numero_serie]" class="form-input text-sm" type="text">
+            </div>
+            <div class="md:col-span-2 flex justify-end">
+                <button type="button" class="btn-danger text-xs" onclick="this.closest('div.border').remove()">Quitar</button>
+            </div>
         </div>
     `;
     document.getElementById('periContainer').appendChild(row);
+    row.querySelectorAll('.js-peri-code-mode').forEach((radio) => {
+        radio.addEventListener('change', () => syncPeripheralCodeMode(row));
+    });
+    syncPeripheralCodeMode(row);
     periIdx++;
 });
 </script>

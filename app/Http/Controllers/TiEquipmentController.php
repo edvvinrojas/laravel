@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\TiEquipment;
 use App\Models\TiPeripheral;
 use App\Models\TiLicense;
+use App\Models\SkuFormat;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TiEquipmentController extends Controller
 {
@@ -30,14 +32,15 @@ class TiEquipmentController extends Controller
     {
         $users    = User::where('is_active', true)->orderBy('full_name')->get();
         $licenses = TiLicense::where('is_active', true)->orderBy('software')->get();
-        $skus     = \App\Models\Sku::where('category', 'TI_EQUIPO')->orderBy('code')->get();
-        return view('ti-equipment.create', compact('users', 'licenses', 'skus'));
+        $nextEquipmentCode = $this->previewNextEquipmentCode();
+        return view('ti-equipment.create', compact('users', 'licenses', 'nextEquipmentCode'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'codigo_interno'    => 'required|string|max:50',
+            'codigo_mode'       => 'required|in:auto,custom',
+            'codigo_interno'    => 'nullable|string|max:50|unique:ti_equipment,codigo_interno',
             'marca'             => 'required|string|max:100',
             'modelo'            => 'required|string|max:150',
             'numero_serie'      => 'nullable|string|max:100|unique:ti_equipment',
@@ -54,6 +57,8 @@ class TiEquipmentController extends Controller
             'licenses'          => 'nullable|array',
             'licenses.*'        => 'exists:ti_licenses,id',
             // Periféricos
+            'perifericos.*.codigo_mode'   => 'nullable|in:auto,custom',
+            'perifericos.*.codigo'        => 'nullable|string|max:20|distinct',
             'perifericos.*.tipo'         => 'nullable|in:MONITOR,TECLADO,MOUSE,CARGADOR,DOCKING,HEADSET,CAMARA,ELIMINADOR,OTRO',
             'perifericos.*.marca'        => 'nullable|string|max:100',
             'perifericos.*.modelo'       => 'nullable|string|max:100',
@@ -61,13 +66,18 @@ class TiEquipmentController extends Controller
             'perifericos.*.notas'        => 'nullable|string',
         ]);
 
-        $data['created_by'] = auth()->id();
-        if (empty($data['codigo_interno'])) {
-            $data['codigo_interno'] = \App\Models\SkuFormat::nextSku('TI_EQUIPO');
+        $data['created_by'] = Auth::id();
+        if (($data['codigo_mode'] ?? 'auto') === 'auto') {
+            $data['codigo_interno'] = SkuFormat::nextSku('TI_EQUIPO');
+        } else {
+            $data['codigo_interno'] = trim((string) ($data['codigo_interno'] ?? ''));
+            if ($data['codigo_interno'] === '') {
+                return back()->withInput()->withErrors(['codigo_interno' => 'Captura un código personalizado para el equipo.']);
+            }
         }
         $licenses = $data['licenses'] ?? [];
         $perifericos = $request->input('perifericos', []);
-        unset($data['licenses'], $data['perifericos']);
+        unset($data['licenses'], $data['perifericos'], $data['codigo_mode']);
 
         $equipo = TiEquipment::create($data);
 
@@ -75,7 +85,19 @@ class TiEquipmentController extends Controller
 
         foreach ($perifericos as $p) {
             if (!empty($p['tipo'])) {
-                $p['codigo'] = $this->nextPeripheralCode($p['tipo']);
+                $mode = $p['codigo_mode'] ?? 'auto';
+                if ($mode === 'custom') {
+                    $p['codigo'] = trim((string) ($p['codigo'] ?? ''));
+                    if ($p['codigo'] === '') {
+                        return back()->withInput()->withErrors(['perifericos' => 'Cada periférico personalizado necesita un código.']);
+                    }
+                    if (TiPeripheral::where('codigo', $p['codigo'])->exists()) {
+                        return back()->withInput()->withErrors(['perifericos' => 'Uno de los códigos personalizados de periférico ya existe.']);
+                    }
+                } else {
+                    $p['codigo'] = $this->nextPeripheralCode($p['tipo']);
+                }
+                unset($p['codigo_mode']);
                 $equipo->peripherals()->create($p);
             }
         }
@@ -98,12 +120,15 @@ class TiEquipmentController extends Controller
         $tiEquipment->load(['peripherals', 'licenses']);
         $users    = User::where('is_active', true)->orderBy('full_name')->get();
         $licenses = TiLicense::where('is_active', true)->orderBy('software')->get();
-        return view('ti-equipment.edit', compact('tiEquipment', 'users', 'licenses'));
+        $nextEquipmentCode = $this->previewNextEquipmentCode();
+        return view('ti-equipment.edit', compact('tiEquipment', 'users', 'licenses', 'nextEquipmentCode'));
     }
 
     public function update(Request $request, TiEquipment $tiEquipment)
     {
         $data = $request->validate([
+            'codigo_mode'       => 'required|in:keep,auto,custom',
+            'codigo_interno'    => 'nullable|string|max:50|unique:ti_equipment,codigo_interno,'.$tiEquipment->id,
             'marca'             => 'required|string|max:100',
             'modelo'            => 'required|string|max:150',
             'numero_serie'      => 'nullable|string|max:100|unique:ti_equipment,numero_serie,'.$tiEquipment->id,
@@ -121,8 +146,19 @@ class TiEquipmentController extends Controller
             'licenses.*'        => 'exists:ti_licenses,id',
         ]);
 
+        if (($data['codigo_mode'] ?? 'keep') === 'auto') {
+            $data['codigo_interno'] = SkuFormat::nextSku('TI_EQUIPO');
+        } elseif (($data['codigo_mode'] ?? 'keep') === 'custom') {
+            $data['codigo_interno'] = trim((string) ($data['codigo_interno'] ?? ''));
+            if ($data['codigo_interno'] === '') {
+                return back()->withInput()->withErrors(['codigo_interno' => 'Captura un código personalizado para el equipo.']);
+            }
+        } else {
+            unset($data['codigo_interno']);
+        }
+
         $licenses = $data['licenses'] ?? [];
-        unset($data['licenses']);
+        unset($data['licenses'], $data['codigo_mode']);
 
         $tiEquipment->update($data);
         $tiEquipment->licenses()->sync($licenses);
@@ -166,13 +202,23 @@ class TiEquipmentController extends Controller
     public function storePeripheral(Request $request, TiEquipment $tiEquipment)
     {
         $data = $request->validate([
+            'codigo_mode'  => 'required|in:auto,custom',
+            'codigo'       => 'nullable|string|max:20|unique:ti_peripherals,codigo',
             'tipo'         => 'required|in:MONITOR,TECLADO,MOUSE,CARGADOR,DOCKING,HEADSET,CAMARA,ELIMINADOR,OTRO',
             'marca'        => 'nullable|string|max:100',
             'modelo'       => 'nullable|string|max:100',
             'numero_serie' => 'nullable|string|max:100',
             'notas'        => 'nullable|string',
         ]);
-        $data['codigo'] = $this->nextPeripheralCode($data['tipo']);
+        if (($data['codigo_mode'] ?? 'auto') === 'custom') {
+            $data['codigo'] = trim((string) ($data['codigo'] ?? ''));
+            if ($data['codigo'] === '') {
+                return back()->withInput()->withErrors(['codigo' => 'Captura un código personalizado para el periférico.']);
+            }
+        } else {
+            $data['codigo'] = $this->nextPeripheralCode($data['tipo']);
+        }
+        unset($data['codigo_mode']);
         $tiEquipment->peripherals()->create($data);
         return back()->with('success', 'Periférico agregado.');
     }
@@ -222,7 +268,7 @@ class TiEquipmentController extends Controller
             'cantidad_licencias' => 'required|integer|min:1',
             'notas'              => 'nullable|string',
         ]);
-        $data['created_by'] = auth()->id();
+        $data['created_by'] = Auth::id();
         TiLicense::create($data);
         return back()->with('success', 'Licencia registrada.');
     }
@@ -242,5 +288,11 @@ class TiEquipmentController extends Controller
             return 'TI-' . str_pad((int)$m[1] + 1, 4, '0', STR_PAD_LEFT);
         }
         return 'TI-0001';
+    }
+
+    private function previewNextEquipmentCode(): string
+    {
+        $format = SkuFormat::where('category', 'TI_EQUIPO')->first();
+        return $format ? $format->preview() : $this->nextCode();
     }
 }

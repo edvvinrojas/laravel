@@ -251,6 +251,34 @@
                             >
                         </div>
 
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label class="form-label">Cliente destino</label>
+                                <select name="client_id" class="form-select js-client-select" data-old-client="{{ old('movement_type') === 'SALIDA' ? old('client_id') : '' }}">
+                                    <option value="">Seleccionar cliente</option>
+                                    @foreach($clients as $client)
+                                    <option value="{{ $client->id }}" @selected(old('movement_type') === 'SALIDA' && (string) old('client_id') === (string) $client->id)>
+                                        {{ $client->name }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Sucursal destino</label>
+                                <select name="branch_id" class="form-select js-branch-select" data-old-branch="{{ old('movement_type') === 'SALIDA' ? old('branch_id') : '' }}">
+                                    <option value="">Seleccionar sucursal</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Área destino</label>
+                                <select name="area_id" class="form-select js-area-select" data-old-area="{{ old('movement_type') === 'SALIDA' ? old('area_id') : '' }}">
+                                    <option value="">Seleccionar área</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <div>
                             <label class="form-label">Equipo (opcional)</label>
                             <select name="equipment_id" class="form-select">
@@ -320,6 +348,34 @@
                             >
                         </div>
 
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label class="form-label">Cliente origen</label>
+                                <select name="client_id" class="form-select js-client-select" data-old-client="{{ old('movement_type') === 'ENTRADA' ? old('client_id') : '' }}">
+                                    <option value="">Seleccionar cliente</option>
+                                    @foreach($clients as $client)
+                                    <option value="{{ $client->id }}" @selected(old('movement_type') === 'ENTRADA' && (string) old('client_id') === (string) $client->id)>
+                                        {{ $client->name }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Sucursal origen</label>
+                                <select name="branch_id" class="form-select js-branch-select" data-old-branch="{{ old('movement_type') === 'ENTRADA' ? old('branch_id') : '' }}">
+                                    <option value="">Seleccionar sucursal</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Área origen</label>
+                                <select name="area_id" class="form-select js-area-select" data-old-area="{{ old('movement_type') === 'ENTRADA' ? old('area_id') : '' }}">
+                                    <option value="">Seleccionar área</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <div>
                             <label class="form-label">Equipo que volvió (opcional)</label>
                             <select name="equipment_id" class="form-select">
@@ -381,6 +437,8 @@
                                 <th>Fecha</th>
                                 <th>Tipo</th>
                                 <th>Responsable</th>
+                                <th>Cliente</th>
+                                <th>Sucursal / Área</th>
                                 <th>Equipo</th>
                                 <th>Tóner</th>
                                 <th>Motivo</th>
@@ -396,6 +454,17 @@
                                     </span>
                                 </td>
                                 <td class="font-medium text-gray-900">{{ $mv->person_name }}</td>
+                                <td class="text-sm text-gray-700">{{ $mv->client?->name ?? '—' }}</td>
+                                <td class="text-sm text-gray-700">
+                                    @if($mv->branch || $mv->area)
+                                        {{ $mv->branch?->name ?? '—' }}
+                                        @if($mv->area)
+                                            / {{ $mv->area->name }}
+                                        @endif
+                                    @else
+                                        —
+                                    @endif
+                                </td>
                                 <td class="text-sm text-gray-700">
                                     @if($mv->equipment)
                                         {{ $mv->equipment->sku ?: 'SIN-SKU' }} / {{ $mv->equipment->model }} / {{ $mv->equipment->serie }}
@@ -413,7 +482,7 @@
                                 <td class="text-sm text-gray-600 max-w-md">{{ $mv->reason }}</td>
                             </tr>
                             @empty
-                            <tr><td colspan="6" class="text-center text-gray-400 py-10">Aún no hay movimientos registrados.</td></tr>
+                            <tr><td colspan="8" class="text-center text-gray-400 py-10">Aún no hay movimientos registrados.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -427,4 +496,56 @@
     @endif
 
 </div>
+
+<script>
+const movementClients = @json($movementClients);
+
+function renderMovementOptions(select, items, placeholder, selectedValue) {
+    select.innerHTML = '';
+
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = placeholder;
+    select.appendChild(defaultOption);
+
+    items.forEach((item) => {
+        const option = document.createElement('option');
+        option.value = String(item.id);
+        option.textContent = item.name;
+        option.selected = selectedValue && String(selectedValue) === String(item.id);
+        select.appendChild(option);
+    });
+}
+
+function setupMovementLocationForm(form) {
+    const clientSelect = form.querySelector('.js-client-select');
+    const branchSelect = form.querySelector('.js-branch-select');
+    const areaSelect = form.querySelector('.js-area-select');
+
+    if (!clientSelect || !branchSelect || !areaSelect) {
+        return;
+    }
+
+    const populateBranches = (selectedBranch = '', selectedArea = '') => {
+        const selectedClient = movementClients.find((client) => String(client.id) === String(clientSelect.value));
+        const branches = selectedClient ? selectedClient.branches : [];
+        renderMovementOptions(branchSelect, branches, 'Seleccionar sucursal', selectedBranch);
+        populateAreas(selectedArea);
+    };
+
+    const populateAreas = (selectedArea = '') => {
+        const selectedClient = movementClients.find((client) => String(client.id) === String(clientSelect.value));
+        const selectedBranch = selectedClient?.branches.find((branch) => String(branch.id) === String(branchSelect.value));
+        const areas = selectedBranch ? selectedBranch.areas : [];
+        renderMovementOptions(areaSelect, areas, 'Seleccionar área', selectedArea);
+    };
+
+    clientSelect.addEventListener('change', () => populateBranches());
+    branchSelect.addEventListener('change', () => populateAreas());
+
+    populateBranches(branchSelect.dataset.oldBranch || '', areaSelect.dataset.oldArea || '');
+}
+
+document.querySelectorAll('form[action="{{ route('almacen.movements.store') }}"]').forEach(setupMovementLocationForm);
+</script>
 @endsection

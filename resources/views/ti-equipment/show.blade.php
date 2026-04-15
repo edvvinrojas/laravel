@@ -119,7 +119,7 @@
     <div id="addPeriForm" class="hidden px-5 py-4 border-b border-gray-100 bg-gray-50">
         <form method="POST" action="{{ route('ti-equipment.peripherals.store', $tiEquipment) }}">
             @csrf
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 items-end">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-end">
                 <div>
                     <label class="form-label text-xs">Tipo *</label>
                     <select name="tipo" class="form-select text-sm" required>
@@ -127,6 +127,23 @@
                         <option>{{ $pt }}</option>
                         @endforeach
                     </select>
+                </div>
+                <div>
+                    <label class="form-label text-xs">Modo de código</label>
+                    <div class="flex flex-wrap gap-4 mt-2">
+                        <label class="inline-flex items-center gap-2 text-xs">
+                            <input type="radio" name="codigo_mode" value="auto" class="js-show-peri-code-mode" checked>
+                            Default
+                        </label>
+                        <label class="inline-flex items-center gap-2 text-xs">
+                            <input type="radio" name="codigo_mode" value="custom" class="js-show-peri-code-mode">
+                            Personalizado
+                        </label>
+                    </div>
+                    <p class="js-show-peri-auto-help text-xs text-gray-500 mt-2">Se generará automáticamente según el tipo del periférico.</p>
+                    <div class="js-show-peri-custom-field hidden mt-2">
+                        <input name="codigo" class="form-input text-sm font-mono" type="text" placeholder="Ej. PER-ESP-001">
+                    </div>
                 </div>
                 <div>
                     <label class="form-label text-xs">Marca</label>
@@ -140,8 +157,8 @@
                     <label class="form-label text-xs">No. serie</label>
                     <input name="numero_serie" class="form-input text-sm" type="text">
                 </div>
-                <div>
-                    <button type="submit" class="btn-primary text-sm w-full">Guardar</button>
+                <div class="md:col-span-2">
+                    <button type="submit" class="btn-primary text-sm w-full md:w-auto">Guardar</button>
                 </div>
             </div>
         </form>
@@ -168,4 +185,20 @@
         @endforelse
     </div>
 </div>
+
+@push('scripts')
+<script>
+function syncShowPeripheralCodeMode() {
+    const selectedMode = document.querySelector('input[name="codigo_mode"]:checked')?.value;
+    document.querySelector('.js-show-peri-auto-help')?.classList.toggle('hidden', selectedMode !== 'auto');
+    document.querySelector('.js-show-peri-custom-field')?.classList.toggle('hidden', selectedMode !== 'custom');
+}
+
+document.querySelectorAll('.js-show-peri-code-mode').forEach((radio) => {
+    radio.addEventListener('change', syncShowPeripheralCodeMode);
+});
+
+syncShowPeripheralCodeMode();
+</script>
+@endpush
 @endsection

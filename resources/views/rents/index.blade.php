@@ -15,6 +15,7 @@
                     @endforeach
                 </select>
                 <button class="btn-secondary">Buscar</button>
+                <a href="{{ route('print-counters.index') }}" class="btn-secondary">Contadores</a>
                 @if(request('search')||request('status'))
                 <a href="{{ route('rents.index') }}" class="btn-secondary">Limpiar</a>
                 @endif
