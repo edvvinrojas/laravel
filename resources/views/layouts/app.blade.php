@@ -124,6 +124,26 @@
             .table tbody tr {
                 @apply hover:bg-gray-50 transition-colors;
             }
+
+            .table-sort-header {
+                @apply inline-flex items-center gap-2 select-none;
+            }
+
+            .table-sort-header-button {
+                @apply inline-flex items-center gap-2 bg-transparent p-0 text-inherit hover:text-gray-700;
+            }
+
+            .table-sort-arrows {
+                @apply inline-flex flex-col leading-none;
+            }
+
+            .table-sort-arrow {
+                @apply text-[10px] text-gray-300 transition-colors;
+            }
+
+            .table-sort-arrow.active {
+                @apply text-blue-600;
+            }
         }
     </style>
     @stack('head')
@@ -530,6 +550,140 @@
                 });
             }, 250);
         });
+    </script>
+
+    <script>
+        function getCellValue(row, columnIndex) {
+            const cell = row.children[columnIndex];
+            return (cell ? cell.innerText : '').trim();
+        }
+
+        function toSortableNumber(value) {
+            // Normaliza valores como "$1,234.50" o "12%" a número.
+            const normalized = value
+                .replace(/\s+/g, '')
+                .replace(/[^0-9.,]/g, '')
+                .replace(/,(?=\d{3}(\D|$))/g, '');
+
+            const parsed = parseFloat(normalized.replace(',', '.'));
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+
+        function sortTableRows(table, columnIndex, direction) {
+            const tbody = table.tBodies[0];
+            if (!tbody) return;
+
+            const rows = Array.from(tbody.rows).filter((row) => {
+                return !(row.cells.length === 1 && row.cells[0].hasAttribute('colspan'));
+            });
+
+            if (rows.length < 2) return;
+
+            const compare = (a, b) => {
+                const aText = getCellValue(a, columnIndex);
+                const bText = getCellValue(b, columnIndex);
+
+                const aNum = toSortableNumber(aText);
+                const bNum = toSortableNumber(bText);
+
+                if (aNum !== null && bNum !== null) {
+                    return direction === 'asc' ? aNum - bNum : bNum - aNum;
+                }
+
+                const textCompare = aText.localeCompare(bText, 'es', { sensitivity: 'base' });
+                return direction === 'asc' ? textCompare : -textCompare;
+            };
+
+            rows.sort(compare).forEach((row) => tbody.appendChild(row));
+        }
+
+        function updateSortArrows(table, columnIndex, direction) {
+            table.querySelectorAll('th[data-sort-index]').forEach((th) => {
+                const up = th.querySelector('[data-sort-arrow="asc"]');
+                const down = th.querySelector('[data-sort-arrow="desc"]');
+                if (!up || !down) return;
+
+                const isActiveColumn = Number(th.dataset.sortIndex) === columnIndex;
+                up.classList.toggle('active', isActiveColumn && direction === 'asc');
+                down.classList.toggle('active', isActiveColumn && direction === 'desc');
+            });
+        }
+
+        function enhanceSortableHeaders(table) {
+            const headers = Array.from(table.tHead?.rows?.[0]?.cells || []);
+            if (!headers.length) return;
+
+            headers.forEach((th, index) => {
+                const label = (th.innerText || '').trim();
+                if (!label) return;
+                if (th.dataset.sortIndex) return;
+
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'table-sort-header-button';
+                button.setAttribute('aria-label', `Ordenar ${label}`);
+
+                const text = document.createElement('span');
+                text.textContent = label;
+
+                const arrows = document.createElement('span');
+                arrows.className = 'table-sort-arrows';
+                arrows.innerHTML = '<span class="table-sort-arrow" data-sort-arrow="asc">▲</span><span class="table-sort-arrow" data-sort-arrow="desc">▼</span>';
+
+                button.appendChild(text);
+                button.appendChild(arrows);
+
+                th.textContent = '';
+                th.dataset.sortIndex = String(index);
+                th.appendChild(button);
+
+                button.addEventListener('click', () => {
+                    const nextDirection = th.dataset.sortDirection === 'asc' ? 'desc' : 'asc';
+
+                    table.querySelectorAll('th[data-sort-index]').forEach((header) => {
+                        if (header !== th) {
+                            delete header.dataset.sortDirection;
+                        }
+                    });
+
+                    th.dataset.sortDirection = nextDirection;
+                    sortTableRows(table, index, nextDirection);
+                    updateSortArrows(table, index, nextDirection);
+                });
+            });
+        }
+
+        function initTableSortToolbars() {
+            const tables = Array.from(document.querySelectorAll('table'));
+
+            tables.forEach((table) => {
+            if (table.dataset.sortEnhanced === '1') return;
+                if (table.dataset.disableSortToolbar === '1') return;
+                if (!table.tHead || !table.tBodies || !table.tBodies.length) return;
+
+                const tbody = table.tBodies[0];
+                if (!tbody) return;
+
+                const dataRows = Array.from(tbody.rows).filter((row) => {
+                    return !(row.cells.length === 1 && row.cells[0].hasAttribute('colspan'));
+                });
+
+                if (dataRows.length < 2) return;
+
+                dataRows.forEach((row, index) => {
+                    row.dataset.sortOriginalIndex = String(index);
+                });
+
+                enhanceSortableHeaders(table);
+                table.dataset.sortEnhanced = '1';
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initTableSortToolbars);
+        } else {
+            initTableSortToolbars();
+        }
     </script>
 
     @stack('scripts')
