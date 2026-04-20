@@ -28,6 +28,7 @@ class Rent extends Model
     public function branch()        { return $this->belongsTo(Branch::class); }
     public function area()          { return $this->belongsTo(Area::class); }
     public function item()          { return $this->belongsTo(Item::class); }
+    public function items()         { return $this->belongsToMany(Item::class, 'rent_item')->withPivot(['branch_id', 'area_id', 'contador_inicial_bn', 'contador_inicial_color', 'has_print_service', 'bn_included', 'bn_cost_per_excess', 'color_included', 'color_cost_per_excess'])->withTimestamps(); }
     public function creator()       { return $this->belongsTo(User::class, 'created_by'); }
     public function billings()      { return $this->hasMany(Billing::class); }
     public function printCounters() { return $this->hasMany(PrintCounter::class); }

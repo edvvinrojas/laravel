@@ -7,6 +7,8 @@
     <style>
         body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 24px; }
         .top { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #f59e0b; padding-bottom: 10px; }
+        .top-left { display: flex; align-items: center; gap: 12px; }
+        .logo { height: 48px; width: auto; }
         .title { font-size: 20px; font-weight: 700; }
         .sub { font-size: 12px; color: #555; }
         .actions { margin: 14px 0; }
@@ -23,9 +25,12 @@
 </head>
 <body>
     <div class="top">
-        <div>
-            <div class="title">Factura</div>
-            <div class="sub">CopyMart ERP</div>
+        <div class="top-left">
+            <img src="{{ asset('img/logo.svg') }}" alt="CopyMart" class="logo">
+            <div>
+                <div class="title">Factura</div>
+                {{-- <div class="sub">CopyMart ERP</div> --}}
+            </div>
         </div>
         <div style="text-align:right;">
             <div class="sub">Folio</div>

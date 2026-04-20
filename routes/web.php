@@ -120,39 +120,45 @@ Route::middleware('auth')->group(function () {
     )->name('api.branch.areas');
     Route::get('api/branches/{branch}/service-locations', function(\App\Models\Branch $branch) {
         $rentLocations = \App\Models\Rent::query()
-            ->where('branch_id', $branch->id)
-            ->whereNotNull('area_id')
-            ->whereNotNull('item_id')
-            ->with(['area:id,name', 'item.brand:id,name'])
+            ->whereHas('items', fn($q) => $q->wherePivot('branch_id', $branch->id))
+            ->with(['items.brand:id,name', 'client.branches.areas'])
             ->get()
-            ->map(function ($rent) {
-                return [
-                    'area_id'   => $rent->area_id,
-                    'item_id'   => $rent->item_id,
-                    'area_name' => $rent->area?->name,
-                    'model'     => $rent->item?->model,
-                    'serie'     => $rent->item?->serie,
-                    'sku'       => $rent->item?->sku,
-                    'brand'     => $rent->item?->brand?->name ?? '',
-                ];
+            ->flatMap(function ($rent) use ($branch) {
+                return $rent->items
+                    ->filter(fn($item) => (int) ($item->pivot->branch_id ?? 0) === (int) $branch->id)
+                    ->map(function ($item) use ($rent, $branch) {
+                        $area = $branch->areas->firstWhere('id', $item->pivot->area_id);
+                        return [
+                            'area_id'   => $item->pivot->area_id,
+                            'item_id'   => $item->id,
+                            'area_name' => $area?->name,
+                            'model'     => $item->model,
+                            'serie'     => $item->serie,
+                            'sku'       => $item->sku,
+                            'brand'     => $item->brand?->name ?? '',
+                        ];
+                    });
             });
 
         $saleLocations = \App\Models\Sale::query()
-            ->where('branch_id', $branch->id)
-            ->whereNotNull('area_id')
-            ->whereNotNull('item_id')
-            ->with(['area:id,name', 'item.brand:id,name'])
+            ->whereHas('items', fn($q) => $q->wherePivot('branch_id', $branch->id))
+            ->with(['items.brand:id,name', 'client.branches.areas'])
             ->get()
-            ->map(function ($sale) {
-                return [
-                    'area_id'   => $sale->area_id,
-                    'item_id'   => $sale->item_id,
-                    'area_name' => $sale->area?->name,
-                    'model'     => $sale->item?->model,
-                    'serie'     => $sale->item?->serie,
-                    'sku'       => $sale->item?->sku,
-                    'brand'     => $sale->item?->brand?->name ?? '',
-                ];
+            ->flatMap(function ($sale) use ($branch) {
+                return $sale->items
+                    ->filter(fn($item) => (int) ($item->pivot->branch_id ?? 0) === (int) $branch->id)
+                    ->map(function ($item) use ($branch) {
+                        $area = $branch->areas->firstWhere('id', $item->pivot->area_id);
+                        return [
+                            'area_id'   => $item->pivot->area_id,
+                            'item_id'   => $item->id,
+                            'area_name' => $area?->name,
+                            'model'     => $item->model,
+                            'serie'     => $item->serie,
+                            'sku'       => $item->sku,
+                            'brand'     => $item->brand?->name ?? '',
+                        ];
+                    });
             });
 
         $locations = $rentLocations
@@ -166,7 +172,7 @@ Route::middleware('auth')->group(function () {
     })->name('api.branch.service-locations');
     Route::get('api/areas/{area}/items', function(\App\Models\Area $area) {
         $items = \App\Models\Item::whereHas('rents', fn($q) =>
-            $q->where('area_id', $area->id)->where('contract_status', 'VIGENTE')
+            $q->wherePivot('area_id', $area->id)->where('contract_status', 'VIGENTE')
         )->with('brand')->get()->map(fn($i) => [
             'id'    => $i->id,
             'model' => $i->model,

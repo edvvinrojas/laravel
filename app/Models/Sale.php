@@ -24,6 +24,7 @@ class Sale extends Model
     public function branch()     { return $this->belongsTo(Branch::class); }
     public function area()       { return $this->belongsTo(Area::class); }
     public function item()       { return $this->belongsTo(Item::class); }
+    public function items()      { return $this->belongsToMany(Item::class, 'sale_item')->withPivot(['branch_id', 'area_id'])->withTimestamps(); }
     public function creator()    { return $this->belongsTo(User::class, 'created_by'); }
     public function billings()   { return $this->hasMany(Billing::class); }
 }

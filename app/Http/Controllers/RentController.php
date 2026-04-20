@@ -53,9 +53,17 @@ class RentController extends Controller
     {
         $data = $request->validate([
             'client_id'              => 'required|exists:clients,id',
-            'branch_id'              => 'nullable|exists:branches,id',
-            'area_id'                => 'nullable|exists:areas,id',
-            'item_id'                => 'required|exists:items,id',
+            'item_rows'              => 'required|array|min:1',
+            'item_rows.*.item_id'    => 'required|integer|exists:items,id|distinct',
+            'item_rows.*.branch_id'  => 'required|integer|exists:branches,id',
+            'item_rows.*.area_id'    => 'nullable|integer|exists:areas,id',
+            'item_rows.*.contador_inicial_bn' => 'nullable|integer|min:0',
+            'item_rows.*.contador_inicial_color' => 'nullable|integer|min:0',
+            'item_rows.*.has_print_service' => 'nullable|boolean',
+            'item_rows.*.bn_included' => 'nullable|integer|min:0',
+            'item_rows.*.bn_cost_per_excess' => 'nullable|numeric|min:0',
+            'item_rows.*.color_included' => 'nullable|integer|min:0',
+            'item_rows.*.color_cost_per_excess' => 'nullable|numeric|min:0',
             'rent'                   => 'required|numeric|min:0',
             'contract_status'        => 'required|in:PENDIENTE,SIN_FIRMAR,VIGENTE,FINALIZADO,CANCELADO',
             'start_date'             => 'required|date',
@@ -67,28 +75,109 @@ class RentController extends Controller
             'color_included'         => 'nullable|integer|min:0',
             'color_cost_per_excess'  => 'nullable|numeric|min:0',
             'print_notes'            => 'nullable|string',
-            'contador_inicial_bn'    => 'nullable|integer|min:0',
-            'contador_inicial_color' => 'nullable|integer|min:0',
         ]);
 
         $data['contract_number']     = $this->generateContractNumber();
         $data['created_by']          = Auth::id();
         $data['is_foreign']          = $request->boolean('is_foreign');
         $data['has_print_service']   = $request->boolean('has_print_service');
-        $data['contador_inicial_bn']    = $request->input('contador_inicial_bn', 0);
-        $data['contador_inicial_color'] = $request->input('contador_inicial_color', 0);
 
-        $item = Item::findOrFail($data['item_id']);
-        if ($item->location_status !== 'BODEGA') {
-            return back()
-                ->withInput()
-                ->withErrors(['item_id' => 'Solo puedes seleccionar equipos con estado BODEGA.']);
+        $itemRows = collect($data['item_rows'])
+            ->map(function (array $row) {
+                return [
+                    'item_id' => (int) $row['item_id'],
+                    'branch_id' => (int) $row['branch_id'],
+                    'area_id' => !empty($row['area_id']) ? (int) $row['area_id'] : null,
+                    'contador_inicial_bn' => max(0, (int) ($row['contador_inicial_bn'] ?? 0)),
+                    'contador_inicial_color' => max(0, (int) ($row['contador_inicial_color'] ?? 0)),
+                    'has_print_service' => !empty($row['has_print_service']),
+                    'bn_included' => max(0, (int) ($row['bn_included'] ?? 0)),
+                    'bn_cost_per_excess' => max(0, (float) ($row['bn_cost_per_excess'] ?? 0)),
+                    'color_included' => max(0, (int) ($row['color_included'] ?? 0)),
+                    'color_cost_per_excess' => max(0, (float) ($row['color_cost_per_excess'] ?? 0)),
+                ];
+            })
+            ->values();
+
+        $itemRows = $itemRows->map(function (array $row) {
+            if (!$row['has_print_service']) {
+                $row['bn_included'] = 0;
+                $row['bn_cost_per_excess'] = 0;
+                $row['color_included'] = 0;
+                $row['color_cost_per_excess'] = 0;
+            }
+            return $row;
+        })->values();
+
+        $branchIds = $itemRows->pluck('branch_id')->unique()->values();
+        $validBranchIds = Branch::where('client_id', $data['client_id'])
+            ->whereIn('id', $branchIds)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        if (count($validBranchIds) !== $branchIds->count()) {
+            return back()->withInput()->withErrors([
+                'item_rows' => 'Cada equipo debe apuntar a una sucursal del cliente seleccionado.',
+            ]);
         }
 
+        $areaIds = $itemRows->pluck('area_id')->filter()->unique()->values();
+        $areasById = Area::whereIn('id', $areaIds)->get()->keyBy('id');
+        foreach ($itemRows as $row) {
+            if (!$row['area_id']) {
+                continue;
+            }
+
+            $area = $areasById->get($row['area_id']);
+            if (!$area || (int) $area->branch_id !== $row['branch_id']) {
+                return back()->withInput()->withErrors([
+                    'item_rows' => 'El area seleccionada debe pertenecer a la sucursal indicada en cada equipo.',
+                ]);
+            }
+        }
+
+        $selectedItemIds = $itemRows->pluck('item_id')->unique()->values();
+        $items = Item::whereIn('id', $selectedItemIds)->get();
+        $nonBodega = $items->first(fn ($item) => $item->location_status !== 'BODEGA');
+        if ($nonBodega) {
+            return back()
+                ->withInput()
+                ->withErrors(['item_rows' => 'Solo puedes seleccionar equipos con estado BODEGA.']);
+        }
+
+        $firstRow = $itemRows->first();
+        $data['item_id'] = $firstRow['item_id'];
+        $data['branch_id'] = $firstRow['branch_id'];
+        $data['area_id'] = $firstRow['area_id'];
+        $data['contador_inicial_bn'] = $firstRow['contador_inicial_bn'];
+        $data['contador_inicial_color'] = $firstRow['contador_inicial_color'];
+        $data['has_print_service'] = $firstRow['has_print_service'];
+        $data['bn_included'] = $firstRow['bn_included'];
+        $data['bn_cost_per_excess'] = $firstRow['bn_cost_per_excess'];
+        $data['color_included'] = $firstRow['color_included'];
+        $data['color_cost_per_excess'] = $firstRow['color_cost_per_excess'];
+        unset($data['item_rows']);
+
         $rent = Rent::create($data);
+        $syncData = [];
+        foreach ($itemRows as $row) {
+            $syncData[$row['item_id']] = [
+                'branch_id' => $row['branch_id'],
+                'area_id' => $row['area_id'],
+                'contador_inicial_bn' => $row['contador_inicial_bn'],
+                'contador_inicial_color' => $row['contador_inicial_color'],
+                'has_print_service' => $row['has_print_service'],
+                'bn_included' => $row['bn_included'],
+                'bn_cost_per_excess' => $row['bn_cost_per_excess'],
+                'color_included' => $row['color_included'],
+                'color_cost_per_excess' => $row['color_cost_per_excess'],
+            ];
+        }
+        $rent->items()->sync($syncData);
 
         if ($rent->contract_status === 'VIGENTE') {
-            $rent->item->update(['location_status' => 'ASIGNADO']);
+            Item::whereIn('id', $selectedItemIds)->update(['location_status' => 'ASIGNADO']);
         }
 
         return redirect()->route('rents.show', $rent)->with('success', 'Renta creada correctamente.');
@@ -96,13 +185,13 @@ class RentController extends Controller
 
     public function show(Rent $rent)
     {
-        $rent->load(['client', 'branch', 'area', 'item.brand', 'creator', 'billings', 'printCounters.rent']);
+        $rent->load(['client.branches.areas', 'branch', 'area', 'item.brand', 'items.brand', 'creator', 'billings', 'printCounters.rent']);
         return view('rents.show', compact('rent'));
     }
 
     public function pdf(Rent $rent)
     {
-        $rent->load(['client', 'branch', 'area', 'item.brand', 'creator', 'billings', 'printCounters']);
+        $rent->load(['client.branches.areas', 'branch', 'area', 'item.brand', 'items.brand', 'creator', 'billings', 'printCounters']);
         return view('pdf.rent', compact('rent'));
     }
 
@@ -114,18 +203,26 @@ class RentController extends Controller
             ->orderByRaw("CASE WHEN location_status = 'BODEGA' THEN 0 ELSE 1 END")
             ->orderBy('model')
             ->get();
-        $branches = $rent->client_id ? Branch::where('client_id', $rent->client_id)->get() : collect();
-        $areas    = $rent->branch_id  ? Area::where('branch_id', $rent->branch_id)->get()   : collect();
-        return view('rents.edit', compact('rent', 'clients', 'items', 'branches', 'areas'));
+        $rent->load('items');
+
+        return view('rents.edit', compact('rent', 'clients', 'items'));
     }
 
     public function update(Request $request, Rent $rent)
     {
         $data = $request->validate([
             'client_id'              => 'required|exists:clients,id',
-            'branch_id'              => 'nullable|exists:branches,id',
-            'area_id'                => 'nullable|exists:areas,id',
-            'item_id'                => 'required|exists:items,id',
+            'item_rows'              => 'required|array|min:1',
+            'item_rows.*.item_id'    => 'required|integer|exists:items,id|distinct',
+            'item_rows.*.branch_id'  => 'required|integer|exists:branches,id',
+            'item_rows.*.area_id'    => 'nullable|integer|exists:areas,id',
+            'item_rows.*.contador_inicial_bn' => 'nullable|integer|min:0',
+            'item_rows.*.contador_inicial_color' => 'nullable|integer|min:0',
+            'item_rows.*.has_print_service' => 'nullable|boolean',
+            'item_rows.*.bn_included' => 'nullable|integer|min:0',
+            'item_rows.*.bn_cost_per_excess' => 'nullable|numeric|min:0',
+            'item_rows.*.color_included' => 'nullable|integer|min:0',
+            'item_rows.*.color_cost_per_excess' => 'nullable|numeric|min:0',
             'rent'                   => 'required|numeric|min:0',
             'contract_status'        => 'required|in:PENDIENTE,SIN_FIRMAR,VIGENTE,FINALIZADO,CANCELADO',
             'start_date'             => 'required|date',
@@ -142,14 +239,108 @@ class RentController extends Controller
         $data['is_foreign']        = $request->boolean('is_foreign');
         $data['has_print_service'] = $request->boolean('has_print_service');
 
-        $item = Item::findOrFail($data['item_id']);
-        if ($item->location_status !== 'BODEGA' && $item->id !== $rent->item_id) {
-            return back()
-                ->withInput()
-                ->withErrors(['item_id' => 'Solo puedes seleccionar equipos con estado BODEGA.']);
+        $currentItemIds = $rent->items()->pluck('items.id');
+        if ($currentItemIds->isEmpty() && $rent->item_id) {
+            $currentItemIds = collect([$rent->item_id]);
         }
 
+        $itemRows = collect($data['item_rows'])
+            ->map(function (array $row) {
+                return [
+                    'item_id' => (int) $row['item_id'],
+                    'branch_id' => (int) $row['branch_id'],
+                    'area_id' => !empty($row['area_id']) ? (int) $row['area_id'] : null,
+                    'contador_inicial_bn' => max(0, (int) ($row['contador_inicial_bn'] ?? 0)),
+                    'contador_inicial_color' => max(0, (int) ($row['contador_inicial_color'] ?? 0)),
+                    'has_print_service' => !empty($row['has_print_service']),
+                    'bn_included' => max(0, (int) ($row['bn_included'] ?? 0)),
+                    'bn_cost_per_excess' => max(0, (float) ($row['bn_cost_per_excess'] ?? 0)),
+                    'color_included' => max(0, (int) ($row['color_included'] ?? 0)),
+                    'color_cost_per_excess' => max(0, (float) ($row['color_cost_per_excess'] ?? 0)),
+                ];
+            })
+            ->values();
+
+        $itemRows = $itemRows->map(function (array $row) {
+            if (!$row['has_print_service']) {
+                $row['bn_included'] = 0;
+                $row['bn_cost_per_excess'] = 0;
+                $row['color_included'] = 0;
+                $row['color_cost_per_excess'] = 0;
+            }
+            return $row;
+        })->values();
+
+        $branchIds = $itemRows->pluck('branch_id')->unique()->values();
+        $validBranchIds = Branch::where('client_id', $data['client_id'])
+            ->whereIn('id', $branchIds)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        if (count($validBranchIds) !== $branchIds->count()) {
+            return back()->withInput()->withErrors([
+                'item_rows' => 'Cada equipo debe apuntar a una sucursal del cliente seleccionado.',
+            ]);
+        }
+
+        $areaIds = $itemRows->pluck('area_id')->filter()->unique()->values();
+        $areasById = Area::whereIn('id', $areaIds)->get()->keyBy('id');
+        foreach ($itemRows as $row) {
+            if (!$row['area_id']) {
+                continue;
+            }
+
+            $area = $areasById->get($row['area_id']);
+            if (!$area || (int) $area->branch_id !== $row['branch_id']) {
+                return back()->withInput()->withErrors([
+                    'item_rows' => 'El area seleccionada debe pertenecer a la sucursal indicada en cada equipo.',
+                ]);
+            }
+        }
+
+        $selectedItemIds = $itemRows->pluck('item_id')->unique()->values();
+        $items = Item::whereIn('id', $selectedItemIds)->get();
+        $currentLookup = $currentItemIds->map(fn ($id) => (int) $id)->all();
+        $invalid = $items->first(function ($item) use ($currentLookup) {
+            return $item->location_status !== 'BODEGA' && !in_array((int) $item->id, $currentLookup, true);
+        });
+
+        if ($invalid) {
+            return back()
+                ->withInput()
+                ->withErrors(['item_rows' => 'Solo puedes seleccionar equipos con estado BODEGA.']);
+        }
+
+        $firstRow = $itemRows->first();
+        $data['item_id'] = $firstRow['item_id'];
+        $data['branch_id'] = $firstRow['branch_id'];
+        $data['area_id'] = $firstRow['area_id'];
+        $data['contador_inicial_bn'] = $firstRow['contador_inicial_bn'];
+        $data['contador_inicial_color'] = $firstRow['contador_inicial_color'];
+        $data['has_print_service'] = $firstRow['has_print_service'];
+        $data['bn_included'] = $firstRow['bn_included'];
+        $data['bn_cost_per_excess'] = $firstRow['bn_cost_per_excess'];
+        $data['color_included'] = $firstRow['color_included'];
+        $data['color_cost_per_excess'] = $firstRow['color_cost_per_excess'];
+        unset($data['item_rows']);
+
         $rent->update($data);
+        $syncData = [];
+        foreach ($itemRows as $row) {
+            $syncData[$row['item_id']] = [
+                'branch_id' => $row['branch_id'],
+                'area_id' => $row['area_id'],
+                'contador_inicial_bn' => $row['contador_inicial_bn'],
+                'contador_inicial_color' => $row['contador_inicial_color'],
+                'has_print_service' => $row['has_print_service'],
+                'bn_included' => $row['bn_included'],
+                'bn_cost_per_excess' => $row['bn_cost_per_excess'],
+                'color_included' => $row['color_included'],
+                'color_cost_per_excess' => $row['color_cost_per_excess'],
+            ];
+        }
+        $rent->items()->sync($syncData);
 
         return redirect()->route('rents.show', $rent)->with('success', 'Renta actualizada.');
     }

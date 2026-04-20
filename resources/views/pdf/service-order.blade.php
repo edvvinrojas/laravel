@@ -7,6 +7,8 @@
     <style>
         body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 24px; }
         .top { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f766e; padding-bottom: 10px; }
+        .top-left { display: flex; align-items: center; gap: 12px; }
+        .logo { height: 48px; width: auto; }
         .title { font-size: 20px; font-weight: 700; }
         .sub { font-size: 12px; color: #555; }
         .actions { margin: 14px 0; }
@@ -24,7 +26,26 @@
         .status-completado { background: #dcfce7; color: #166534; }
         .no-print { display: inline-block; padding: 7px 10px; background: #111827; color: #fff; border-radius: 6px; text-decoration: none; }
         .signature { margin-top: 8px; border: 1px solid #ddd; border-radius: 6px; background: #fff; max-height: 90px; }
-        @media print { .no-print { display: none; } body { margin: 10px; } }
+        .section-title { margin-bottom: 6px; font-size: 12px; font-weight: 700; color: #111; text-transform: uppercase; letter-spacing: 0.04em; }
+        .toner-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 18px; align-items: start; }
+        .toner-chart { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; background: #fafafa; }
+        .toner-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .toner-item { text-align: center; }
+        .toner-ring { position: relative; width: 72px; height: 72px; margin: 0 auto 6px; }
+        .toner-ring svg { width: 72px; height: 72px; transform: rotate(-90deg); }
+        .toner-ring span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #111; }
+        .toner-name { margin: 0; font-size: 11px; color: #666; }
+        .muted-value { font-size: 12px; font-weight: 600; color: #374151; }
+        @media print {
+            .no-print { display: none; }
+            body { margin: 10px; }
+            .box { break-inside: avoid; }
+            .toner-chart { break-inside: avoid; }
+        }
+        @media (max-width: 720px) {
+            .grid { grid-template-columns: 1fr; }
+            .toner-layout { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -43,9 +64,12 @@
     @endphp
 
     <div class="top">
-        <div>
-            <div class="title">Orden de Servicio</div>
-            <div class="sub">CopyMart ERP</div>
+        <div class="top-left">
+            <img src="{{ asset('img/logo.svg') }}" alt="CopyMart" class="logo">
+            <div>
+                <div class="title">Orden de Servicio</div>
+                {{-- <div class="sub">CopyMart ERP</div> --}}
+            </div>
         </div>
         <div style="text-align:right;">
             <div class="sub">Folio</div>
@@ -85,30 +109,60 @@
     </div>
 
     <div class="box">
-        <div class="grid">
-            <div class="item"><div class="label">Diagnostico / accion</div><div class="value">{{ $serviceOrder->diagnostico_accion ?: '—' }}</div></div>
-            <div class="item"><div class="label">Material pendiente</div><div class="value">{{ $serviceOrder->pendiente_material ?: '—' }}</div></div>
-            <div class="item"><div class="label">Entrego toner</div><div class="value">{{ $serviceOrder->entrego_toner ? 'Si' : 'No' }}</div></div>
-            <div class="item"><div class="label">Codigos toner</div><div class="value">{{ $serviceOrder->codigos_toner ?: '—' }}</div></div>
-            <div class="item"><div class="label">Toner % (K/C/M/Y)</div><div class="value">{{ $serviceOrder->pct_toner_negro ?? 0 }} / {{ $serviceOrder->pct_toner_cyan ?? 0 }} / {{ $serviceOrder->pct_toner_magenta ?? 0 }} / {{ $serviceOrder->pct_toner_amarillo ?? 0 }}</div></div>
-            <div class="item"><div class="label">Tiene stock</div><div class="value">{{ $serviceOrder->tiene_stock ? 'Si' : 'No' }}</div></div>
-            <div class="item"><div class="label">Firma nombre</div><div class="value">{{ $serviceOrder->firma_nombre ?: '—' }}</div></div>
-            <div class="item"><div class="label">Queda pendiente</div><div class="value">{{ $serviceOrder->queda_pendiente ? 'Si' : 'No' }}</div></div>
+        <div class="toner-layout">
+            <div>
+                <div class="grid">
+                    <div class="item"><div class="label">Diagnostico / accion</div><div class="value">{{ $serviceOrder->diagnostico_accion ?: '—' }}</div></div>
+                    <div class="item"><div class="label">Material pendiente</div><div class="value">{{ $serviceOrder->pendiente_material ?: '—' }}</div></div>
+                    <div class="item"><div class="label">Entrego toner</div><div class="value">{{ $serviceOrder->entrego_toner ? 'Si' : 'No' }}</div></div>
+                    <div class="item"><div class="label">Codigos toner</div><div class="value">{{ $serviceOrder->codigos_toner ?: '—' }}</div></div>
+                    <div class="item"><div class="label">Toner % (K/C/M/Y)</div><div class="value">{{ $serviceOrder->pct_toner_negro ?? 0 }} / {{ $serviceOrder->pct_toner_cyan ?? 0 }} / {{ $serviceOrder->pct_toner_magenta ?? 0 }} / {{ $serviceOrder->pct_toner_amarillo ?? 0 }}</div></div>
+                    <div class="item"><div class="label">Tiene stock</div><div class="value">{{ $serviceOrder->tiene_stock ? 'Si' : 'No' }}</div></div>
+                    <div class="item"><div class="label">Firma nombre</div><div class="value">{{ $serviceOrder->firma_nombre ?: '—' }}</div></div>
+                    <div class="item"><div class="label">Queda pendiente</div><div class="value">{{ $serviceOrder->queda_pendiente ? 'Si' : 'No' }}</div></div>
+                </div>
+
+                @if($serviceOrder->queda_pendiente && $serviceOrder->descripcion_pendiente)
+                    <div class="item" style="margin-top:8px;">
+                        <div class="label">Descripcion pendiente</div>
+                        <div class="value">{{ $serviceOrder->descripcion_pendiente }}</div>
+                    </div>
+                @endif
+
+                @if($serviceOrder->firma_imagen)
+                    <div style="margin-top:8px;">
+                        <div class="label">Firma digital</div>
+                        <img src="{{ $serviceOrder->firma_imagen }}" class="signature">
+                    </div>
+                @endif
+            </div>
+
+            <div class="toner-chart">
+                <div class="section-title">Grafica de toner</div>
+                <div class="toner-grid">
+                    @foreach([
+                        'negro' => ['label' => 'Negro', 'color' => '#1e293b'],
+                        'cyan' => ['label' => 'Cyan', 'color' => '#0891b2'],
+                        'magenta' => ['label' => 'Magenta', 'color' => '#db2777'],
+                        'amarillo' => ['label' => 'Amarillo', 'color' => '#ca8a04'],
+                    ] as $key => $meta)
+                        @php $pct = $serviceOrder->{'pct_toner_'.$key} ?? 0; @endphp
+                        <div class="toner-item">
+                            <div class="toner-ring">
+                                <svg viewBox="0 0 36 36" aria-hidden="true">
+                                    <circle cx="18" cy="18" r="15" fill="none" stroke="#e5e7eb" stroke-width="4"></circle>
+                                    <circle cx="18" cy="18" r="15" fill="none" stroke="{{ $meta['color'] }}" stroke-width="4" stroke-linecap="round"
+                                        stroke-dasharray="{{ $pct * 94.25 / 100 }} 94.25"></circle>
+                                </svg>
+                                <span>{{ $pct }}%</span>
+                            </div>
+                            <p class="toner-name">{{ $meta['label'] }}</p>
+                            <div class="muted-value">{{ $pct }}%</div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
         </div>
-
-        @if($serviceOrder->queda_pendiente && $serviceOrder->descripcion_pendiente)
-            <div class="item" style="margin-top:8px;">
-                <div class="label">Descripcion pendiente</div>
-                <div class="value">{{ $serviceOrder->descripcion_pendiente }}</div>
-            </div>
-        @endif
-
-        @if($serviceOrder->firma_imagen)
-            <div style="margin-top:8px;">
-                <div class="label">Firma digital</div>
-                <img src="{{ $serviceOrder->firma_imagen }}" class="signature">
-            </div>
-        @endif
     </div>
 </body>
 </html>

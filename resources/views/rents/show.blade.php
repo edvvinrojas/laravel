@@ -22,11 +22,29 @@
         </div>
         <div class="card-body grid grid-cols-2 gap-4 text-sm">
             <div><p class="text-gray-500">Cliente</p><p class="font-medium">{{ $rent->client->name }}</p></div>
-            <div><p class="text-gray-500">Equipo</p><p class="font-medium">{{ $rent->item->brand->name ?? '' }} {{ $rent->item->model }}</p></div>
-            <div><p class="text-gray-500">Serie</p><p class="font-mono">{{ $rent->item->serie }}</p></div>
+            <div><p class="text-gray-500">Equipos</p><p class="font-medium">{{ $rent->items->count() ?: 1 }}</p></div>
             <div><p class="text-gray-500">Renta mensual</p><p class="font-bold text-lg">${{ number_format($rent->rent,2) }}</p></div>
             <div><p class="text-gray-500">Inicio</p><p>{{ $rent->start_date->format('d/m/Y') }}</p></div>
             <div><p class="text-gray-500">Fin</p><p>{{ $rent->end_date?->format('d/m/Y') ?? '—' }}</p></div>
+            <div class="col-span-2 border-t pt-3">
+                <p class="text-gray-500 mb-2">Asignacion por equipo</p>
+                <div class="space-y-2">
+                    @foreach(($rent->items->count() ? $rent->items : collect([$rent->item])) as $eq)
+                        @php
+                            $branchId = $eq->pivot->branch_id ?? $rent->branch_id;
+                            $areaId = $eq->pivot->area_id ?? $rent->area_id;
+                            $branchName = optional($rent->client->branches->firstWhere('id', $branchId))->name;
+                            $branchModel = $rent->client->branches->firstWhere('id', $branchId);
+                            $areaName = $branchModel ? optional($branchModel->areas->firstWhere('id', $areaId))->name : null;
+                        @endphp
+                        <div class="rounded border border-gray-200 p-2">
+                            <p class="font-medium">{{ $eq->brand->name ?? '' }} {{ $eq->model }} <span class="font-mono text-xs text-gray-500">{{ $eq->serie }}</span></p>
+                            <p class="text-xs text-gray-600">Sucursal: {{ $branchName ?: 'Sin sucursal' }} | Area: {{ $areaName ?: 'Sin area' }}</p>
+                            <p class="text-xs text-gray-600">Contador BN: {{ (int) ($eq->pivot->contador_inicial_bn ?? $rent->contador_inicial_bn ?? 0) }} | Contador Color: {{ (int) ($eq->pivot->contador_inicial_color ?? $rent->contador_inicial_color ?? 0) }}</p>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
             @if($rent->has_print_service)
             <div class="col-span-2 border-t pt-3 grid grid-cols-2 gap-3">
                 <div><p class="text-gray-500">BN incluidas</p><p>{{ number_format($rent->bn_included) }}</p></div>

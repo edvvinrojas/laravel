@@ -72,14 +72,14 @@
 
 {{-- Stat cards --}}
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-    <x-stat-card label="Clientes activos"   value="{{ $stats['clients'] }}"         color="blue"   icon="users"/>
-    <x-stat-card label="Rentas vigentes"    value="{{ $stats['rents_active'] }}"     color="green"  icon="document"/>
-    <x-stat-card label="Facturas pendientes" value="{{ $stats['billing_pending'] }}" color="yellow" icon="cash"/>
-    <x-stat-card label="Facturas vencidas"  value="{{ $stats['billing_overdue'] }}"  color="red"    icon="exclamation"/>
-    <x-stat-card label="Tickets pendientes" value="{{ $stats['tickets_pending'] }}"  color="orange" icon="ticket"/>
-    <x-stat-card label="Tickets urgentes"   value="{{ $stats['tickets_urgent'] }}"   color="red"    icon="bell"/>
-    <x-stat-card label="Equipos en sistema" value="{{ $stats['items_total'] }}"      color="purple" icon="computer"/>
-    <x-stat-card label="Empleados activos"  value="{{ $stats['employees'] }}"        color="teal"   icon="person"/>
+    <x-stat-card label="Clientes activos" value="{{ $stats['clients'] }}" color="blue" icon="users" href="{{ route('clients.index') }}"/>
+    <x-stat-card label="Rentas vigentes" value="{{ $stats['rents_active'] }}" color="green" icon="document" href="{{ route('rents.index', ['status' => 'VIGENTE']) }}"/>
+    <x-stat-card label="Facturas pendientes" value="{{ $stats['billing_pending'] }}" color="yellow" icon="cash" href="{{ route('billing.index', ['status' => 'PENDIENTE']) }}"/>
+    <x-stat-card label="Facturas vencidas" value="{{ $stats['billing_overdue'] }}" color="red" icon="exclamation" href="{{ route('billing.index', ['status' => 'VENCIDO']) }}"/>
+    <x-stat-card label="Tickets pendientes" value="{{ $stats['tickets_pending'] }}" color="orange" icon="ticket" href="{{ route('tickets.index', ['status' => 'PENDIENTE']) }}"/>
+    <x-stat-card label="Tickets urgentes" value="{{ $stats['tickets_urgent'] }}" color="red" icon="bell" href="{{ route('tickets.index', ['status' => 'URGENTE']) }}"/>
+    <x-stat-card label="Equipos en sistema" value="{{ $stats['items_total'] }}" color="purple" icon="computer" href="{{ route('almacen.index', ['tab' => 'equipos']) }}"/>
+    <x-stat-card label="Empleados activos" value="{{ $stats['employees'] }}" color="teal" icon="person" href="{{ route('employees.index') }}"/>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">

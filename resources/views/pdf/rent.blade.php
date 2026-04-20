@@ -7,6 +7,8 @@
     <style>
         body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 24px; }
         .top { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #2563eb; padding-bottom: 10px; }
+        .top-left { display: flex; align-items: center; gap: 12px; }
+        .logo { height: 48px; width: auto; }
         .title { font-size: 20px; font-weight: 700; }
         .sub { font-size: 12px; color: #555; }
         .actions { margin: 14px 0; }
@@ -23,9 +25,12 @@
 </head>
 <body>
     <div class="top">
-        <div>
-            <div class="title">Contrato de Renta</div>
-            <div class="sub">CopyMart ERP</div>
+        <div class="top-left">
+            <img src="{{ asset('img/logo.svg') }}" alt="CopyMart" class="logo">
+            <div>
+                <div class="title">Contrato de Renta</div>
+                {{-- <div class="sub">CopyMart ERP</div> --}}
+            </div>
         </div>
         <div style="text-align:right;">
             <div class="sub">Contrato</div>
@@ -41,14 +46,44 @@
     <div class="box">
         <div class="grid">
             <div class="item"><div class="label">Cliente</div><div class="value">{{ $rent->client->name ?? '—' }}</div></div>
-            <div class="item"><div class="label">Equipo</div><div class="value">{{ $rent->item->brand->name ?? '' }} {{ $rent->item->model ?? '' }}</div></div>
-            <div class="item"><div class="label">Serie</div><div class="value">{{ $rent->item->serie ?? '—' }}</div></div>
+            <div class="item"><div class="label">Equipos</div><div class="value">{{ $rent->items->count() ?: 1 }}</div></div>
             <div class="item"><div class="label">Renta mensual</div><div class="value">${{ number_format((float)$rent->rent, 2) }}</div></div>
             <div class="item"><div class="label">Inicio</div><div class="value">{{ $rent->start_date?->format('d/m/Y') ?? '—' }}</div></div>
             <div class="item"><div class="label">Fin</div><div class="value">{{ $rent->end_date?->format('d/m/Y') ?? '—' }}</div></div>
             <div class="item"><div class="label">Estatus</div><div class="value">{{ $rent->contract_status }}</div></div>
             <div class="item"><div class="label">Ubicación</div><div class="value">{{ $rent->branch->name ?? '—' }} / {{ $rent->area->name ?? '—' }}</div></div>
         </div>
+
+        <table class="table" style="margin-top:14px;">
+            <thead>
+                <tr>
+                    <th>Equipo</th>
+                    <th>Serie</th>
+                    <th>Sucursal</th>
+                    <th>Area</th>
+                    <th>Cont. BN</th>
+                    <th>Cont. Color</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach(($rent->items->count() ? $rent->items : collect([$rent->item])) as $eq)
+                @php
+                    $branchId = $eq->pivot->branch_id ?? $rent->branch_id;
+                    $areaId = $eq->pivot->area_id ?? $rent->area_id;
+                    $branch = $rent->client->branches->firstWhere('id', $branchId);
+                    $area = $branch ? $branch->areas->firstWhere('id', $areaId) : null;
+                @endphp
+                <tr>
+                    <td>{{ $eq->brand->name ?? '' }} {{ $eq->model ?? '' }}</td>
+                    <td>{{ $eq->serie ?? '—' }}</td>
+                    <td>{{ $branch->name ?? '—' }}</td>
+                    <td>{{ $area->name ?? '—' }}</td>
+                    <td>{{ (int) ($eq->pivot->contador_inicial_bn ?? $rent->contador_inicial_bn ?? 0) }}</td>
+                    <td>{{ (int) ($eq->pivot->contador_inicial_color ?? $rent->contador_inicial_color ?? 0) }}</td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
     </div>
 
     @if($rent->has_print_service)

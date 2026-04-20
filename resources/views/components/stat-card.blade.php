@@ -1,4 +1,4 @@
-@props(['label', 'value', 'color' => 'blue', 'icon' => 'chart'])
+@props(['label', 'value', 'color' => 'blue', 'icon' => 'chart', 'href' => null])
 
 @php
 $colors = [
@@ -13,7 +13,19 @@ $colors = [
 $iconClass = $colors[$color] ?? $colors['blue'];
 @endphp
 
-<div class="card p-4 flex items-center gap-3">
+@php
+    $classes = 'card p-4 flex items-center gap-3';
+
+    if ($href) {
+        $classes .= ' transition hover:shadow-md hover:border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500';
+    }
+@endphp
+
+@if($href)
+<a href="{{ $href }}" class="{{ $classes }}" aria-label="Ir a {{ $label }}">
+@else
+<div class="{{ $classes }}">
+@endif
     <div class="w-10 h-10 rounded-lg {{ $iconClass }} flex items-center justify-center flex-shrink-0">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             @if($icon === 'users')
@@ -41,4 +53,8 @@ $iconClass = $colors[$color] ?? $colors['blue'];
         <p class="text-2xl font-bold text-gray-900">{{ $value }}</p>
         <p class="text-xs text-gray-500 mt-0.5">{{ $label }}</p>
     </div>
+@if($href)
+</a>
+@else
 </div>
+@endif
