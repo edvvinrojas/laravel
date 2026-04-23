@@ -21,8 +21,13 @@ return new class extends Migration
             $table->index(['branch_id', 'area_id']);
         });
 
-        DB::statement('UPDATE rent_item ri INNER JOIN rents r ON r.id = ri.rent_id SET ri.branch_id = r.branch_id, ri.area_id = r.area_id WHERE ri.branch_id IS NULL AND ri.area_id IS NULL');
-        DB::statement('UPDATE sale_item si INNER JOIN sales s ON s.id = si.sale_id SET si.branch_id = s.branch_id, si.area_id = s.area_id WHERE si.branch_id IS NULL AND si.area_id IS NULL');
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('UPDATE rent_item ri SET branch_id = r.branch_id, area_id = r.area_id FROM rents r WHERE r.id = ri.rent_id AND ri.branch_id IS NULL AND ri.area_id IS NULL');
+            DB::statement('UPDATE sale_item si SET branch_id = s.branch_id, area_id = s.area_id FROM sales s WHERE s.id = si.sale_id AND si.branch_id IS NULL AND si.area_id IS NULL');
+        } else {
+            DB::statement('UPDATE rent_item ri INNER JOIN rents r ON r.id = ri.rent_id SET ri.branch_id = r.branch_id, ri.area_id = r.area_id WHERE ri.branch_id IS NULL AND ri.area_id IS NULL');
+            DB::statement('UPDATE sale_item si INNER JOIN sales s ON s.id = si.sale_id SET si.branch_id = s.branch_id, si.area_id = s.area_id WHERE si.branch_id IS NULL AND si.area_id IS NULL');
+        }
     }
 
     public function down(): void
