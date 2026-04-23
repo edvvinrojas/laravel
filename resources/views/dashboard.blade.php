@@ -4,6 +4,10 @@
 @section('page-title', 'Dashboard')
 
 @section('content')
+@php
+    $employeesHref = auth()->user()?->hasPermission('empleados.view') ? route('employees.index') : null;
+@endphp
+
 {{-- Mesa de Ayuda quick-ticket button --}}
 <div class="flex justify-end mb-4">
     <button type="button" onclick="document.getElementById('mesaAyudaModal').classList.remove('hidden')"
@@ -79,7 +83,7 @@
     <x-stat-card label="Tickets pendientes" value="{{ $stats['tickets_pending'] }}" color="orange" icon="ticket" href="{{ route('tickets.index', ['status' => 'PENDIENTE']) }}"/>
     <x-stat-card label="Tickets urgentes" value="{{ $stats['tickets_urgent'] }}" color="red" icon="bell" href="{{ route('tickets.index', ['status' => 'URGENTE']) }}"/>
     <x-stat-card label="Equipos en sistema" value="{{ $stats['items_total'] }}" color="purple" icon="computer" href="{{ route('almacen.index', ['tab' => 'equipos']) }}"/>
-    <x-stat-card label="Empleados activos" value="{{ $stats['employees'] }}" color="teal" icon="person" href="{{ route('employees.index') }}"/>
+    <x-stat-card label="Empleados activos" value="{{ $stats['employees'] }}" color="teal" icon="person" href="{{ $employeesHref }}"/>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
