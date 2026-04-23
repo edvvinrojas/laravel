@@ -14,7 +14,11 @@ return new class extends Migration
             $table->unsignedInteger('contador_inicial_color')->default(0)->after('contador_inicial_bn');
         });
 
-        DB::statement('UPDATE rent_item ri INNER JOIN rents r ON r.id = ri.rent_id SET ri.contador_inicial_bn = COALESCE(r.contador_inicial_bn, 0), ri.contador_inicial_color = COALESCE(r.contador_inicial_color, 0)');
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('UPDATE rent_item ri SET contador_inicial_bn = COALESCE(r.contador_inicial_bn, 0), contador_inicial_color = COALESCE(r.contador_inicial_color, 0) FROM rents r WHERE r.id = ri.rent_id');
+        } else {
+            DB::statement('UPDATE rent_item ri INNER JOIN rents r ON r.id = ri.rent_id SET ri.contador_inicial_bn = COALESCE(r.contador_inicial_bn, 0), ri.contador_inicial_color = COALESCE(r.contador_inicial_color, 0)');
+        }
     }
 
     public function down(): void
