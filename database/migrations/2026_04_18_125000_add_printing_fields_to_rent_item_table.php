@@ -18,7 +18,7 @@ return new class extends Migration
         });
 
         if (DB::getDriverName() === 'pgsql') {
-            DB::statement('UPDATE rent_item ri SET has_print_service = COALESCE(r.has_print_service, 0), bn_included = COALESCE(r.bn_included, 0), bn_cost_per_excess = COALESCE(r.bn_cost_per_excess, 0), color_included = COALESCE(r.color_included, 0), color_cost_per_excess = COALESCE(r.color_cost_per_excess, 0) FROM rents r WHERE r.id = ri.rent_id');
+            DB::statement('UPDATE rent_item ri SET has_print_service = COALESCE(r.has_print_service, false), bn_included = COALESCE(r.bn_included, 0), bn_cost_per_excess = COALESCE(r.bn_cost_per_excess, 0), color_included = COALESCE(r.color_included, 0), color_cost_per_excess = COALESCE(r.color_cost_per_excess, 0) FROM rents r WHERE r.id = ri.rent_id');
         } else {
             DB::statement("UPDATE rent_item ri INNER JOIN rents r ON r.id = ri.rent_id SET ri.has_print_service = COALESCE(r.has_print_service, 0), ri.bn_included = COALESCE(r.bn_included, 0), ri.bn_cost_per_excess = COALESCE(r.bn_cost_per_excess, 0), ri.color_included = COALESCE(r.color_included, 0), ri.color_cost_per_excess = COALESCE(r.color_cost_per_excess, 0)");
         }
