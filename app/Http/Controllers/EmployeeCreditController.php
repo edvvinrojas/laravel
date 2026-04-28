@@ -34,12 +34,14 @@ class EmployeeCreditController extends Controller
             'credit_amount' => 'required|numeric|min:0.01',
             'credit_reason' => 'required|string',
             'biweekly_discount' => 'required|numeric|min:0.01',
-            'pending_amount' => 'required|numeric|min:0',
-            'pending_biweeks' => 'required|integer|min:0',
             'approval_date' => 'nullable|date',
             'payment_end_date' => 'nullable|date|after_or_equal:approval_date',
             'status' => 'required|in:SOLICITADO,AUTORIZADO,LIQUIDADO,CANCELADO',
         ]);
+
+        // pending_amount/biweeks se derivan automáticamente: nunca son editables manualmente.
+        $data['pending_amount']  = $data['credit_amount'];
+        $data['pending_biweeks'] = (int) ceil($data['credit_amount'] / max($data['biweekly_discount'], 0.01));
 
         if ($data['status'] === 'AUTORIZADO') {
             $data['approved_by'] = Auth::id();
@@ -70,12 +72,18 @@ class EmployeeCreditController extends Controller
             'credit_amount' => 'required|numeric|min:0.01',
             'credit_reason' => 'required|string',
             'biweekly_discount' => 'required|numeric|min:0.01',
-            'pending_amount' => 'required|numeric|min:0',
-            'pending_biweeks' => 'required|integer|min:0',
             'approval_date' => 'nullable|date',
             'payment_end_date' => 'nullable|date|after_or_equal:approval_date',
             'status' => 'required|in:SOLICITADO,AUTORIZADO,LIQUIDADO,CANCELADO',
         ]);
+
+        // pending_amount/biweeks: si cambia el monto del crédito y aún no se ha pagado nada,
+        // los recalculamos. Si ya se aplicó alguna nómina, se respeta lo pendiente actual.
+        $alreadyPaid = $credit->credit_amount - $credit->pending_amount;
+        if (abs($alreadyPaid) < 0.01) {
+            $data['pending_amount']  = $data['credit_amount'];
+            $data['pending_biweeks'] = (int) ceil($data['credit_amount'] / max($data['biweekly_discount'], 0.01));
+        }
 
         if ($data['status'] === 'AUTORIZADO' && !$credit->approved_by) {
             $data['approved_by'] = Auth::id();

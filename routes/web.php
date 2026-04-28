@@ -120,7 +120,7 @@ Route::middleware('auth')->group(function () {
     )->name('api.branch.areas');
     Route::get('api/branches/{branch}/service-locations', function(\App\Models\Branch $branch) {
         $rentLocations = \App\Models\Rent::query()
-            ->whereHas('items', fn($q) => $q->wherePivot('branch_id', $branch->id))
+            ->whereHas('items', fn($q) => $q->where('rent_item.branch_id', $branch->id))
             ->with(['items.brand:id,name', 'client.branches.areas'])
             ->get()
             ->flatMap(function ($rent) use ($branch) {
@@ -141,7 +141,7 @@ Route::middleware('auth')->group(function () {
             });
 
         $saleLocations = \App\Models\Sale::query()
-            ->whereHas('items', fn($q) => $q->wherePivot('branch_id', $branch->id))
+            ->whereHas('items', fn($q) => $q->where('sale_item.branch_id', $branch->id))
             ->with(['items.brand:id,name', 'client.branches.areas'])
             ->get()
             ->flatMap(function ($sale) use ($branch) {
@@ -283,10 +283,17 @@ Route::middleware('auth')->group(function () {
 
     // Refacciones
     Route::resource('spareparts', SparepartController::class);
+    Route::get('spareparts/api/next-sequential', [SparepartController::class, 'apiNextSequential'])->name('spareparts.api.next-sequential');
 
-    // Tickets
-    Route::resource('tickets', TicketController::class);
-    Route::patch('tickets/{ticket}/close', [TicketController::class, 'close'])->name('tickets.close');
+    // Atención a Clientes (tickets)
+    Route::resource('tickets', TicketController::class)
+        ->middlewareFor(['index', 'show'], 'permission:atencion_clientes.view')
+        ->middlewareFor(['create', 'store'], 'permission:atencion_clientes.create')
+        ->middlewareFor(['edit', 'update'], 'permission:atencion_clientes.edit')
+        ->middlewareFor('destroy', 'permission:atencion_clientes.delete');
+    Route::patch('tickets/{ticket}/close', [TicketController::class, 'close'])
+        ->name('tickets.close')
+        ->middleware('permission:atencion_clientes.edit');
 
     // Taller / Reparaciones
     Route::resource('repairs', RepairController::class)
@@ -381,12 +388,16 @@ Route::middleware('auth')->group(function () {
     // TI – Inventario interno
     Route::resource('ti-equipment', TiEquipmentController::class);
     Route::post('ti-equipment/{tiEquipment}/peripherals',           [TiEquipmentController::class, 'storePeripheral'])->name('ti-equipment.peripherals.store');
+    Route::get('ti-equipment/{tiEquipment}/peripherals/{peripheral}/edit', [TiEquipmentController::class, 'editPeripheral'])->name('ti-equipment.peripherals.edit');
+    Route::put('ti-equipment/{tiEquipment}/peripherals/{peripheral}',      [TiEquipmentController::class, 'updatePeripheral'])->name('ti-equipment.peripherals.update');
     Route::delete('ti-equipment/{tiEquipment}/peripherals/{peripheral}', [TiEquipmentController::class, 'destroyPeripheral'])->name('ti-equipment.peripherals.destroy');
     Route::post('ti-equipment/{tiEquipment}/licenses/attach',             [TiEquipmentController::class, 'attachLicense'])->name('ti-equipment.licenses.attach');
     Route::delete('ti-equipment/{tiEquipment}/licenses/{license}/detach',[TiEquipmentController::class, 'detachLicense'])->name('ti-equipment.licenses.detach');
     Route::get('ti-equipment/{tiEquipment}/responsiva',                  [TiEquipmentController::class, 'responsiva'])->name('ti-equipment.responsiva');
     Route::get('ti-licenses',                                        [TiEquipmentController::class, 'licensesIndex'])->name('ti-equipment.licenses');
     Route::post('ti-licenses',                                       [TiEquipmentController::class, 'licenseStore'])->name('ti-equipment.licenses.store');
+    Route::get('ti-licenses/{license}/edit',                         [TiEquipmentController::class, 'licenseEdit'])->name('ti-equipment.licenses.edit');
+    Route::put('ti-licenses/{license}',                              [TiEquipmentController::class, 'licenseUpdate'])->name('ti-equipment.licenses.update');
     Route::delete('ti-licenses/{license}',                          [TiEquipmentController::class, 'licenseDestroy'])->name('ti-equipment.licenses.destroy');
 
     // TI – Mesa de Ayuda (tickets internos)

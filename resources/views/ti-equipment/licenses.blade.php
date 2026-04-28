@@ -66,7 +66,11 @@
     <tr class="table-row">
         <td class="px-4 py-2 font-medium">{{ $lic->software }}</td>
         <td class="px-4 py-2"><span class="{{ $lsc[$lic->tipo]??'badge-gray' }}">{{ $lic->tipo }}</span></td>
-        <td class="px-4 py-2">{{ $lic->equipment_count }}</td>
+        <td class="px-4 py-2">
+            <span class="{{ $lic->equipment_count >= $lic->cantidad_licencias ? 'text-red-600 font-semibold' : '' }}">
+                {{ $lic->equipment_count }} / {{ $lic->cantidad_licencias }}
+            </span>
+        </td>
         <td class="px-4 py-2">{{ $lic->cantidad_licencias }}</td>
         <td class="px-4 py-2">
             @if($lic->fecha_vencimiento)
@@ -80,11 +84,14 @@
             @endif
         </td>
         <td class="px-4 py-2 text-right">
-            <form method="POST" action="{{ route('ti-equipment.licenses.destroy', $lic) }}"
-                  onsubmit="return confirm('¿Eliminar esta licencia?')">
-                @csrf @method('DELETE')
-                <button class="text-red-500 text-xs hover:underline">Eliminar</button>
-            </form>
+            <div class="flex justify-end gap-3">
+                <a href="{{ route('ti-equipment.licenses.edit', $lic) }}" class="text-blue-600 text-xs hover:underline">Editar</a>
+                <form method="POST" action="{{ route('ti-equipment.licenses.destroy', $lic) }}"
+                      onsubmit="return confirm('¿Eliminar esta licencia?')">
+                    @csrf @method('DELETE')
+                    <button class="text-red-500 text-xs hover:underline">Eliminar</button>
+                </form>
+            </div>
         </td>
     </tr>
     @empty

@@ -57,7 +57,7 @@
 @php
 $currentPerms = $user->permissions ?? [];
 $sections = [
-    'Comercial'      => ['ventas'=>'Ventas','rentas'=>'Rentas','clientes'=>'Clientes','produccion'=>'Producción'],
+    'Comercial'      => ['ventas'=>'Ventas','rentas'=>'Rentas','clientes'=>'Clientes','atencion_clientes'=>'Atención a Clientes','produccion'=>'Producción'],
     'Administración' => ['compras'=>'Compras','almacen'=>'Almacén','cobranza'=>'Cobranza','facturacion'=>'Facturación','inventario'=>'Inventario','usuarios'=>'Usuarios'],
     'Operaciones'    => ['rutas'=>'Rutas','ordenes_servicio'=>'Órdenes de Servicio','taller'=>'Taller','recursos_humanos'=>'Recursos Humanos'],
     'TI'             => ['ti'=>'TI','reportes'=>'Reportes','auditoria'=>'Auditoría','configuracion'=>'Configuración','migraciones'=>'Migraciones BD'],
@@ -158,7 +158,7 @@ function syncRolRestrictions() {
 const deptPresets = {
     rh:            ['usuarios','recursos_humanos'],
     administracion:['ventas','rentas','compras','almacen','cobranza','facturacion','inventario'],
-    comercial:     ['ventas','rentas','clientes','produccion','cobranza','facturacion'],
+    comercial:     ['ventas','rentas','clientes','atencion_clientes','produccion','cobranza','facturacion'],
     operaciones:   ['inventario','rutas','ordenes_servicio','taller'],
     ti:            ['ti','reportes','auditoria','configuracion','migraciones'],
 };

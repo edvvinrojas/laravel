@@ -44,6 +44,7 @@ class EmployeeController extends Controller
             'birthday'          => 'required|date',
             'hire_date'         => 'required|date',
             'termination_date'  => 'nullable|date|after_or_equal:hire_date',
+            'motivo_baja'       => 'nullable|string',
             'phone_emergency'   => 'required|string|max:15',
             'contact_emergency' => 'required|string|max:255',
             'is_active'         => 'boolean',
@@ -52,6 +53,7 @@ class EmployeeController extends Controller
         $data['is_active'] = $request->boolean('is_active', true);
         if ($data['is_active']) {
             $data['termination_date'] = null;
+            $data['motivo_baja'] = null;
         }
 
         Employee::create($data);
@@ -93,6 +95,7 @@ class EmployeeController extends Controller
             'birthday'          => 'required|date',
             'hire_date'         => 'required|date',
             'termination_date'  => 'nullable|date|after_or_equal:hire_date',
+            'motivo_baja'       => 'nullable|string',
             'phone_emergency'   => 'required|string|max:15',
             'contact_emergency' => 'required|string|max:255',
             'is_active'         => 'boolean',
@@ -101,6 +104,7 @@ class EmployeeController extends Controller
         $data['is_active'] = $request->boolean('is_active');
         if ($data['is_active']) {
             $data['termination_date'] = null;
+            $data['motivo_baja'] = null;
         } elseif (empty($data['termination_date'])) {
             $data['termination_date'] = now()->toDateString();
         }

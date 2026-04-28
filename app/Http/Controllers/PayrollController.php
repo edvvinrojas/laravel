@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Payroll;
 use App\Models\Employee;
+use App\Models\EmployeeCredit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PayrollController extends Controller
 {
@@ -44,7 +46,11 @@ class PayrollController extends Controller
         $data['total_pay'] = $data['salary'] + $data['bonus'] + $data['commission'];
         $data['net_pay'] = max(0, $data['total_pay'] - $data['credit_discount']);
 
-        Payroll::create($data);
+        DB::transaction(function () use ($data, $employee) {
+            Payroll::create($data);
+            $this->applyCreditPayment($employee, (float) $data['credit_discount']);
+        });
+
         return redirect()->route('payrolls.index')->with('success', 'Nómina registrada.');
     }
 
@@ -86,5 +92,34 @@ class PayrollController extends Controller
     {
         $payroll->delete();
         return redirect()->route('payrolls.index')->with('success', 'Nómina eliminada.');
+    }
+
+    /**
+     * Aplica el descuento quincenal a los créditos autorizados del empleado.
+     * Decrementa pending_amount y pending_biweeks, marca como LIQUIDADO al saldarse.
+     */
+    private function applyCreditPayment(Employee $employee, float $totalDiscount): void
+    {
+        if ($totalDiscount <= 0) return;
+
+        $credits = $employee->credits()
+            ->where('status', 'AUTORIZADO')
+            ->where('pending_amount', '>', 0)
+            ->where('pending_biweeks', '>', 0)
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get();
+
+        foreach ($credits as $credit) {
+            $payment = (float) min($credit->biweekly_discount, $credit->pending_amount);
+            $credit->pending_amount  = max(0, $credit->pending_amount - $payment);
+            $credit->pending_biweeks = max(0, $credit->pending_biweeks - 1);
+            if ($credit->pending_amount <= 0 || $credit->pending_biweeks <= 0) {
+                $credit->status          = 'LIQUIDADO';
+                $credit->pending_amount  = 0;
+                $credit->pending_biweeks = 0;
+            }
+            $credit->save();
+        }
     }
 }

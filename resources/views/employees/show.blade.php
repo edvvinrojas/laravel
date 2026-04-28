@@ -29,6 +29,7 @@
             <div><p class="text-gray-500">Nacimiento</p><p>{{ $employee->birthday->format('d/m/Y') }}</p></div>
             <div><p class="text-gray-500">Ingreso</p><p>{{ $employee->hire_date->format('d/m/Y') }}</p></div>
             <div><p class="text-gray-500">Fecha de baja</p><p>{{ $employee->termination_date?->format('d/m/Y') ?? 'N/A' }}</p></div>
+            @if($employee->motivo_baja)<div class="col-span-2"><p class="text-gray-500">Motivo de baja</p><p class="whitespace-pre-line">{{ $employee->motivo_baja }}</p></div>@endif
             <div><p class="text-gray-500">Tel. emergencia</p><p>{{ $employee->phone_emergency }}</p></div>
             <div class="col-span-2"><p class="text-gray-500">Contacto emergencia</p><p>{{ $employee->contact_emergency }}</p></div>
             @if($employee->user)<div class="col-span-2"><p class="text-gray-500">Usuario sistema</p><p>{{ $employee->user->full_name }} ({{ $employee->user->email }})</p></div>@endif

@@ -38,9 +38,11 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        $today = Carbon::today();
         $upcoming_billings = Billing::with('client')
             ->where('status', 'PENDIENTE')
-            ->where('due_date', '<=', Carbon::now()->addDays(7))
+            ->whereDate('due_date', '>=', $today)
+            ->whereDate('due_date', '<=', $today->copy()->addDays(7))
             ->orderBy('due_date')
             ->limit(5)
             ->get();

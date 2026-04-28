@@ -20,6 +20,7 @@
         <div><label class="form-label">Fecha nacimiento *</label><input name="birthday" type="date" value="{{ old('birthday',$employee->birthday?->format('Y-m-d')) }}" class="form-input" required></div>
         <div><label class="form-label">Fecha ingreso *</label><input name="hire_date" type="date" value="{{ old('hire_date',$employee->hire_date?->format('Y-m-d')) }}" class="form-input" required></div>
         <div><label class="form-label">Fecha de baja</label><input name="termination_date" type="date" value="{{ old('termination_date',$employee->termination_date?->format('Y-m-d')) }}" class="form-input"></div>
+        <div class="col-span-2"><label class="form-label">Motivo de baja</label><textarea name="motivo_baja" class="form-input" rows="2" placeholder="Solo aplica al dar de baja al empleado">{{ old('motivo_baja',$employee->motivo_baja) }}</textarea></div>
         <div><label class="form-label">Tel. emergencia *</label><input name="phone_emergency" value="{{ old('phone_emergency',$employee->phone_emergency) }}" class="form-input" required></div>
         <div><label class="form-label">Contacto emergencia *</label><input name="contact_emergency" value="{{ old('contact_emergency',$employee->contact_emergency) }}" class="form-input" required></div>
         <div class="flex items-center gap-2 pt-3"><input type="checkbox" name="is_active" value="1" @checked(old('is_active',$employee->is_active))><label class="text-sm">Activo</label></div>

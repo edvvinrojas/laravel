@@ -174,11 +174,14 @@
                 @if($p->modelo) <span class="text-gray-600"> {{ $p->modelo }}</span> @endif
                 @if($p->numero_serie) <span class="font-mono text-xs text-gray-400 ml-2">{{ $p->numero_serie }}</span> @endif
             </div>
-            <form method="POST" action="{{ route('ti-equipment.peripherals.destroy', [$tiEquipment, $p]) }}"
-                  onsubmit="return confirm('¿Eliminar periférico?')">
-                @csrf @method('DELETE')
-                <button class="text-red-500 text-xs hover:underline">Eliminar</button>
-            </form>
+            <div class="flex items-center gap-3">
+                <a href="{{ route('ti-equipment.peripherals.edit', [$tiEquipment, $p]) }}" class="text-blue-600 text-xs hover:underline">Editar</a>
+                <form method="POST" action="{{ route('ti-equipment.peripherals.destroy', [$tiEquipment, $p]) }}"
+                      onsubmit="return confirm('¿Eliminar periférico?')">
+                    @csrf @method('DELETE')
+                    <button class="text-red-500 text-xs hover:underline">Eliminar</button>
+                </form>
+            </div>
         </div>
         @empty
         <p class="text-gray-400">Sin periféricos registrados.</p>

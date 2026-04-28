@@ -187,7 +187,17 @@ class TiEquipmentController extends Controller
     public function attachLicense(Request $request, TiEquipment $tiEquipment)
     {
         $request->validate(['license_id' => 'required|exists:ti_licenses,id']);
-        $tiEquipment->licenses()->syncWithoutDetaching([$request->license_id]);
+
+        $license = TiLicense::findOrFail($request->license_id);
+        $assigned = $license->equipment()->count();
+
+        if ($assigned >= $license->cantidad_licencias) {
+            return back()->withErrors([
+                'license_id' => "La licencia '{$license->software}' ya alcanzó su límite de {$license->cantidad_licencias} asignaciones.",
+            ]);
+        }
+
+        $tiEquipment->licenses()->syncWithoutDetaching([$license->id]);
         return back()->with('success', 'Licencia vinculada.');
     }
 
@@ -243,6 +253,29 @@ class TiEquipmentController extends Controller
         return $prefix . str_pad($next, 3, '0', STR_PAD_LEFT);
     }
 
+    public function editPeripheral(TiEquipment $tiEquipment, TiPeripheral $peripheral)
+    {
+        abort_if($peripheral->ti_equipment_id !== $tiEquipment->id, 404);
+        return view('ti-equipment.peripheral-edit', compact('tiEquipment', 'peripheral'));
+    }
+
+    public function updatePeripheral(Request $request, TiEquipment $tiEquipment, TiPeripheral $peripheral)
+    {
+        abort_if($peripheral->ti_equipment_id !== $tiEquipment->id, 404);
+
+        $data = $request->validate([
+            'codigo'       => 'required|string|max:20|unique:ti_peripherals,codigo,' . $peripheral->id,
+            'tipo'         => 'required|in:MONITOR,TECLADO,MOUSE,CARGADOR,DOCKING,HEADSET,CAMARA,ELIMINADOR,OTRO',
+            'marca'        => 'nullable|string|max:100',
+            'modelo'       => 'nullable|string|max:100',
+            'numero_serie' => 'nullable|string|max:100',
+            'notas'        => 'nullable|string',
+        ]);
+
+        $peripheral->update($data);
+        return redirect()->route('ti-equipment.show', $tiEquipment)->with('success', 'Periférico actualizado.');
+    }
+
     public function destroyPeripheral(TiEquipment $tiEquipment, TiPeripheral $peripheral)
     {
         $peripheral->delete();
@@ -271,6 +304,37 @@ class TiEquipmentController extends Controller
         $data['created_by'] = Auth::id();
         TiLicense::create($data);
         return back()->with('success', 'Licencia registrada.');
+    }
+
+    public function licenseEdit(TiLicense $license)
+    {
+        return view('ti-equipment.license-edit', compact('license'));
+    }
+
+    public function licenseUpdate(Request $request, TiLicense $license)
+    {
+        $data = $request->validate([
+            'software'           => 'required|string|max:150',
+            'tipo'               => 'required|in:OFFICE,ANTIVIRUS,OS,OTRO',
+            'clave_licencia'     => 'nullable|string|max:255',
+            'proveedor'          => 'nullable|string|max:150',
+            'fecha_vencimiento'  => 'nullable|date',
+            'cantidad_licencias' => 'required|integer|min:1',
+            'is_active'          => 'nullable|boolean',
+            'notas'              => 'nullable|string',
+        ]);
+
+        $assigned = $license->equipment()->count();
+        if ($data['cantidad_licencias'] < $assigned) {
+            return back()->withInput()->withErrors([
+                'cantidad_licencias' => "No puedes bajar a {$data['cantidad_licencias']}: ya hay {$assigned} equipos con esta licencia. Desvincula primero.",
+            ]);
+        }
+
+        $data['is_active'] = $request->boolean('is_active', true);
+        $license->update($data);
+
+        return redirect()->route('ti-equipment.licenses')->with('success', 'Licencia actualizada.');
     }
 
     public function licenseDestroy(TiLicense $license)

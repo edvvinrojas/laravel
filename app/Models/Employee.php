@@ -9,7 +9,8 @@ class Employee extends Model
     protected $fillable = [
         'user_id', 'direct_manager_user_id', 'nombre', 'departamento', 'puesto', 'sueldo',
         'nss', 'rfc', 'curp',
-        'birthday', 'hire_date', 'termination_date', 'phone_emergency', 'contact_emergency', 'is_active',
+        'birthday', 'hire_date', 'termination_date', 'motivo_baja',
+        'phone_emergency', 'contact_emergency', 'is_active',
     ];
 
     protected $casts = [
