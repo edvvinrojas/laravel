@@ -84,8 +84,10 @@ class PurchaseController extends Controller
 
     public function show(Purchase $purchase)
     {
+        $user = auth()->user();
+        $isCompras = in_array($user->rol, ['administrador', 'gerencia']) || $user->department === 'administracion';
         $purchase->load(['sparepart', 'user', 'areaChief', 'admin', 'quotes']);
-        return view('purchases.show', compact('purchase'));
+        return view('purchases.show', compact('purchase', 'isCompras'));
     }
 
     public function edit(Purchase $purchase)

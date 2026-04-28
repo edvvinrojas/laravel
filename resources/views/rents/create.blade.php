@@ -365,7 +365,8 @@ async function renderItemRows() {
             </div>
             <div>
                 <label class="form-label text-xs">Sucursal *</label>
-                <select name="item_rows[${index}][branch_id]" class="form-select branch-select" data-item-id="${row.item_id}">
+                <select name="item_rows[${index}][branch_id]" class="form-select branch-select" data-item-id="${row.item_id}" required>
+                    ${row.branch_id ? `<option value="${row.branch_id}" selected>Cargando sucursal...</option>` : ''}
                     ${branchOptionsHtml(branches, row.branch_id)}
                 </select>
             </div>
@@ -385,7 +386,8 @@ async function renderItemRows() {
             </div>
             <div class="md:col-span-2">
                 <label class="inline-flex items-center gap-2 text-sm">
-                    <input type="checkbox" name="item_rows[${index}][has_print_service]" class="row-print-check" data-item-id="${row.item_id}" ${row.has_print_service ? 'checked' : ''}>
+                    <input type="hidden" name="item_rows[${index}][has_print_service]" value="0">
+                    <input type="checkbox" name="item_rows[${index}][has_print_service]" value="1" class="row-print-check" data-item-id="${row.item_id}" ${row.has_print_service ? 'checked' : ''}>
                     Servicio de impresion en este equipo
                 </label>
             </div>
