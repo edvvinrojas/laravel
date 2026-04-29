@@ -31,7 +31,7 @@ class TiEquipmentController extends Controller
     public function create()
     {
         $users    = User::where('is_active', true)->orderBy('full_name')->get();
-        $licenses = TiLicense::where('is_active', true)->orderBy('software')->get();
+        $licenses = $this->assignableLicensesQuery()->orderBy('software')->get();
         $nextEquipmentCode = $this->previewNextEquipmentCode();
         return view('ti-equipment.create', compact('users', 'licenses', 'nextEquipmentCode'));
     }
@@ -75,13 +75,27 @@ class TiEquipmentController extends Controller
                 return back()->withInput()->withErrors(['codigo_interno' => 'Captura un código personalizado para el equipo.']);
             }
         }
-        $licenses = $data['licenses'] ?? [];
+        $licenses = collect($data['licenses'] ?? [])->map(fn ($id) => (int) $id)->unique()->values();
+        $assignableLicenses = $this->assignableLicensesQuery()
+            ->whereIn('id', $licenses)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->values();
+
+        if ($assignableLicenses->count() !== $licenses->count()) {
+            return back()->withInput()->withErrors([
+                'licenses' => 'Una o más licencias seleccionadas están vencidas o inactivas y no pueden asignarse.',
+            ]);
+        }
+
         $perifericos = $request->input('perifericos', []);
         unset($data['licenses'], $data['perifericos'], $data['codigo_mode']);
 
         $equipo = TiEquipment::create($data);
 
-        if ($licenses) $equipo->licenses()->sync($licenses);
+        if ($assignableLicenses->isNotEmpty()) {
+            $equipo->licenses()->sync($assignableLicenses->all());
+        }
 
         foreach ($perifericos as $p) {
             if (!empty($p['tipo'])) {
@@ -109,7 +123,7 @@ class TiEquipmentController extends Controller
     {
         $tiEquipment->load(['assignedUser', 'peripherals', 'licenses', 'creator']);
         $attachedIds    = $tiEquipment->licenses->pluck('id');
-        $availableLicenses = TiLicense::where('is_active', true)
+        $availableLicenses = $this->assignableLicensesQuery()
             ->whereNotIn('id', $attachedIds)
             ->orderBy('software')->get();
         return view('ti-equipment.show', compact('tiEquipment', 'availableLicenses'));
@@ -119,7 +133,7 @@ class TiEquipmentController extends Controller
     {
         $tiEquipment->load(['peripherals', 'licenses']);
         $users    = User::where('is_active', true)->orderBy('full_name')->get();
-        $licenses = TiLicense::where('is_active', true)->orderBy('software')->get();
+        $licenses = $this->assignableLicensesQuery()->orderBy('software')->get();
         $nextEquipmentCode = $this->previewNextEquipmentCode();
         return view('ti-equipment.edit', compact('tiEquipment', 'users', 'licenses', 'nextEquipmentCode'));
     }
@@ -157,11 +171,38 @@ class TiEquipmentController extends Controller
             unset($data['codigo_interno']);
         }
 
-        $licenses = $data['licenses'] ?? [];
+        $licenses = collect($data['licenses'] ?? [])->map(fn ($id) => (int) $id)->unique()->values();
+        $assignableLicenses = $this->assignableLicensesQuery()
+            ->whereIn('id', $licenses)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->values();
+
+        if ($assignableLicenses->count() !== $licenses->count()) {
+            return back()->withInput()->withErrors([
+                'licenses' => 'Una o más licencias seleccionadas están vencidas o inactivas y no pueden asignarse.',
+            ]);
+        }
+
+        $blockedCurrentIds = $tiEquipment->licenses()
+            ->where(function ($q) {
+                $q->where('is_active', false)
+                    ->orWhereDate('fecha_vencimiento', '<', now()->toDateString());
+            })
+            ->pluck('ti_licenses.id')
+            ->map(fn ($id) => (int) $id)
+            ->values();
+
+        $licensesToSync = $assignableLicenses
+            ->merge($blockedCurrentIds)
+            ->unique()
+            ->values()
+            ->all();
+
         unset($data['licenses'], $data['codigo_mode']);
 
         $tiEquipment->update($data);
-        $tiEquipment->licenses()->sync($licenses);
+        $tiEquipment->licenses()->sync($licensesToSync);
 
         return redirect()->route('ti-equipment.show', $tiEquipment)->with('success', 'Equipo actualizado.');
     }
@@ -189,6 +230,13 @@ class TiEquipmentController extends Controller
         $request->validate(['license_id' => 'required|exists:ti_licenses,id']);
 
         $license = TiLicense::findOrFail($request->license_id);
+
+        if (!$license->is_active || ($license->fecha_vencimiento && $license->fecha_vencimiento->lt(now()->startOfDay()))) {
+            return back()->withErrors([
+                'license_id' => "La licencia '{$license->software}' está vencida o inactiva y no puede vincularse.",
+            ]);
+        }
+
         $assigned = $license->equipment()->count();
 
         if ($assigned >= $license->cantidad_licencias) {
@@ -292,15 +340,12 @@ class TiEquipmentController extends Controller
 
     public function licenseStore(Request $request)
     {
-        $data = $request->validate([
-            'software'           => 'required|string|max:150',
-            'tipo'               => 'required|in:OFFICE,ANTIVIRUS,OS,OTRO',
-            'clave_licencia'     => 'nullable|string|max:255',
-            'proveedor'          => 'nullable|string|max:150',
-            'fecha_vencimiento'  => 'nullable|date',
-            'cantidad_licencias' => 'required|integer|min:1',
-            'notas'              => 'nullable|string',
-        ]);
+        $data = $request->validate(
+            $this->licenseValidationRules(),
+            $this->licenseValidationMessages(),
+            $this->licenseValidationAttributes()
+        );
+
         $data['created_by'] = Auth::id();
         TiLicense::create($data);
         return back()->with('success', 'Licencia registrada.');
@@ -313,16 +358,14 @@ class TiEquipmentController extends Controller
 
     public function licenseUpdate(Request $request, TiLicense $license)
     {
-        $data = $request->validate([
-            'software'           => 'required|string|max:150',
-            'tipo'               => 'required|in:OFFICE,ANTIVIRUS,OS,OTRO',
-            'clave_licencia'     => 'nullable|string|max:255',
-            'proveedor'          => 'nullable|string|max:150',
-            'fecha_vencimiento'  => 'nullable|date',
-            'cantidad_licencias' => 'required|integer|min:1',
-            'is_active'          => 'nullable|boolean',
-            'notas'              => 'nullable|string',
-        ]);
+        $rules = $this->licenseValidationRules();
+        $rules['is_active'] = 'nullable|boolean';
+
+        $data = $request->validate(
+            $rules,
+            $this->licenseValidationMessages(),
+            $this->licenseValidationAttributes()
+        );
 
         $assigned = $license->equipment()->count();
         if ($data['cantidad_licencias'] < $assigned) {
@@ -358,5 +401,57 @@ class TiEquipmentController extends Controller
     {
         $format = SkuFormat::where('category', 'TI_EQUIPO')->first();
         return $format ? $format->preview() : $this->nextCode();
+    }
+
+    private function assignableLicensesQuery()
+    {
+        return TiLicense::query()
+            ->where('is_active', true)
+            ->where(function ($q) {
+                $q->whereNull('fecha_vencimiento')
+                    ->orWhereDate('fecha_vencimiento', '>=', now()->toDateString());
+            });
+    }
+
+    private function licenseValidationRules(): array
+    {
+        return [
+            'software'           => 'required|string|max:150',
+            'tipo'               => 'required|in:OFFICE,ANTIVIRUS,OS,OTRO',
+            'clave_licencia'     => 'nullable|string|max:255',
+            'proveedor'          => 'nullable|string|max:150',
+            'fecha_vencimiento'  => 'nullable|date',
+            'cantidad_licencias' => 'required|integer|min:1',
+            'notas'              => 'nullable|string',
+        ];
+    }
+
+    private function licenseValidationMessages(): array
+    {
+        return [
+            'required'                  => 'El campo :attribute es obligatorio.',
+            'string'                    => 'El campo :attribute debe ser texto.',
+            'integer'                   => 'El campo :attribute debe ser un número entero.',
+            'max'                       => 'El campo :attribute no debe exceder :max caracteres.',
+            'min'                       => 'El campo :attribute debe ser al menos :min.',
+            'date'                      => 'El campo :attribute debe ser una fecha válida.',
+            'in'                        => 'El valor seleccionado para :attribute no es válido.',
+            'tipo.in'                   => 'El tipo seleccionado no es válido. Opciones permitidas: OFFICE, ANTIVIRUS, OS u OTRO.',
+            'cantidad_licencias.min'    => 'La cantidad de licencias debe ser al menos 1.',
+        ];
+    }
+
+    private function licenseValidationAttributes(): array
+    {
+        return [
+            'software'           => 'software',
+            'tipo'               => 'tipo',
+            'clave_licencia'     => 'clave de licencia',
+            'proveedor'          => 'proveedor',
+            'fecha_vencimiento'  => 'fecha de vencimiento',
+            'cantidad_licencias' => 'cantidad de licencias',
+            'notas'              => 'notas',
+            'is_active'          => 'estatus de la licencia',
+        ];
     }
 }

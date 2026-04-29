@@ -10,6 +10,9 @@
 
 <div id="newLicForm" class="hidden card mb-4">
     <div class="card-header font-semibold">Registrar licencia</div>
+    @php
+        $licenseTypes = ['OFFICE' => 'Office', 'ANTIVIRUS' => 'Antivirus', 'OS' => 'Sistema operativo', 'OTRO' => 'Otro'];
+    @endphp
     <form method="POST" action="{{ route('ti-equipment.licenses.store') }}">
     @csrf
     <div class="card-body grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -19,7 +22,12 @@
         </div>
         <div>
             <label class="form-label">Tipo *</label>
-            <input name="tipo" type="text" value="{{ old('tipo') }}" class="form-input" required placeholder="Ej: OFFICE, ANTIVIRUS, OS…">
+            <select name="tipo" class="form-select" required>
+                <option value="">Selecciona un tipo</option>
+                @foreach($licenseTypes as $value => $label)
+                    <option value="{{ $value }}" @selected(old('tipo') === $value)>{{ $label }}</option>
+                @endforeach
+            </select>
         </div>
         <div>
             <label class="form-label">Cantidad de licencias *</label>

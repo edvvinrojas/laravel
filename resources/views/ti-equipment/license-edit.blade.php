@@ -10,6 +10,9 @@
 <div class="max-w-3xl">
 <form method="POST" action="{{ route('ti-equipment.licenses.update', $license) }}">
 @csrf @method('PUT')
+@php
+    $licenseTypes = ['OFFICE' => 'Office', 'ANTIVIRUS' => 'Antivirus', 'OS' => 'Sistema operativo', 'OTRO' => 'Otro'];
+@endphp
 <div class="card">
     <div class="card-body grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
@@ -19,8 +22,8 @@
         <div>
             <label class="form-label">Tipo *</label>
             <select name="tipo" class="form-select" required>
-                @foreach(['OFFICE','ANTIVIRUS','OS','OTRO'] as $t)
-                    <option value="{{ $t }}" @selected(old('tipo', $license->tipo) === $t)>{{ $t }}</option>
+                @foreach($licenseTypes as $value => $label)
+                    <option value="{{ $value }}" @selected(old('tipo', $license->tipo) === $value)>{{ $label }}</option>
                 @endforeach
             </select>
         </div>
