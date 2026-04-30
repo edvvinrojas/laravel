@@ -36,6 +36,12 @@
             <tbody>
             @forelse($credits as $c)
             @php $sc=['SOLICITADO'=>'badge-yellow','AUTORIZADO'=>'badge-blue','LIQUIDADO'=>'badge-green','CANCELADO'=>'badge-red']; @endphp
+            @php
+                $u = auth()->user();
+                $canApprove = $u->hasFullRhAccess()
+                    || $u->department === 'rh'
+                    || $c->employee?->direct_manager_user_id === $u->id;
+            @endphp
             <tr>
                 <td class="font-medium">{{ $c->employee->nombre }}</td>
                 <td>${{ number_format($c->credit_amount,2) }}</td>
@@ -43,9 +49,19 @@
                 <td>${{ number_format($c->pending_amount,2) }}</td>
                 <td>{{ $c->pending_biweeks }}</td>
                 <td><span class="{{ $sc[$c->status] ?? 'badge-gray' }}">{{ $c->status }}</span></td>
-                <td class="flex gap-1">
+                <td class="flex gap-1 flex-wrap">
                     <a href="{{ route('credits.show',$c) }}" class="btn btn-sm btn-secondary">Ver</a>
                     <a href="{{ route('credits.edit',$c) }}" class="btn btn-sm btn-primary">Editar</a>
+                    @if($canApprove && $c->status === 'SOLICITADO')
+                    <form action="{{ route('credits.approve',$c) }}" method="POST">
+                        @csrf @method('PATCH')
+                        <button class="btn btn-sm btn-success">Autorizar</button>
+                    </form>
+                    <form action="{{ route('credits.reject',$c) }}" method="POST" onsubmit="return confirm('¿No autorizar esta solicitud?')">
+                        @csrf @method('PATCH')
+                        <button class="btn btn-sm btn-danger">No autorizar</button>
+                    </form>
+                    @endif
                 </td>
             </tr>
             @empty

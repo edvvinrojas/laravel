@@ -364,6 +364,10 @@ Route::middleware('auth')->group(function () {
         ->middlewareFor(['edit', 'update'], 'permission:empleados.edit')
         ->middlewareFor('destroy', 'permission:empleados.delete');
     Route::resource('credits', EmployeeCreditController::class)->middleware('permission:empleados.edit');
+    Route::patch('credits/{credit}/approve', [EmployeeCreditController::class, 'approve'])
+        ->name('credits.approve');
+    Route::patch('credits/{credit}/reject', [EmployeeCreditController::class, 'reject'])
+        ->name('credits.reject');
     Route::get('supervision/peticiones', [SupervisionController::class, 'index'])
         ->name('supervision.requests')
         ->middleware('role:administrador,gerencia');
