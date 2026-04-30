@@ -115,6 +115,22 @@
             </div>
         </a>
 
+        @if(auth()->user()->isGerencia())
+        <a href="{{ route('supervision.requests') }}"
+           class="card p-5 hover:shadow-md transition-shadow flex items-start gap-4 border border-blue-200 bg-blue-50/40">
+            <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M4 6h16M4 18h16"/>
+                </svg>
+            </div>
+            <div>
+                <p class="font-semibold text-gray-800">Supervisión de Peticiones</p>
+                <p class="text-xs text-gray-500 mt-0.5">Bandeja única para atender autorizaciones de jefatura</p>
+                <p class="text-sm font-bold text-blue-700 mt-2">Vacaciones, ausentismo y tickets</p>
+            </div>
+        </a>
+        @endif
+
     </div>
 
     {{-- Empleados recientes --}}

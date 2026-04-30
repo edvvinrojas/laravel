@@ -194,6 +194,7 @@
                 $canTaller = $user->hasPermission('taller.view');
 
                 $canRH = $user->hasPermission('recursos_humanos.view');
+                $canSupervision = $user->isGerencia();
 
                 $canUsuarios = $user->hasPermission('usuarios.view');
                 $canTiEquip = $user->hasPermission('ti.view');
@@ -321,9 +322,17 @@
             @endif
 
             {{-- RECURSOS HUMANOS --}}
-            @if ($canRH)
+            @if ($canRH || $canSupervision)
                 <div class="pt-3">
                     <p class="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">RH</p>
+                    @if ($canSupervision)
+                        <a href="{{ route('supervision.requests') }}" class="nav-link @activeRoute('supervision.*')">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 014-4h8m0 0l-3-3m3 3l-3 3M5 3v4m0 0v4m0-4h4m-4 0H1m4 8v4m0 0v4m0-4h4m-4 0H1" />
+                            </svg>
+                            Supervision de Peticiones
+                        </a>
+                    @endif
                     @if ($canRH)
                         <a href="{{ route('rh.index') }}" class="nav-link @activeRoute('rh.*') @activeRoute('employees.*') @activeRoute('payrolls.*') @activeRoute('vacations.*') @activeRoute('absences.*') @activeRoute('administrative-records.*') @activeRoute('credits.*')">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
