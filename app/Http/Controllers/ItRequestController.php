@@ -14,8 +14,10 @@ class ItRequestController extends Controller
         $user = auth()->user();
         $isTi = $user->rol === 'administrador' || $user->department === 'ti';
 
+        $mineOnly = $request->boolean('mine') || !$isTi;
+
         $query = ItRequest::with(['user', 'assignedUser'])
-            ->when(!$isTi, fn($q) => $q->where('user_id', $user->id))
+            ->when($mineOnly, fn($q) => $q->where('user_id', $user->id))
             ->when($request->status,   fn($q) => $q->where('status', $request->status))
             ->when($request->priority, fn($q) => $q->where('priority', $request->priority))
             ->when($request->category, fn($q) => $q->where('category', $request->category))
@@ -28,7 +30,7 @@ class ItRequestController extends Controller
             ->orderByDesc('created_at')
             ->paginate(20)->withQueryString();
 
-        return view('it-requests.index', compact('query', 'isTi'));
+        return view('it-requests.index', compact('query', 'isTi', 'mineOnly'));
     }
 
     public function create()

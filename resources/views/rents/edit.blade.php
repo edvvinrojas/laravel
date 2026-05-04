@@ -41,8 +41,10 @@
         </div>
 
         <div>
-            <label class="form-label">Renta mensual *</label>
-            <input name="rent" type="number" step="0.01" min="0" value="{{ old('rent',$rent->rent) }}" class="form-input" required>
+            <label class="form-label">Renta mensual total</label>
+            <input id="totalRentDisplay" type="text" class="form-input bg-gray-50 font-bold text-blue-700" readonly value="$0.00">
+            <input type="hidden" name="rent" id="totalRentHidden" value="0">
+            <p class="text-xs text-gray-400 mt-1">Se calcula automáticamente como suma de las rentas por equipo</p>
         </div>
 
         <div>
@@ -89,6 +91,10 @@
             <div>
                 <label class="form-label">Costo exceso Color</label>
                 <input name="color_cost_per_excess" type="number" step="0.0001" value="{{ old('color_cost_per_excess',$rent->color_cost_per_excess) }}" class="form-input">
+            </div>
+            <div class="col-span-2">
+                <label class="form-label">Notas impresión</label>
+                <textarea name="print_notes" class="form-input" rows="2">{{ old('print_notes', $rent->print_notes) }}</textarea>
             </div>
         </div>
 
@@ -172,6 +178,7 @@
                 'item_id' => $item->id,
                 'branch_id' => $item->pivot->branch_id ?? $rent->branch_id,
                 'area_id' => $item->pivot->area_id ?? $rent->area_id,
+                'rent' => $item->pivot->rent ?? 0,
                 'contador_inicial_bn' => $item->pivot->contador_inicial_bn ?? $rent->contador_inicial_bn,
                 'contador_inicial_color' => $item->pivot->contador_inicial_color ?? $rent->contador_inicial_color,
                 'has_print_service' => $item->pivot->has_print_service ?? $rent->has_print_service,
@@ -304,6 +311,7 @@ initialRows.forEach(row => {
         item_id: String(row.item_id),
         branch_id: row.branch_id ? String(row.branch_id) : '',
         area_id: row.area_id ? String(row.area_id) : '',
+        rent: row.rent ? String(row.rent) : '0',
         contador_inicial_bn: row.contador_inicial_bn ? String(row.contador_inicial_bn) : '0',
         contador_inicial_color: row.contador_inicial_color ? String(row.contador_inicial_color) : '0',
         has_print_service: !!row.has_print_service,
@@ -322,6 +330,17 @@ function updateEquipmentCardSelection() {
         card.classList.toggle('ring-1', active);
         card.classList.toggle('ring-blue-200', active);
     });
+}
+
+function updateTotalRent() {
+    let total = 0;
+    selectedRows.forEach(row => {
+        total += parseFloat(row.rent || '0') || 0;
+    });
+    const display = document.getElementById('totalRentDisplay');
+    const hidden = document.getElementById('totalRentHidden');
+    if (display) display.value = '$' + total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    if (hidden) hidden.value = total.toFixed(2);
 }
 
 function branchOptionsHtml(branches, selectedValue = '') {
@@ -379,6 +398,10 @@ async function renderItemRows() {
             <div class="md:col-span-2">
                 <label class="form-label text-xs">Equipo</label>
                 <div class="text-sm font-medium text-gray-800">${label}</div>
+            </div>
+            <div>
+                <label class="form-label text-xs">Renta mensual *</label>
+                <input type="number" step="0.01" min="0" name="item_rows[${index}][rent]" class="form-input row-rent" data-item-id="${row.item_id}" value="${row.rent || '0'}" required>
             </div>
             <div>
                 <label class="form-label text-xs">Sucursal *</label>
@@ -530,12 +553,15 @@ async function renderItemRows() {
         });
     });
 
-    itemRowsContainer.querySelectorAll('.row-color-cost').forEach((input) => {
+    itemRowsContainer.querySelectorAll('.row-rent').forEach((input) => {
         input.addEventListener('input', () => {
             const state = selectedRows.get(input.dataset.itemId);
-            state.color_cost_per_excess = input.value || '0';
+            state.rent = input.value || '0';
+            updateTotalRent();
         });
     });
+
+    updateTotalRent();
 }
 
 equipmentCards.forEach(card => {
@@ -550,6 +576,7 @@ equipmentCards.forEach(card => {
                 item_id: itemId,
                 branch_id: '',
                 area_id: '',
+                rent: '',
                 contador_inicial_bn: '0',
                 contador_inicial_color: '0',
                 has_print_service: false,

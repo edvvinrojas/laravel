@@ -40,7 +40,6 @@ use App\Http\Controllers\ClientPortalController;
 use App\Http\Controllers\ItRequestController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SearchController;
-use App\Http\Controllers\SkuController;
 use App\Http\Controllers\EmployeeCreditController;
 use App\Http\Controllers\SupervisionController;
 
@@ -119,6 +118,8 @@ Route::middleware('auth')->group(function () {
     Route::get('api/branches/{branch}/areas', fn(\App\Models\Branch $branch) =>
         $branch->areas()->select('id','name')->orderBy('name')->get()
     )->name('api.branch.areas');
+    Route::get('api/equipment/next-sku-preview', [EquipmentController::class, 'apiNextSkuPreview'])
+        ->name('equipment.api.next-sku-preview');
     Route::get('api/branches/{branch}/service-locations', function(\App\Models\Branch $branch) {
         $rentLocations = \App\Models\Rent::query()
             ->whereHas('items', fn($q) => $q->where('rent_item.branch_id', $branch->id))
@@ -257,13 +258,6 @@ Route::middleware('auth')->group(function () {
 
     // Búsqueda global
     Route::get('api/search', [SearchController::class, 'search'])->name('search');
-
-    // Configuración de SKU (TI)
-    Route::get('sku', [SkuController::class, 'index'])->name('sku.index');
-    Route::post('sku', [SkuController::class, 'store'])->name('sku.store');
-    Route::put('sku/{skuFormat}', [SkuController::class, 'update'])->name('sku.update');
-    Route::post('sku/{skuFormat}/reset', [SkuController::class, 'reset'])->name('sku.reset');
-    Route::delete('sku/{sku}', [SkuController::class, 'destroy'])->name('sku.destroy');
 
     // Contadores de impresión
     Route::resource('print-counters', PrintCounterController::class);

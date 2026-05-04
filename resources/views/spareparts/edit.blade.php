@@ -51,15 +51,17 @@
 
         <div>
             <label class="form-label">Marca</label>
-            <select name="brand" class="form-select">
-                <option value="">— Sin marca —</option>
+            <select name="brand" id="brandSelect" class="form-select">
+                <option value="">Sin marca</option>
                 @foreach($brands as $brand)
                     <option value="{{ $brand }}" @selected(old('brand', $sparepart->brand)===$brand)>{{ $brand }}</option>
                 @endforeach
-                <option value="" disabled>───</option>
-                <option value="__add_new__">+ Agregar nueva marca…</option>
+                <option value="__add_new__" @selected(old('brand_new'))>＋ Agregar nueva marca...</option>
             </select>
-            <input type="text" id="newBrandInput" placeholder="Nueva marca" class="form-input mt-2 hidden">
+            <div id="brandNewWrap" class="{{ old('brand_new') ? '' : 'hidden' }} mt-2">
+                <input type="text" name="brand_new" id="brand_new" value="{{ old('brand_new') }}" placeholder="Escribe el nombre de la marca" class="form-input">
+                @error('brand_new')<p class="form-error">{{ $message }}</p>@enderror
+            </div>
         </div>
 
         <div>
@@ -77,6 +79,25 @@
             <input name="equipment" value="{{ old('equipment', $sparepart->equipment) }}" class="form-input">
         </div>
 
+        {{-- Precio y factura --}}
+        <div>
+            <label class="form-label">Precio unitario</label>
+            <input name="unit_price" type="number" step="0.01" min="0" value="{{ old('unit_price', $sparepart->unit_price) }}" class="form-input" placeholder="0.00">
+            @error('unit_price')<p class="form-error">{{ $message }}</p>@enderror
+        </div>
+
+        <div>
+            <label class="form-label">Precio total</label>
+            <input name="total_price" type="number" step="0.01" min="0" value="{{ old('total_price', $sparepart->total_price) }}" class="form-input" placeholder="0.00">
+            @error('total_price')<p class="form-error">{{ $message }}</p>@enderror
+        </div>
+
+        <div class="col-span-2">
+            <label class="form-label">No. de factura</label>
+            <input name="invoice_number" value="{{ old('invoice_number', $sparepart->invoice_number) }}" class="form-input" placeholder="Ej: FAC-2026-0001">
+            @error('invoice_number')<p class="form-error">{{ $message }}</p>@enderror
+        </div>
+
         <div class="col-span-2">
             <label class="form-label">Descripción</label>
             <textarea name="description" class="form-input" rows="3">{{ old('description', $sparepart->description) }}</textarea>
@@ -92,27 +113,21 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const brandSelect = document.querySelector('select[name="brand"]');
-    const newBrandInput = document.getElementById('newBrandInput');
-
-    // Manejar agregar nueva marca
-    brandSelect.addEventListener('change', function() {
-        if (this.value === '__add_new__') {
-            newBrandInput.classList.remove('hidden');
-            newBrandInput.focus();
-        } else {
-            newBrandInput.classList.add('hidden');
-            newBrandInput.value = '';
-        }
-    });
-
-    // Interceptar el submit para usar la nueva marca si se capturó
-    document.querySelector('form').addEventListener('submit', function(e) {
-        if (brandSelect.value === '__add_new__' && newBrandInput.value.trim()) {
-            brandSelect.value = newBrandInput.value.trim();
-        }
-    });
+document.addEventListener('DOMContentLoaded', function () {
+    const brandSelect = document.getElementById('brandSelect');
+    const brandNewWrap = document.getElementById('brandNewWrap');
+    const brandNewInput = document.getElementById('brand_new');
+    if (brandSelect && brandNewWrap) {
+        brandSelect.addEventListener('change', function () {
+            if (this.value === '__add_new__') {
+                brandNewWrap.classList.remove('hidden');
+                brandNewInput.focus();
+            } else {
+                brandNewWrap.classList.add('hidden');
+                brandNewInput.value = '';
+            }
+        });
+    }
 });
 </script>
 

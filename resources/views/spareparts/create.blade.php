@@ -22,10 +22,24 @@
         <!-- Código de pieza con preview de consecutivo -->
         <div>
             <label class="form-label">Código de pieza</label>
-            <input name="code" id="codeField" value="{{ old('code') }}" class="form-input"
-                placeholder="Ej: DV-512C">
-            <p class="text-xs text-gray-400 mt-1">Si capturas un código base, al replicar se generan DV-512C-01, DV-512C-02, …</p>
-            <div id="nextSequential" class="mt-3 text-xs">
+            <div class="flex gap-2">
+                <input name="code" id="codeField" value="{{ old('code') }}" class="form-input flex-1"
+                    placeholder="Ej: DV-512C" list="code_prefixes_list" autocomplete="off">
+                @if(count($codePrefixes) > 0)
+                <button type="button" id="btnAutoCode"
+                    class="btn-secondary btn-sm whitespace-nowrap"
+                    title="Generar código automático">
+                    ↻ Auto
+                </button>
+                @endif
+            </div>
+            <datalist id="code_prefixes_list">
+                @foreach($codePrefixes as $prefix)
+                    <option value="{{ $prefix }}"></option>
+                @endforeach
+            </datalist>
+            <p class="text-xs text-gray-400 mt-1">Prefijos existentes: {{ implode(', ', $codePrefixes) ?: 'ninguno aún' }}</p>
+            <div id="nextSequential" class="mt-1 text-xs">
                 <span class="text-gray-600">Siguiente: <span class="font-semibold text-blue-600">—</span></span>
             </div>
             @error('code')<p class="form-error">{{ $message }}</p>@enderror
@@ -53,15 +67,17 @@
         <!-- Marca con selector -->
         <div>
             <label class="form-label">Marca</label>
-            <select name="brand" class="form-select">
-                <option value="">— Sin marca —</option>
+            <select name="brand" id="brandSelect" class="form-select">
+                <option value="">Sin marca</option>
                 @foreach($brands as $brand)
                     <option value="{{ $brand }}" @selected(old('brand')===$brand)>{{ $brand }}</option>
                 @endforeach
-                <option value="" disabled>───</option>
-                <option value="__add_new__">+ Agregar nueva marca…</option>
+                <option value="__add_new__" @selected(old('brand_new'))>＋ Agregar nueva marca...</option>
             </select>
-            <input type="text" id="newBrandInput" placeholder="Nueva marca" class="form-input mt-2 hidden">
+            <div id="brandNewWrap" class="{{ old('brand_new') ? '' : 'hidden' }} mt-2">
+                <input type="text" name="brand_new" id="brand_new" value="{{ old('brand_new') }}" placeholder="Escribe el nombre de la marca" class="form-input">
+                @error('brand_new')<p class="form-error">{{ $message }}</p>@enderror
+            </div>
         </div>
 
         <div class="col-span-2">
@@ -80,6 +96,25 @@
             <input name="equipment" value="{{ old('equipment') }}" class="form-input">
         </div>
 
+        {{-- Precio y factura --}}
+        <div>
+            <label class="form-label">Precio unitario</label>
+            <input name="unit_price" type="number" step="0.01" min="0" value="{{ old('unit_price') }}" class="form-input" placeholder="0.00">
+            @error('unit_price')<p class="form-error">{{ $message }}</p>@enderror
+        </div>
+
+        <div>
+            <label class="form-label">Precio total</label>
+            <input name="total_price" type="number" step="0.01" min="0" value="{{ old('total_price') }}" class="form-input" placeholder="0.00">
+            @error('total_price')<p class="form-error">{{ $message }}</p>@enderror
+        </div>
+
+        <div class="col-span-2">
+            <label class="form-label">No. de factura</label>
+            <input name="invoice_number" value="{{ old('invoice_number') }}" class="form-input" placeholder="Ej: FAC-2026-0001">
+            @error('invoice_number')<p class="form-error">{{ $message }}</p>@enderror
+        </div>
+
         <div class="col-span-2">
             <label class="form-label">Descripción</label>
             <textarea name="description" class="form-input" rows="3">{{ old('description') }}</textarea>
@@ -95,52 +130,72 @@
 </div>
 
 <script>
+const codePrefixes = @json($codePrefixes);
+
 document.addEventListener('DOMContentLoaded', function() {
     const codeField = document.getElementById('codeField');
     const nextSequentialDiv = document.getElementById('nextSequential');
-    const brandSelect = document.querySelector('select[name="brand"]');
-    const newBrandInput = document.getElementById('newBrandInput');
+    const btnAuto = document.getElementById('btnAutoCode');
+    const apiUrl = '{{ route('spareparts.api.next-sequential') }}';
 
-    // Actualizar preview del siguiente consecutivo
-    function updateNextSequential() {
+    function updateNextSequential(callback) {
         const code = codeField.value.trim();
         if (!code) {
             nextSequentialDiv.innerHTML = '<span class="text-gray-600">Siguiente: <span class="font-semibold text-blue-600">—</span></span>';
+            if (callback) callback(null);
             return;
         }
-
-        // Enviar petición AJAX para obtener el siguiente consecutivo
-        fetch(`{{ route('spareparts.api.next-sequential') }}?code=${encodeURIComponent(code)}`)
+        fetch(`${apiUrl}?code=${encodeURIComponent(code)}`)
             .then(r => r.json())
             .then(data => {
                 const next = data.next || '—';
                 nextSequentialDiv.innerHTML = `<span class="text-gray-600">Siguiente: <span class="font-semibold text-blue-600">${next}</span></span>`;
+                if (callback) callback(data.next || null);
             })
             .catch(() => {
                 nextSequentialDiv.innerHTML = '<span class="text-gray-600">Siguiente: <span class="font-semibold text-blue-600">—</span></span>';
+                if (callback) callback(null);
             });
     }
 
-    codeField.addEventListener('input', updateNextSequential);
-    updateNextSequential();
+    // Al cargar: si hay prefijos y el campo está vacío, auto-rellenar con el primero
+    if (codePrefixes.length > 0 && !codeField.value.trim()) {
+        codeField.value = codePrefixes[0];
+        updateNextSequential();
+    }
 
-    // Manejar agregar nueva marca
-    brandSelect.addEventListener('change', function() {
-        if (this.value === '__add_new__') {
-            newBrandInput.classList.remove('hidden');
-            newBrandInput.focus();
-        } else {
-            newBrandInput.classList.add('hidden');
-            newBrandInput.value = '';
-        }
-    });
+    codeField.addEventListener('input', () => updateNextSequential());
 
-    // Interceptar el submit para usar la nueva marca si se capturó
-    document.querySelector('form').addEventListener('submit', function(e) {
-        if (brandSelect.value === '__add_new__' && newBrandInput.value.trim()) {
-            brandSelect.value = newBrandInput.value.trim();
-        }
-    });
+    // Botón Auto: pide el siguiente código completo y lo mete en el campo
+    if (btnAuto) {
+        btnAuto.addEventListener('click', function() {
+            const prefix = codeField.value.trim() || codePrefixes[0] || '';
+            if (!prefix) return;
+            codeField.value = prefix;
+            updateNextSequential(function(next) {
+                if (next) {
+                    codeField.value = next;
+                    updateNextSequential();
+                }
+            });
+        });
+    }
+
+    // Mostrar/ocultar input nueva marca según selección
+    const brandSelect = document.getElementById('brandSelect');
+    const brandNewWrap = document.getElementById('brandNewWrap');
+    const brandNewInput = document.getElementById('brand_new');
+    if (brandSelect && brandNewWrap) {
+        brandSelect.addEventListener('change', function () {
+            if (this.value === '__add_new__') {
+                brandNewWrap.classList.remove('hidden');
+                brandNewInput.focus();
+            } else {
+                brandNewWrap.classList.add('hidden');
+                brandNewInput.value = '';
+            }
+        });
+    }
 });
 </script>
 @endsection

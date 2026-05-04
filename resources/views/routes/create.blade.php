@@ -8,7 +8,17 @@
 @csrf
 <div class="card">
     <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div><label class="form-label">Código de ruta</label><input value="{{ $nextCode }}" class="form-input bg-gray-50" readonly><p class="text-xs text-gray-400 mt-1">Se genera automáticamente</p></div>
+        <div>
+            <label class="form-label">Código de ruta</label>
+            <input name="route_code" value="{{ old('route_code') }}" class="form-input font-mono" placeholder="Vacío = usar {{ $nextCode }}" list="route_codes_list">
+            <datalist id="route_codes_list">
+                @foreach($routeCodes as $rc)
+                    <option value="{{ $rc }}"></option>
+                @endforeach
+            </datalist>
+            <p class="text-xs text-gray-400 mt-1">Siguiente sugerido: <span class="font-mono font-semibold text-blue-600">{{ $nextCode }}</span></p>
+            @error('route_code')<p class="form-error">{{ $message }}</p>@enderror
+        </div>
         <div><label class="form-label">Chofer *</label><input name="driver_name" value="{{ old('driver_name') }}" class="form-input" required></div>
         <div><label class="form-label">Vehículo</label><input name="vehicle" value="{{ old('vehicle') }}" class="form-input"></div>
         <div><label class="form-label">Estado *</label>

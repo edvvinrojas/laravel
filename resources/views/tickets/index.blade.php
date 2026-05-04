@@ -27,7 +27,13 @@
             </select>
             <button class="btn-secondary">Buscar</button>
         </form>
-        <a href="{{ route('tickets.create') }}" class="btn-primary">+ Levantar ticket</a>
+        <div class="flex gap-2">
+            <a href="{{ route('tickets.index', array_merge(request()->except('page'), ['mine' => 1])) }}" class="btn-secondary">Mis tickets</a>
+            @if(!empty($canSeeAllTickets))
+                <a href="{{ route('tickets.index', array_merge(request()->except(['page', 'mine']), ['mine' => 0])) }}" class="btn-secondary">Ver todos</a>
+            @endif
+            <a href="{{ route('tickets.create') }}" class="btn-primary">+ Levantar ticket</a>
+        </div>
     </div>
     <div class="table-wrap rounded-none border-0">
         <table class="table">

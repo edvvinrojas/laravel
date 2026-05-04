@@ -16,6 +16,9 @@
         <div><p class="text-gray-500">Proveedor</p><p>{{ $sparepart->supplier_name ?? '—' }}</p></div>
         <div><p class="text-gray-500">Creado</p><p>{{ $sparepart->created_at?->format('d/m/Y') ?? '—' }}</p></div>
         <div class="col-span-2"><p class="text-gray-500">Equipo compatible</p><p>{{ $sparepart->equipment ?? '—' }}</p></div>
+        <div><p class="text-gray-500">Precio unitario</p><p>{{ $sparepart->unit_price !== null ? '$'.number_format($sparepart->unit_price,2) : '—' }}</p></div>
+        <div><p class="text-gray-500">Precio total</p><p>{{ $sparepart->total_price !== null ? '$'.number_format($sparepart->total_price,2) : '—' }}</p></div>
+        <div class="col-span-2"><p class="text-gray-500">No. de factura</p><p class="font-mono">{{ $sparepart->invoice_number ?? '—' }}</p></div>
         @if($sparepart->description)
         <div class="col-span-2"><p class="text-gray-500">Descripción</p><p>{{ $sparepart->description }}</p></div>
         @endif

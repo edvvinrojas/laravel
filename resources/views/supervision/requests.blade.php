@@ -37,6 +37,28 @@
 
     <div class="card">
         <div class="card-header">
+            <h3 class="text-sm font-semibold text-gray-700">Empleados a tu cargo</h3>
+            <span class="badge badge-blue">{{ $managedEmployees->count() }}</span>
+        </div>
+        <div class="card-body">
+            <p class="mb-3 text-sm text-gray-500">Solo puedes atender solicitudes y tickets de los empleados listados aqui.</p>
+            @if($managedEmployees->isEmpty())
+                <p class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">No tienes empleados asignados actualmente. Contacta a RH para asignaciones.</p>
+            @else
+                <div class="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
+                    @foreach($managedEmployees as $employee)
+                        <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                            <p class="text-sm font-semibold text-gray-800">{{ $employee->nombre }}</p>
+                            <p class="text-xs text-gray-500">{{ $employee->puesto ?: 'Sin puesto' }} · {{ strtoupper($employee->departamento ?: 'SIN DEPTO') }}</p>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
             <h3 class="text-sm font-semibold text-gray-700">Solicitudes de vacaciones por autorizar</h3>
             <a href="{{ route('vacations.index') }}" class="btn-secondary btn-sm">Ver modulo completo</a>
         </div>

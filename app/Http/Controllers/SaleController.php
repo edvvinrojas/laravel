@@ -45,7 +45,8 @@ class SaleController extends Controller
             ->orderByRaw("CASE WHEN location_status = 'BODEGA' THEN 0 ELSE 1 END")
             ->orderBy('model')
             ->get();
-        return view('sales.create', compact('clients', 'items'));
+        $nextInvoice = $this->generateInvoiceNumber();
+        return view('sales.create', compact('clients', 'items', 'nextInvoice'));
     }
 
     public function store(Request $request)

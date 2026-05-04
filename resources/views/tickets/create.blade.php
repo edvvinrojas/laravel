@@ -9,12 +9,23 @@
 <div class="card">
     <div class="card-header">
         <div>
-            <p class="text-xs text-gray-500">ID asignado</p>
+            <p class="text-xs text-gray-500">Siguiente sugerido</p>
             <h3 class="font-semibold text-lg text-blue-700">{{ $nextCode }}</h3>
         </div>
         <span class="text-xs text-gray-400">Levantado el {{ now()->format('d/m/Y H:i') }}</span>
     </div>
     <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="md:col-span-2">
+            <label class="form-label">Código de ticket</label>
+            <input name="ticket_code" value="{{ old('ticket_code') }}" class="form-input font-mono" placeholder="Vacío = usar {{ $nextCode }}" list="ticket_codes_list">
+            <datalist id="ticket_codes_list">
+                @foreach($ticketCodes as $tc)
+                    <option value="{{ $tc }}"></option>
+                @endforeach
+            </datalist>
+            <p class="text-xs text-gray-400 mt-1">Puedes escribir un código manual o dejarlo vacío para usar el sugerido.</p>
+            @error('ticket_code')<p class="form-error">{{ $message }}</p>@enderror
+        </div>
         <div>
             <label class="form-label">Cliente *</label>
             <select name="client_id" id="clientSel" class="form-select" required>

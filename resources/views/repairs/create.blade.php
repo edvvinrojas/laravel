@@ -10,16 +10,24 @@
     <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="col-span-2">
             <label class="form-label">Equipo *</label>
-            <select name="item_id" class="form-select" required>
+            <select name="item_id" id="itemSelect" class="form-select" required>
                 <option value="">Seleccionar…</option>
                 @foreach($items as $i)
-                <option value="{{ $i->id }}" @selected(old('item_id')==$i->id)>{{ $i->brand->name ?? '' }} {{ $i->model }} — {{ $i->serie }}</option>
+                <option
+                    value="{{ $i->id }}"
+                    data-client="{{ $i->assigned_client_info['client'] ?? '' }}"
+                    data-source="{{ $i->assigned_client_info['source'] ?? '' }}"
+                    data-branch="{{ $i->assigned_client_info['branch'] ?? '' }}"
+                    data-area="{{ $i->assigned_client_info['area'] ?? '' }}"
+                    data-reference="{{ $i->assigned_client_info['reference'] ?? '' }}"
+                    @selected(old('item_id')==$i->id)
+                >{{ $i->brand->name ?? '' }} {{ $i->model }} — {{ $i->serie }}</option>
                 @endforeach
             </select>
         </div>
         <div>
             <label class="form-label">Procedencia *</label>
-            <input name="procedencia" value="{{ old('procedencia') }}" class="form-input" required
+            <input name="procedencia" id="procedenciaInput" value="{{ old('procedencia') }}" class="form-input" required
                 placeholder="Ej: Cliente ABC, Bodega central, Comprado por empleado…">
             <p class="text-xs text-gray-400 mt-1">Indica de dónde viene el equipo</p>
         </div>
@@ -72,4 +80,50 @@
 </div>
 </form>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const itemSelect = document.getElementById('itemSelect');
+    const procedenciaInput = document.getElementById('procedenciaInput');
+    let lastAutoValue = '';
+
+    function updateAssignedClientInfo() {
+        const option = itemSelect.options[itemSelect.selectedIndex];
+        const client = option?.dataset.client?.trim();
+        const currentValue = procedenciaInput.value.trim();
+
+        if (!client) {
+            if (currentValue === lastAutoValue) {
+                procedenciaInput.value = '';
+            }
+            lastAutoValue = '';
+            return;
+        }
+
+        const parts = [];
+        parts.push(client);
+        if (option.dataset.source && option.dataset.reference) {
+            parts.push(option.dataset.source + ' ' + option.dataset.reference);
+        } else if (option.dataset.source) {
+            parts.push(option.dataset.source);
+        } else if (option.dataset.reference) {
+            parts.push(option.dataset.reference);
+        }
+        if (option.dataset.branch) {
+            parts.push(option.dataset.branch);
+        }
+        if (option.dataset.area) {
+            parts.push(option.dataset.area);
+        }
+
+        const autoValue = parts.join(' - ');
+        if (currentValue === '' || currentValue === lastAutoValue) {
+            procedenciaInput.value = autoValue;
+        }
+        lastAutoValue = autoValue;
+    }
+
+    itemSelect.addEventListener('change', updateAssignedClientInfo);
+    updateAssignedClientInfo();
+});
+</script>
 @endsection

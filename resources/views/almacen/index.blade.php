@@ -115,7 +115,7 @@
             <div class="card-body p-0">
                 <div class="table-wrap">
                     <table class="table">
-                        <thead><tr><th>Código</th><th>Nombre</th><th>Color</th><th>Marca</th><th>Equipo compatible</th><th>Proveedor</th><th class="text-right">Acciones</th></tr></thead>
+                        <thead><tr><th>Código</th><th>Nombre</th><th>Color</th><th>Marca</th><th>Equipo compatible</th><th>Proveedor</th><th class="text-right">Precio unit.</th><th class="text-right">Precio total</th><th>Factura</th><th class="text-right">Acciones</th></tr></thead>
                         <tbody>
                             @forelse($spareparts as $sp)
                             @php
@@ -142,6 +142,9 @@
                                 <td>{{ $sp->brand_name ?? '—' }}</td>
                                 <td class="text-sm text-gray-500">{{ $sp->equipment ?? '—' }}</td>
                                 <td class="text-sm text-gray-500">{{ $sp->supplier_name ?? '—' }}</td>
+                                <td class="text-right text-sm font-mono">{{ $sp->unit_price !== null ? '$'.number_format($sp->unit_price,2) : '—' }}</td>
+                                <td class="text-right text-sm font-mono">{{ $sp->total_price !== null ? '$'.number_format($sp->total_price,2) : '—' }}</td>
+                                <td class="font-mono text-xs text-gray-500">{{ $sp->invoice_number ?? '—' }}</td>
                                 <td class="text-right">
                                     <div class="flex items-center justify-end gap-1">
                                         <a href="{{ route('spareparts.show', $sp) }}" class="btn-secondary btn-sm">Ver</a>
@@ -154,7 +157,7 @@
                                 </td>
                             </tr>
                             @empty
-                            <tr><td colspan="7" class="text-center text-gray-400 py-10">No hay refacciones.</td></tr>
+                            <tr><td colspan="10" class="text-center text-gray-400 py-10">No hay refacciones.</td></tr>
                             @endforelse
                         </tbody>
                     </table>

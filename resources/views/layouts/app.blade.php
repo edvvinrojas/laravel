@@ -156,7 +156,7 @@
 
         {{-- Logo --}}
         <div class="flex items-center justify-center border-b border-gray-700 px-4 py-4">
-            <img src="{{ asset('img/logo.svg') }}" alt="CopyMart" class="h-11 w-auto rounded-md bg-white p-1">
+            <img src="{{ asset('img/logo.svg') }}" alt="CopyMart" class="h-11 w-auto rounded-md  p-1">
         </div>
 
         {{-- Nav --}}
@@ -198,7 +198,6 @@
 
                 $canUsuarios = $user->hasPermission('usuarios.view');
                 $canTiEquip = $user->hasPermission('ti.view');
-                $canSku = $user->hasPermission('configuracion.view') || $user->hasPermission('migraciones.view');
                 $canMesaAyuda = $user->hasPermission('ti.view');
                 $canAuditoria = $user->hasPermission('auditoria.view');
             @endphp
@@ -322,17 +321,9 @@
             @endif
 
             {{-- RECURSOS HUMANOS --}}
-            @if ($canRH || $canSupervision)
+            @if ($canRH)
                 <div class="pt-3">
                     <p class="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">RH</p>
-                    @if ($canSupervision)
-                        <a href="{{ route('supervision.requests') }}" class="nav-link @activeRoute('supervision.*')">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 014-4h8m0 0l-3-3m3 3l-3 3M5 3v4m0 0v4m0-4h4m-4 0H1m4 8v4m0 0v4m0-4h4m-4 0H1" />
-                            </svg>
-                            Supervision de Peticiones
-                        </a>
-                    @endif
                     @if ($canRH)
                         <a href="{{ route('rh.index') }}" class="nav-link @activeRoute('rh.*') @activeRoute('employees.*') @activeRoute('payrolls.*') @activeRoute('vacations.*') @activeRoute('absences.*') @activeRoute('administrative-records.*') @activeRoute('credits.*')">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -345,7 +336,7 @@
             @endif
 
             {{-- TI --}}
-            @if ($canUsuarios || $canTiEquip || $canSku || $canMesaAyuda || $canAuditoria)
+            @if ($canUsuarios || $canTiEquip || $canMesaAyuda || $canAuditoria)
                 <div class="pt-3">
                     <p class="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">TI</p>
                     @if ($canUsuarios)
@@ -364,14 +355,6 @@
                             Inventario TI
                         </a>
                     @endif
-                    @if ($canSku)
-                        <a href="{{ route('sku.index') }}" class="nav-link @activeRoute('sku.*')">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
-                            </svg>
-                            Catálogo SKU
-                        </a>
-                    @endif
                     @if ($canMesaAyuda)
                         <a href="{{ route('it-requests.index') }}" class="nav-link @activeRoute('it-requests.*')">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -388,6 +371,19 @@
                             Auditoría
                         </a>
                     @endif
+                </div>
+            @endif
+
+            {{-- SUPERVISION --}}
+            @if ($canSupervision)
+                <div class="pt-3">
+                    <p class="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">Supervision</p>
+                    <a href="{{ route('supervision.requests') }}" class="nav-link @activeRoute('supervision.*')">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 014-4h8m0 0l-3-3m3 3l-3 3M5 3v4m0 0v4m0-4h4m-4 0H1m4 8v4m0 0v4m0-4h4m-4 0H1" />
+                        </svg>
+                        Supervision de Peticiones
+                    </a>
                 </div>
             @endif
 

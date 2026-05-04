@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Absence;
+use App\Models\Employee;
 use App\Models\Ticket;
 use App\Models\Vacation;
 use Illuminate\Http\Request;
@@ -16,29 +17,26 @@ class SupervisionController extends Controller
         $isAdmin = $user->rol === 'administrador';
         $search = trim((string) $request->input('search', ''));
 
+        $managedEmployees = $isAdmin
+            ? Employee::query()->where('is_active', '=', true)->orderBy('nombre', 'asc')->get()
+            : Employee::query()->where('direct_manager_user_id', '=', $user->id)->where('is_active', '=', true)->orderBy('nombre', 'asc')->get();
+
+        $managedEmployeeIds = $managedEmployees->pluck('id')->filter()->values();
+        $managedUserIds = $managedEmployees->pluck('user_id')->filter()->values();
+
         $vacationsQuery = Vacation::query()
             ->with(['employee.user'])
             ->where('status', 'PENDIENTE')
             ->when($search !== '', fn($q) => $q->whereHas('employee', fn($e) => $e->where('nombre', 'like', "%{$search}%")));
 
-        if (!$isAdmin) {
-            $vacationsQuery->whereHas('employee', function ($q) use ($user) {
-                $q->where('direct_manager_user_id', $user->id)
-                    ->orWhereHas('user', fn($uq) => $uq->where('department', $user->department));
-            });
-        }
+        $vacationsQuery->whereIn('employee_id', $managedEmployeeIds);
 
         $absencesQuery = Absence::query()
             ->with(['employee.user'])
             ->where('status', 'PENDIENTE')
             ->when($search !== '', fn($q) => $q->whereHas('employee', fn($e) => $e->where('nombre', 'like', "%{$search}%")));
 
-        if (!$isAdmin) {
-            $absencesQuery->whereHas('employee', function ($q) use ($user) {
-                $q->where('direct_manager_user_id', $user->id)
-                    ->orWhereHas('user', fn($uq) => $uq->where('department', $user->department));
-            });
-        }
+        $absencesQuery->whereIn('employee_id', $managedEmployeeIds);
 
         $ticketsQuery = Ticket::query()
             ->with(['client', 'creator'])
@@ -49,9 +47,7 @@ class SupervisionController extends Controller
                     ->orWhereHas('client', fn($c) => $c->where('name', 'like', "%{$search}%"));
             }));
 
-        if (!$isAdmin) {
-            $ticketsQuery->whereHas('creator', fn($q) => $q->where('department', $user->department));
-        }
+        $ticketsQuery->whereIn('created_by', $managedUserIds);
 
         $stats = [
             'vacations_pending' => (clone $vacationsQuery)->count(),
@@ -63,6 +59,6 @@ class SupervisionController extends Controller
         $absences = $absencesQuery->orderBy('start_date')->limit(25)->get();
         $tickets = $ticketsQuery->orderBy('created_at', 'desc')->limit(25)->get();
 
-        return view('supervision.requests', compact('vacations', 'absences', 'tickets', 'stats', 'search'));
+        return view('supervision.requests', compact('vacations', 'absences', 'tickets', 'stats', 'search', 'managedEmployees'));
     }
 }

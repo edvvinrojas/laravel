@@ -7,7 +7,13 @@
 
     {{-- Toolbar --}}
     <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-        <a href="{{ route('it-requests.create') }}" class="btn-primary">+ Nuevo ticket</a>
+        <div class="flex gap-2">
+            <a href="{{ route('it-requests.create') }}" class="btn-primary">+ Nuevo ticket</a>
+            <a href="{{ route('it-requests.index', array_merge(request()->except('page'), ['mine' => 1])) }}" class="btn-secondary">Mis tickets</a>
+            @if($isTi)
+                <a href="{{ route('it-requests.index', array_merge(request()->except(['page', 'mine']), ['mine' => 0])) }}" class="btn-secondary">Ver todos</a>
+            @endif
+        </div>
 
         <form method="GET" class="flex flex-wrap gap-2">
             <input name="search" value="{{ request('search') }}" placeholder="Folio o título…"

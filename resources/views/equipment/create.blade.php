@@ -60,12 +60,16 @@
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <label class="form-label">SKU</label>
-                <select name="sku" class="form-select @error('sku') border-red-400 @enderror">
-                    <option value="">— Seleccionar SKU —</option>
+                <input name="sku" list="sku_suggestions" value="{{ old('sku') }}" class="form-input font-mono @error('sku') border-red-400 @enderror" placeholder="Vacío = usar siguiente automático">
+                <datalist id="sku_suggestions">
                     @foreach($skus as $s)
-                        <option value="{{ $s->code }}" @selected(old('sku') === $s->code)>{{ $s->code }}</option>
+                        <option value="{{ $s->code }}"></option>
                     @endforeach
-                </select>
+                </datalist>
+                <div id="skuPreview" class="mt-1 text-xs text-gray-600">
+                    Siguiente automático: <span class="font-semibold text-blue-600">—</span>
+                </div>
+                <p class="text-xs text-gray-400 mt-1">Puedes escribir un SKU manual o dejarlo vacío para usar el sugerido.</p>
                 @error('sku')<p class="form-error">{{ $message }}</p>@enderror
             </div>
             <div>
@@ -142,17 +146,35 @@
 @push('scripts')
 <script>
     const brandSelect = document.querySelector('select[name="brand_id"]');
-    const skuSelect = document.querySelector('select[name="sku"]');
-    const brands = @json($brands->keyBy('id')->map(fn($b) => $b->name));
+    const skuPreview = document.getElementById('skuPreview');
+
+    function setSkuPreview(text) {
+        skuPreview.innerHTML = 'Siguiente automático: <span class="font-semibold text-blue-600">' + text + '</span>';
+    }
+
+    function updateSkuPreview() {
+        const brandId = brandSelect.value;
+
+        if (!brandId) {
+            setSkuPreview('—');
+            return;
+        }
+
+        fetch(`{{ route('equipment.api.next-sku-preview') }}?brand_id=${encodeURIComponent(brandId)}`)
+            .then(r => r.json())
+            .then(data => {
+                setSkuPreview(data.next || '—');
+            })
+            .catch(() => {
+                setSkuPreview('—');
+            });
+    }
 
     brandSelect.addEventListener('change', function() {
-        const brandName = brands[this.value] || '';
-        if (brandName) {
-            skuSelect.options[0].text = '— Auto: ' + brandName.toUpperCase() + '-### —';
-        } else {
-            skuSelect.options[0].text = '— Seleccionar SKU —';
-        }
+        updateSkuPreview();
     });
+
+    updateSkuPreview();
 </script>
 @endpush
 

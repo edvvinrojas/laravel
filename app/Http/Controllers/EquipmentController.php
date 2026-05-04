@@ -10,6 +10,24 @@ use Illuminate\Http\Request;
 
 class EquipmentController extends Controller
 {
+    private function nextAutoSkuByBrandId(int $brandId): string
+    {
+        $brand = Brand::findOrFail($brandId);
+        $prefix = strtoupper($brand->prefix) . '-';
+        $lastItem = Item::where('sku', 'like', $prefix . '%')->orderByDesc('sku')->first();
+
+        $nextNumber = 1;
+        if ($lastItem) {
+            $num = intval(str_replace($prefix, '', $lastItem->sku));
+            $nextNumber = $num + 1;
+        }
+
+        $format = \App\Models\SkuFormat::where('category', 'EQUIPO')->first();
+        $pad = $format->pad ?? 3;
+
+        return $prefix . str_pad($nextNumber, $pad, '0', STR_PAD_LEFT);
+    }
+
     public function index(Request $request)
     {
         $query = Item::with('brand', 'supplier')
@@ -60,17 +78,7 @@ class EquipmentController extends Controller
 
         $validated['is_active'] = $request->boolean('is_active', true);
         if (empty($validated['sku'])) {
-            $brand = Brand::findOrFail($validated['brand_id']);
-            $prefix = strtoupper($brand->prefix) . '-';
-            $lastItem = Item::where('sku', 'like', $prefix . '%')->orderByDesc('sku')->first();
-            $nextNumber = 1;
-            if ($lastItem) {
-                $num = intval(str_replace($prefix, '', $lastItem->sku));
-                $nextNumber = $num + 1;
-            }
-            $format = \App\Models\SkuFormat::where('category', 'EQUIPO')->first();
-            $pad = $format->pad ?? 3;
-            $validated['sku'] = $prefix . str_pad($nextNumber, $pad, '0', STR_PAD_LEFT);
+            $validated['sku'] = $this->nextAutoSkuByBrandId((int) $validated['brand_id']);
         }
 
         Item::create($validated);
@@ -128,5 +136,20 @@ class EquipmentController extends Controller
 
         return redirect()->route('equipment.index')
             ->with('success', 'Equipo eliminado correctamente.');
+    }
+
+    public function apiNextSkuPreview(Request $request)
+    {
+        $brandId = (int) $request->query('brand_id', 0);
+        if ($brandId <= 0) {
+            return response()->json(['next' => null]);
+        }
+
+        try {
+            $next = $this->nextAutoSkuByBrandId($brandId);
+            return response()->json(['next' => $next]);
+        } catch (\Throwable $e) {
+            return response()->json(['next' => null]);
+        }
     }
 }

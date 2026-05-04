@@ -4,10 +4,25 @@ namespace App\Http\Controllers;
 
 use App\Models\Sparepart;
 use App\Models\Supplier;
+use App\Models\Brand;
 use Illuminate\Http\Request;
 
 class SparepartController extends Controller
 {
+    private function normalizeBrandValue(?string $value): ?string
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
+
+        if (in_array($value, ['__add_new__', '+ Agregar nueva marca...', '+ Agregar nueva marca…'], true)) {
+            return null;
+        }
+
+        return $value;
+    }
+
     public function index(Request $request)
     {
         $spareparts = Sparepart::query()
@@ -21,7 +36,8 @@ class SparepartController extends Controller
         $suppliers = Supplier::orderBy('name')->get();
         $colors = $this->getAvailableColors();
         $brands = $this->getAvailableBrands();
-        return view('spareparts.create', compact('suppliers', 'colors', 'brands'));
+        $codePrefixes = $this->getCodePrefixes();
+        return view('spareparts.create', compact('suppliers', 'colors', 'brands', 'codePrefixes'));
     }
 
     public function store(Request $request)
@@ -31,15 +47,25 @@ class SparepartController extends Controller
             'color'       => 'nullable|string|max:50',
             'description' => 'nullable|string',
             'brand'       => 'nullable|string|max:100',
+            'brand_new'   => 'nullable|string|max:100',
             'equipment'   => 'nullable|string|max:255',
-            'code'        => 'nullable|string|max:100',
-            'supplier'    => 'nullable|string|max:100',
-            'quantity'    => 'required|integer|min:1|max:500',
+            'code'           => 'nullable|string|max:100',
+            'supplier'       => 'nullable|string|max:100',
+            'unit_price'     => 'nullable|numeric|min:0',
+            'total_price'    => 'nullable|numeric|min:0',
+            'invoice_number' => 'nullable|string|max:100',
+            'quantity'       => 'required|integer|min:1|max:500',
         ]);
 
         $quantity = (int) $data['quantity'];
         $baseCode = $this->stripSequenceSuffix($data['code'] ?? null);
-        unset($data['quantity'], $data['code']);
+        $selectedBrand = $this->normalizeBrandValue($data['brand'] ?? null);
+        $newBrand = $this->normalizeBrandValue($data['brand_new'] ?? null);
+        $data['brand'] = $newBrand ?? $selectedBrand;
+        $data['unit_price']     = !empty($data['unit_price'])     ? $data['unit_price']     : null;
+        $data['total_price']    = !empty($data['total_price'])    ? $data['total_price']    : null;
+        $data['invoice_number'] = !empty($data['invoice_number']) ? $data['invoice_number'] : null;
+        unset($data['quantity'], $data['code'], $data['brand_new']);
 
         $created = 0;
         for ($i = 0; $i < $quantity; $i++) {
@@ -107,11 +133,19 @@ class SparepartController extends Controller
             'color'       => 'nullable|string|max:50',
             'description' => 'nullable|string',
             'brand'       => 'nullable|string|max:100',
+            'brand_new'   => 'nullable|string|max:100',
             'equipment'   => 'nullable|string|max:255',
-            'code'        => "nullable|string|max:100|unique:spareparts,code,{$sparepart->id}",
-            'supplier'    => 'nullable|string|max:100',
+            'code'           => "nullable|string|max:100|unique:spareparts,code,{$sparepart->id}",
+            'supplier'       => 'nullable|string|max:100',
+            'unit_price'     => 'nullable|numeric|min:0',
+            'total_price'    => 'nullable|numeric|min:0',
+            'invoice_number' => 'nullable|string|max:100',
         ]);
 
+        $selectedBrand = $this->normalizeBrandValue($data['brand'] ?? null);
+        $newBrand = $this->normalizeBrandValue($data['brand_new'] ?? null);
+        $data['brand'] = $newBrand ?? $selectedBrand;
+        unset($data['brand_new']);
         $sparepart->update($data);
         return redirect()->route('spareparts.show', $sparepart)->with('success', 'Refacción actualizada.');
     }
@@ -160,10 +194,37 @@ class SparepartController extends Controller
      */
     private function getAvailableBrands(): array
     {
-        return Sparepart::where('brand', '!=', null)
-            ->distinct('brand')
+        $catalogBrands = Brand::orderBy('name')
+            ->pluck('name')
+            ->filter(fn ($name) => is_string($name) && trim($name) !== '')
+            ->map(fn ($name) => trim($name))
+            ->values()
+            ->toArray();
+
+        $legacyBrands = Sparepart::whereNotNull('brand')
             ->pluck('brand')
+            ->filter(fn ($name) => is_string($name) && trim($name) !== '')
+            ->map(fn ($name) => trim($name))
+            ->reject(fn ($name) => in_array($name, ['+ Agregar nueva marca...'], true))
+            ->values()
+            ->toArray();
+
+        $allBrands = array_unique(array_merge($catalogBrands, $legacyBrands));
+        sort($allBrands, SORT_NATURAL | SORT_FLAG_CASE);
+
+        return array_values($allBrands);
+    }
+
+    /**
+     * Devuelve los prefijos base únicos usados (sin sufijo -NN).
+     */
+    private function getCodePrefixes(): array
+    {
+        return Sparepart::whereNotNull('code')
+            ->pluck('code')
+            ->map(fn ($c) => $this->stripSequenceSuffix($c))
             ->filter()
+            ->unique()
             ->sort()
             ->values()
             ->toArray();

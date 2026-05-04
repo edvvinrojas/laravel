@@ -8,6 +8,41 @@ use Illuminate\Http\Request;
 
 class RepairController extends Controller
 {
+    private function resolveAssignedClientInfo(Item $item): ?array
+    {
+        $rent = $item->rents
+            ->where('is_active', true)
+            ->sortByDesc('created_at')
+            ->first();
+
+        if ($rent && $rent->client) {
+            return [
+                'source' => 'Renta',
+                'client' => $rent->client->name,
+                'branch' => $rent->branch->name ?? null,
+                'area' => $rent->area->name ?? null,
+                'reference' => $rent->contract_number ?: null,
+            ];
+        }
+
+        $sale = $item->sales
+            ->where('is_active', true)
+            ->sortByDesc('created_at')
+            ->first();
+
+        if ($sale && $sale->client) {
+            return [
+                'source' => 'Venta',
+                'client' => $sale->client->name,
+                'branch' => $sale->branch->name ?? null,
+                'area' => $sale->area->name ?? null,
+                'reference' => $sale->invoice_number ?: null,
+            ];
+        }
+
+        return null;
+    }
+
     public function index(Request $request)
     {
         $repairs = Repair::with(['item.brand'])
@@ -25,7 +60,22 @@ class RepairController extends Controller
 
     public function create()
     {
-        $items = Item::where('is_active', true)->with('brand')->orderBy('model')->get();
+        $items = Item::where('is_active', true)
+            ->with([
+                'brand',
+                'rents.client',
+                'rents.branch',
+                'rents.area',
+                'sales.client',
+                'sales.branch',
+                'sales.area',
+            ])
+            ->orderBy('model')
+            ->get()
+            ->each(function (Item $item) {
+                $item->assigned_client_info = $this->resolveAssignedClientInfo($item);
+            });
+
         return view('repairs.create', compact('items'));
     }
 

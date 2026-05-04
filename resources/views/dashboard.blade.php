@@ -25,8 +25,11 @@
     <div class="bg-white rounded-xl shadow-xl w-full max-w-lg">
         <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
             <h2 class="font-semibold text-gray-800">Nuevo ticket — Mesa de Ayuda</h2>
-            <button type="button" onclick="document.getElementById('mesaAyudaModal').classList.add('hidden')"
-                class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('it-requests.index', ['mine' => 1]) }}" class="btn-secondary btn-sm">Ver peticiones</a>
+                <button type="button" onclick="document.getElementById('mesaAyudaModal').classList.add('hidden')"
+                    class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+            </div>
         </div>
         <form method="POST" action="{{ route('it-requests.store') }}">
             @csrf

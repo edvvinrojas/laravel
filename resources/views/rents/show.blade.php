@@ -26,6 +26,14 @@
             <div><p class="text-gray-500">Renta mensual</p><p class="font-bold text-lg">${{ number_format($rent->rent,2) }}</p></div>
             <div><p class="text-gray-500">Inicio</p><p>{{ $rent->start_date->format('d/m/Y') }}</p></div>
             <div><p class="text-gray-500">Fin</p><p>{{ $rent->end_date?->format('d/m/Y') ?? '—' }}</p></div>
+            <div>
+                <p class="text-gray-500">Foráneo</p>
+                <p>{{ $rent->is_foreign ? 'Sí' : 'No' }}</p>
+            </div>
+            <div>
+                <p class="text-gray-500">Creado por</p>
+                <p>{{ $rent->creator?->full_name ?? '—' }}</p>
+            </div>
             <div class="col-span-2 border-t pt-3">
                 <p class="text-gray-500 mb-2">Asignacion por equipo</p>
                 <div class="space-y-2">
@@ -40,6 +48,7 @@
                         <div class="rounded border border-gray-200 p-2">
                             <p class="font-medium">{{ $eq->brand->name ?? '' }} {{ $eq->model }} <span class="font-mono text-xs text-gray-500">{{ $eq->serie }}</span></p>
                             <p class="text-xs text-gray-600">Sucursal: {{ $branchName ?: 'Sin sucursal' }} | Area: {{ $areaName ?: 'Sin area' }}</p>
+                            <p class="text-xs text-gray-600">Renta mensual: ${{ number_format($eq->pivot->rent ?? 0, 2) }}</p>
                             <p class="text-xs text-gray-600">Contador BN: {{ (int) ($eq->pivot->contador_inicial_bn ?? $rent->contador_inicial_bn ?? 0) }} | Contador Color: {{ (int) ($eq->pivot->contador_inicial_color ?? $rent->contador_inicial_color ?? 0) }}</p>
                         </div>
                     @endforeach
@@ -51,6 +60,9 @@
                 <div><p class="text-gray-500">Costo exceso BN</p><p>${{ $rent->bn_cost_per_excess }}</p></div>
                 <div><p class="text-gray-500">Color incluidas</p><p>{{ number_format($rent->color_included) }}</p></div>
                 <div><p class="text-gray-500">Costo exceso Color</p><p>${{ $rent->color_cost_per_excess }}</p></div>
+                @if($rent->print_notes)
+                <div class="col-span-2"><p class="text-gray-500">Notas</p><p class="text-sm">{{ $rent->print_notes }}</p></div>
+                @endif
             </div>
             @endif
         </div>

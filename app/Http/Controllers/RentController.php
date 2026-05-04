@@ -28,8 +28,11 @@ class RentController extends Controller
     public function index(Request $request)
     {
         $rents = Rent::with(['client', 'item', 'item.brand'])
-            ->when($request->search, fn($q) => $q->whereHas('client', fn($c) => $c->where('name', 'like', "%{$request->search}%"))
-                ->orWhere('contract_number', 'like', "%{$request->search}%"))
+            ->where('is_active', true)
+            ->when($request->search, fn($q) => $q->where(fn($sub) =>
+                $sub->whereHas('client', fn($c) => $c->where('name', 'like', "%{$request->search}%"))
+                    ->orWhere('contract_number', 'like', "%{$request->search}%")
+            ))
             ->when($request->status, fn($q) => $q->where('contract_status', $request->status))
             ->orderBy('created_at', 'desc')
             ->paginate(15)->withQueryString();
@@ -57,6 +60,7 @@ class RentController extends Controller
             'item_rows.*.item_id'    => 'required|integer|exists:items,id|distinct',
             'item_rows.*.branch_id'  => 'required|integer|exists:branches,id',
             'item_rows.*.area_id'    => 'nullable|integer|exists:areas,id',
+            'item_rows.*.rent'       => 'required|numeric|min:0',
             'item_rows.*.contador_inicial_bn' => 'nullable|integer|min:0',
             'item_rows.*.contador_inicial_color' => 'nullable|integer|min:0',
             'item_rows.*.has_print_service' => 'nullable|boolean',
@@ -64,7 +68,6 @@ class RentController extends Controller
             'item_rows.*.bn_cost_per_excess' => 'nullable|numeric|min:0',
             'item_rows.*.color_included' => 'nullable|integer|min:0',
             'item_rows.*.color_cost_per_excess' => 'nullable|numeric|min:0',
-            'rent'                   => 'required|numeric|min:0',
             'contract_status'        => 'required|in:PENDIENTE,SIN_FIRMAR,VIGENTE,FINALIZADO,CANCELADO',
             'start_date'             => 'required|date',
             'end_date'               => 'nullable|date|after:start_date',
@@ -88,6 +91,7 @@ class RentController extends Controller
                     'item_id' => (int) $row['item_id'],
                     'branch_id' => (int) $row['branch_id'],
                     'area_id' => !empty($row['area_id']) ? (int) $row['area_id'] : null,
+                    'rent' => max(0, (float) ($row['rent'] ?? 0)),
                     'contador_inicial_bn' => max(0, (int) ($row['contador_inicial_bn'] ?? 0)),
                     'contador_inicial_color' => max(0, (int) ($row['contador_inicial_color'] ?? 0)),
                     'has_print_service' => !empty($row['has_print_service']),
@@ -147,6 +151,7 @@ class RentController extends Controller
         }
 
         $firstRow = $itemRows->first();
+        $data['rent'] = $itemRows->sum('rent');  // total = suma de rentas por equipo
         $data['item_id'] = $firstRow['item_id'];
         $data['branch_id'] = $firstRow['branch_id'];
         $data['area_id'] = $firstRow['area_id'];
@@ -165,6 +170,7 @@ class RentController extends Controller
             $syncData[$row['item_id']] = [
                 'branch_id' => $row['branch_id'],
                 'area_id' => $row['area_id'],
+                'rent' => $row['rent'],
                 'contador_inicial_bn' => $row['contador_inicial_bn'],
                 'contador_inicial_color' => $row['contador_inicial_color'],
                 'has_print_service' => $row['has_print_service'],
@@ -223,7 +229,7 @@ class RentController extends Controller
             'item_rows.*.bn_cost_per_excess' => 'nullable|numeric|min:0',
             'item_rows.*.color_included' => 'nullable|integer|min:0',
             'item_rows.*.color_cost_per_excess' => 'nullable|numeric|min:0',
-            'rent'                   => 'required|numeric|min:0',
+            'item_rows.*.rent'       => 'required|numeric|min:0',
             'contract_status'        => 'required|in:PENDIENTE,SIN_FIRMAR,VIGENTE,FINALIZADO,CANCELADO',
             'start_date'             => 'required|date',
             'end_date'               => 'nullable|date',
@@ -250,6 +256,7 @@ class RentController extends Controller
                     'item_id' => (int) $row['item_id'],
                     'branch_id' => (int) $row['branch_id'],
                     'area_id' => !empty($row['area_id']) ? (int) $row['area_id'] : null,
+                    'rent' => max(0, (float) ($row['rent'] ?? 0)),
                     'contador_inicial_bn' => max(0, (int) ($row['contador_inicial_bn'] ?? 0)),
                     'contador_inicial_color' => max(0, (int) ($row['contador_inicial_color'] ?? 0)),
                     'has_print_service' => !empty($row['has_print_service']),
@@ -313,6 +320,7 @@ class RentController extends Controller
         }
 
         $firstRow = $itemRows->first();
+        $data['rent'] = $itemRows->sum('rent');  // total = suma de rentas por equipo
         $data['item_id'] = $firstRow['item_id'];
         $data['branch_id'] = $firstRow['branch_id'];
         $data['area_id'] = $firstRow['area_id'];
@@ -325,12 +333,14 @@ class RentController extends Controller
         $data['color_cost_per_excess'] = $firstRow['color_cost_per_excess'];
         unset($data['item_rows']);
 
+        $previousStatus = $rent->contract_status;
         $rent->update($data);
         $syncData = [];
         foreach ($itemRows as $row) {
             $syncData[$row['item_id']] = [
                 'branch_id' => $row['branch_id'],
                 'area_id' => $row['area_id'],
+                'rent' => $row['rent'],
                 'contador_inicial_bn' => $row['contador_inicial_bn'],
                 'contador_inicial_color' => $row['contador_inicial_color'],
                 'has_print_service' => $row['has_print_service'],
@@ -342,11 +352,46 @@ class RentController extends Controller
         }
         $rent->items()->sync($syncData);
 
+        // Actualizar location_status de equipos según cambio de estatus
+        if ($data['contract_status'] === 'VIGENTE') {
+            Item::whereIn('id', $selectedItemIds)->update(['location_status' => 'ASIGNADO']);
+        } elseif (in_array($data['contract_status'], ['FINALIZADO', 'CANCELADO'], true) && $previousStatus === 'VIGENTE') {
+            // Liberar equipos que ya no estén en otra renta vigente
+            foreach ($selectedItemIds as $itemId) {
+                $hasOtherActive = Rent::where('id', '!=', $rent->id)
+                    ->where('contract_status', 'VIGENTE')
+                    ->where('is_active', true)
+                    ->whereHas('items', fn($q) => $q->where('items.id', $itemId))
+                    ->exists();
+                if (!$hasOtherActive) {
+                    Item::where('id', $itemId)->update(['location_status' => 'BODEGA']);
+                }
+            }
+        }
+
         return redirect()->route('rents.show', $rent)->with('success', 'Renta actualizada.');
     }
 
     public function destroy(Rent $rent)
     {
+        // Liberar equipos si la renta estaba vigente
+        if ($rent->contract_status === 'VIGENTE') {
+            $itemIds = $rent->items()->pluck('items.id');
+            if ($itemIds->isEmpty() && $rent->item_id) {
+                $itemIds = collect([$rent->item_id]);
+            }
+            foreach ($itemIds as $itemId) {
+                $hasOtherActive = Rent::where('id', '!=', $rent->id)
+                    ->where('contract_status', 'VIGENTE')
+                    ->where('is_active', true)
+                    ->whereHas('items', fn($q) => $q->where('items.id', $itemId))
+                    ->exists();
+                if (!$hasOtherActive) {
+                    Item::where('id', $itemId)->update(['location_status' => 'BODEGA']);
+                }
+            }
+        }
+
         $rent->update(['is_active' => false]);
         return redirect()->route('rents.index')->with('success', 'Renta desactivada.');
     }

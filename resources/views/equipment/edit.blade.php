@@ -61,7 +61,16 @@
             <div>
                 <label class="form-label">SKU</label>
                 <input name="sku" id="sku_input" value="{{ old('sku', $equipment->sku) }}"
-                       class="form-input @error('sku') border-red-400 @enderror">
+                       class="form-input @error('sku') border-red-400 @enderror"
+                       list="sku_suggestions">
+                <datalist id="sku_suggestions">
+                    @foreach($skus as $s)
+                        <option value="{{ $s->code }}"></option>
+                    @endforeach
+                </datalist>
+                <div id="skuPreview" class="mt-1 text-xs text-gray-600">
+                    Siguiente automático: <span class="font-semibold text-blue-600">—</span>
+                </div>
                 @error('sku')<p class="form-error">{{ $message }}</p>@enderror
             </div>
             <div>
@@ -139,16 +148,43 @@
 <script>
     const brandSelect = document.querySelector('select[name="brand_id"]');
     const skuInput = document.getElementById('sku_input');
+    const skuPreview = document.getElementById('skuPreview');
     const brands = @json($brands->keyBy('id')->map(fn($b) => $b->name));
+
+    function setSkuPreview(text) {
+        skuPreview.innerHTML = 'Siguiente automático: <span class="font-semibold text-blue-600">' + text + '</span>';
+    }
+
+    function updateSkuPreview() {
+        const brandId = brandSelect.value;
+
+        if (!brandId) {
+            setSkuPreview('—');
+            return;
+        }
+
+        fetch(`{{ route('equipment.api.next-sku-preview') }}?brand_id=${encodeURIComponent(brandId)}`)
+            .then(r => r.json())
+            .then(data => {
+                setSkuPreview(data.next || '—');
+            })
+            .catch(() => {
+                setSkuPreview('—');
+            });
+    }
 
     brandSelect.addEventListener('change', function() {
         const brandName = (brands[this.value] || '').toUpperCase();
         if (!brandName || !skuInput.value) {
+            updateSkuPreview();
             return;
         }
         const digits = skuInput.value.replace(/^[A-Z]+-/, '');
         skuInput.value = brandName + '-' + digits;
+        updateSkuPreview();
     });
+
+    updateSkuPreview();
 </script>
 @endpush
 

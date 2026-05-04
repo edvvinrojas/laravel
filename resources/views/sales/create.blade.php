@@ -1,13 +1,16 @@
 @extends('layouts.app')
 @section('title','Nueva Venta')
-@section('page-title','Nueva Venta')
+@section('page-title')Nueva Venta <span id="invoiceTitleTop" class="text-xs font-mono text-blue-700 bg-blue-50 border border-blue-200 rounded px-2 py-0.5 align-middle hidden"></span>@endsection
 
 @section('content')
 <div class="w-full max-w-7xl mx-auto px-2 sm:px-4">
 <form method="POST" action="{{ route('sales.store') }}">
 @csrf
 <div class="card">
-    <div class="card-header"><h3 class="font-semibold text-sm">Datos de la venta</h3></div>
+    <div class="card-header">
+        <h3 class="font-semibold text-sm">Datos de la venta</h3>
+        <span id="invoiceTitle" class="text-xs font-mono text-blue-700 bg-blue-50 border border-blue-200 rounded px-2 py-0.5 hidden"></span>
+    </div>
     <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-4">
         @php
             $availableItems = $items->filter(fn($i) => $i->location_status === 'BODEGA');
@@ -34,7 +37,8 @@
 
         <div>
             <label class="form-label">No. Factura</label>
-            <input name="invoice_number" value="{{ old('invoice_number') }}" class="form-input">
+            <input name="invoice_number" id="invoiceNumberInput" value="{{ old('invoice_number') }}" class="form-input font-mono" placeholder="Vacío = usar {{ $nextInvoice }}">
+            <p class="text-xs text-gray-400 mt-1">Siguiente sugerido: <span class="font-semibold text-blue-600 font-mono">{{ $nextInvoice }}</span></p>
         </div>
         <div>
             <label class="form-label">Estado *</label>
@@ -440,6 +444,26 @@ setupClientSearch();
 updateEquipmentCardSelection();
 renderItemRows();
 syncSaleTotal();
+
+// Mostrar No. Factura en el título del card y arriba en el h1
+const invoiceInput = document.getElementById('invoiceNumberInput');
+const invoiceTitle = document.getElementById('invoiceTitle');
+const invoiceTitleTop = document.getElementById('invoiceTitleTop');
+function updateInvoiceTitle() {
+    const val = invoiceInput.value.trim();
+    if (val) {
+        const label = 'Factura: ' + val;
+        invoiceTitle.textContent = label;
+        invoiceTitle.classList.remove('hidden');
+        invoiceTitleTop.textContent = label;
+        invoiceTitleTop.classList.remove('hidden');
+    } else {
+        invoiceTitle.classList.add('hidden');
+        invoiceTitleTop.classList.add('hidden');
+    }
+}
+invoiceInput.addEventListener('input', updateInvoiceTitle);
+updateInvoiceTitle();
 </script>
 @endpush
 @endsection

@@ -9,6 +9,7 @@ use App\Models\Area;
 use App\Models\Item;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class TicketController extends Controller
@@ -25,9 +26,26 @@ class TicketController extends Controller
 
     private const PRIORITIES = ['URGENTE', 'NORMAL', 'BAJA'];
 
+    private function authorizeTicketAccess(Ticket $ticket): void
+    {
+        $user = Auth::user();
+        if (!$user) {
+            abort(403);
+        }
+
+        // Usuario operativo solo puede ver/editar/cerrar sus propios tickets.
+        if ($user->rol === 'usuario' && (int) $ticket->created_by !== (int) $user->id) {
+            abort(403, 'No tienes permiso para ver tickets de otros usuarios.');
+        }
+    }
+
     public function index(Request $request)
     {
+        $user = Auth::user();
+
         $tickets = Ticket::with(['client', 'branch', 'creator', 'item'])
+            ->when($user && $user->rol === 'usuario', fn($q) => $q->where('created_by', $user->id))
+            ->when($request->boolean('mine') && $user, fn($q) => $q->where('created_by', $user->id))
             ->when($request->search, function ($q) use ($request) {
                 $term = $request->search;
                 $q->where(function ($qq) use ($term) {
@@ -47,24 +65,28 @@ class TicketController extends Controller
             'reportTypes' => self::REPORT_TYPES,
             'statuses'    => self::STATUSES,
             'priorities'  => self::PRIORITIES,
+            'canSeeAllTickets' => $user && $user->rol !== 'usuario',
         ]);
     }
 
     public function create()
     {
         $clients = Client::where('is_active', true)->orderBy('name')->get();
+        $ticketCodes = Ticket::whereNotNull('ticket_code')->distinct()->orderBy('ticket_code')->pluck('ticket_code')->toArray();
         return view('tickets.create', [
             'clients'     => $clients,
             'reportTypes' => self::REPORT_TYPES,
             'statuses'    => self::STATUSES,
             'priorities'  => self::PRIORITIES,
             'nextCode'    => Ticket::generateTicketCode(),
+            'ticketCodes' => $ticketCodes,
         ]);
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
+            'ticket_code'   => 'nullable|string|max:50|unique:tickets,ticket_code',
             'client_id'     => 'required|exists:clients,id',
             'branch_id'     => 'required|exists:branches,id',
             'area_id'       => 'nullable|exists:areas,id',
@@ -83,8 +105,11 @@ class TicketController extends Controller
         }
         unset($data['evidence_url'], $data['evidence_file']);
 
-        $data['created_by']   = auth()->id();
-        $data['ticket_code']  = Ticket::generateTicketCode();
+        $data['created_by']   = Auth::id();
+        $data['ticket_code']  = trim((string) ($data['ticket_code'] ?? ''));
+        if ($data['ticket_code'] === '') {
+            $data['ticket_code'] = Ticket::generateTicketCode();
+        }
 
         $ticket = Ticket::create($data);
 
@@ -94,12 +119,14 @@ class TicketController extends Controller
 
     public function show(Ticket $ticket)
     {
+        $this->authorizeTicketAccess($ticket);
         $ticket->load(['client', 'branch', 'area', 'item.brand', 'creator']);
         return view('tickets.show', compact('ticket'));
     }
 
     public function edit(Ticket $ticket)
     {
+        $this->authorizeTicketAccess($ticket);
         $clients  = Client::where('is_active', true)->orderBy('name')->get();
         $branches = Branch::where('client_id', $ticket->client_id)->get();
         $areas    = $ticket->branch_id ? Area::where('branch_id', $ticket->branch_id)->get() : collect();
@@ -117,6 +144,7 @@ class TicketController extends Controller
 
     public function update(Request $request, Ticket $ticket)
     {
+        $this->authorizeTicketAccess($ticket);
         $data = $request->validate([
             'client_id'         => 'required|exists:clients,id',
             'branch_id'         => 'required|exists:branches,id',
@@ -153,12 +181,14 @@ class TicketController extends Controller
 
     public function close(Ticket $ticket)
     {
+        $this->authorizeTicketAccess($ticket);
         $ticket->update(['report_status' => 'LISTO', 'completed_at' => Carbon::now()]);
         return back()->with('success', 'Ticket cerrado.');
     }
 
     public function destroy(Ticket $ticket)
     {
+        $this->authorizeTicketAccess($ticket);
         $ticket->delete();
         return redirect()->route('tickets.index')->with('success', 'Ticket eliminado.');
     }

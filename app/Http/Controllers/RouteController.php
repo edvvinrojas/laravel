@@ -34,19 +34,25 @@ class RouteController extends Controller
     {
         $clients   = Client::where('is_active', true)->with('branches')->orderBy('name')->get();
         $nextCode  = $this->nextRouteCode();
-        return view('routes.create', compact('clients', 'nextCode'));
+        $routeCodes = Route::whereNotNull('route_code')->distinct()->orderBy('route_code')->pluck('route_code')->toArray();
+        return view('routes.create', compact('clients', 'nextCode', 'routeCodes'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
+            'route_code'     => 'nullable|string|max:50|unique:routes,route_code',
             'driver_name'    => 'required|string|max:200',
             'vehicle'        => 'nullable|string|max:100',
             'status'         => 'required|in:PROGRAMADA,EN_RUTA,PAUSADA,COMPLETADA,CANCELADA',
             'scheduled_date' => 'required|date',
             'notes'          => 'nullable|string',
         ]);
-        $data['route_code'] = $this->nextRouteCode();
+
+        $data['route_code'] = trim((string) ($data['route_code'] ?? ''));
+        if ($data['route_code'] === '') {
+            $data['route_code'] = $this->nextRouteCode();
+        }
 
         $route = Route::create($data);
 

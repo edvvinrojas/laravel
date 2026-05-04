@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -21,7 +22,13 @@ class UserController extends Controller
 
     public function create()
     {
-        return view('users.create');
+        $employeesWithoutAccount = Employee::query()
+            ->where('is_active', '=', true, 'and')
+            ->where('user_id', '=', null, 'and')
+            ->orderBy('nombre', 'asc')
+            ->get(['id', 'nombre', 'departamento', 'puesto']);
+
+        return view('users.create', compact('employeesWithoutAccount'));
     }
 
     public function store(Request $request)
@@ -33,14 +40,32 @@ class UserController extends Controller
             'full_name'  => 'required|string|max:255',
             'rol'        => 'required|in:administrador,gerencia,usuario',
             'department' => 'required|in:rh,administracion,comercial,operaciones,ti',
+            'employee_id' => 'nullable|exists:employees,id',
             'is_active'  => 'boolean',
         ]);
+
+        if (!empty($data['employee_id'])) {
+            $employee = Employee::query()->findOrFail($data['employee_id']);
+            if (!empty($employee->user_id)) {
+                return back()->withInput()->withErrors([
+                    'employee_id' => 'El empleado seleccionado ya tiene una cuenta de usuario asignada.',
+                ]);
+            }
+        }
 
         $data['password']  = Hash::make($data['password']);
         $data['is_active'] = $request->boolean('is_active', true);
         $data['permissions'] = [];
+        unset($data['employee_id']);
 
         $user = User::create($data);
+
+        if ($request->filled('employee_id')) {
+            Employee::where('id', '=', $request->integer('employee_id'), 'and')
+                ->where('user_id', '=', null, 'and')
+                ->update(['user_id' => $user->id]);
+        }
+
         return redirect()->route('users.edit', $user)->with('success', 'Usuario creado. Ahora configura sus permisos.');
     }
 
