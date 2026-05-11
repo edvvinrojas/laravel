@@ -69,77 +69,160 @@
         </div>
 
             <div class="md:col-span-2 pt-2">
-                <label class="form-label">Equipos *</label>
-                <p class="text-xs text-gray-500 mb-2">Selecciona uno o varios equipos y asigna su sucursal/area.</p>
+                <label class="form-label">Productos *</label>
+                <p class="text-xs text-gray-500 mb-2">Selecciona equipos, refacciones y/o artículos de inventario que deseas vender.</p>
                 @error('item_rows')<p class="form-error mb-2">{{ $message }}</p>@enderror
+                @error('sparepart_rows')<p class="form-error mb-2">{{ $message }}</p>@enderror
+                @error('inventory_rows')<p class="form-error mb-2">{{ $message }}</p>@enderror
 
-            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Equipos disponibles</p>
-            <div class="h-[14.75rem] overflow-y-auto pr-1">
-                <div id="equipmentCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    @foreach($availableItems as $i)
-                        @php
-                            $price = $i->cost;
-                        @endphp
-                        <button
-                            type="button"
-                            class="equipment-card h-28 flex flex-col justify-between text-left border border-gray-200 rounded-lg p-3 hover:border-blue-300 hover:bg-blue-50/40 transition"
-                            data-item-id="{{ $i->id }}"
-                            data-item-price="{{ $price ?? '' }}"
-                            data-item-label="{{ trim(($i->brand->name ?? '').' '.$i->model.' — '.$i->serie) }}"
-                            data-selectable="1"
-                        >
-                            <div class="text-sm font-semibold text-gray-900 truncate">{{ $i->brand->name ?? '—' }} {{ $i->model }}</div>
-                            <div class="text-xs text-gray-500 mt-0.5">Serie: {{ $i->serie ?: '—' }}</div>
-                            <div class="mt-2 flex items-center justify-between">
-                                <span class="text-[11px] px-2 py-1 rounded bg-gray-100 text-gray-600">{{ $i->location_status ?? 'BODEGA' }}</span>
-                                <span class="text-sm font-bold text-blue-700">{{ $price !== null ? '$'.number_format($price, 2) : 'Sin precio' }}</span>
-                            </div>
+                {{-- TAB: EQUIPOS --}}
+                <div class="border-b border-gray-200 mb-4">
+                    <div class="flex gap-0.5">
+                        <button type="button" class="product-tab active px-4 py-2 text-sm font-medium border-b-2 border-blue-600 text-blue-600 transition-colors" data-tab="equipos">
+                            Equipos
                         </button>
-                    @endforeach
-                </div>
-
-                @if($unavailableItems->count())
-                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-4 mb-2">No disponibles</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    @foreach($unavailableItems as $i)
-                        @php
-                            $price = $i->cost;
-                        @endphp
-                        <button
-                            type="button"
-                            disabled
-                            class="equipment-card h-28 flex flex-col justify-between text-left border border-gray-200 rounded-lg p-3 opacity-55 cursor-not-allowed bg-gray-50"
-                            data-item-id="{{ $i->id }}"
-                            data-item-price="{{ $price ?? '' }}"
-                            data-item-label="{{ trim(($i->brand->name ?? '').' '.$i->model.' — '.$i->serie) }}"
-                            data-selectable="0"
-                        >
-                            <div class="text-sm font-semibold text-gray-700 truncate">{{ $i->brand->name ?? '—' }} {{ $i->model }}</div>
-                            <div class="text-xs text-gray-500 mt-0.5">Serie: {{ $i->serie ?: '—' }}</div>
-                            <div class="mt-2 flex items-center justify-between">
-                                <span class="text-[11px] px-2 py-1 rounded bg-red-100 text-red-700">{{ $i->location_status ?? 'NO DISPONIBLE' }}</span>
-                                <span class="text-sm font-bold text-gray-500">{{ $price !== null ? '$'.number_format($price, 2) : 'Sin precio' }}</span>
-                            </div>
+                        <button type="button" class="product-tab px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="refacciones">
+                            Refacciones
                         </button>
-                    @endforeach
-                </div>
-                @endif
-            </div>
-            <div class="mt-4 border border-gray-200 rounded-lg p-3 bg-gray-50/60">
-                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Asignacion por equipo</p>
-                <div id="itemRowsContainer" class="space-y-3"></div>
-                <p id="itemRowsEmpty" class="text-xs text-gray-500">No hay equipos seleccionados.</p>
-                <div class="mt-3 pt-3 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-3 items-end">
-                    <div>
-                        <p class="text-xs text-gray-500">Suma automatica de equipos seleccionados</p>
-                        <p id="saleTotalHint" class="text-sm font-semibold text-gray-700">$0.00</p>
-                    </div>
-                    <div>
-                        <label class="form-label">Precio de venta general *</label>
-                        <input name="sale_price" id="sale_price_total" type="number" step="0.01" min="0" value="{{ old('sale_price', 0) }}" class="form-input" required>
+                        <button type="button" class="product-tab px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="inventario">
+                            Toners/Inventario
+                        </button>
                     </div>
                 </div>
-            </div>
+
+                {{-- EQUIPOS TAB CONTENT --}}
+                <div class="product-tab-content active" data-tab="equipos">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Equipos disponibles</p>
+                    <div class="h-[14.75rem] overflow-y-auto pr-1 mb-4">
+                        <div id="equipmentCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            @foreach($availableItems as $i)
+                                @php
+                                    $price = $i->cost;
+                                @endphp
+                                <button
+                                    type="button"
+                                    class="equipment-card product-card h-28 flex flex-col justify-between text-left border border-gray-200 rounded-lg p-3 hover:border-blue-300 hover:bg-blue-50/40 transition"
+                                    data-item-id="{{ $i->id }}"
+                                    data-item-price="{{ $price ?? '' }}"
+                                    data-item-label="{{ trim(($i->brand->name ?? '').' '.$i->model.' — '.$i->serie) }}"
+                                    data-selectable="1"
+                                    data-product-type="equipment"
+                                >
+                                    <div class="text-sm font-semibold text-gray-900 truncate">{{ $i->brand->name ?? '—' }} {{ $i->model }}</div>
+                                    <div class="text-xs text-gray-500 mt-0.5">Serie: {{ $i->serie ?: '—' }}</div>
+                                    <div class="mt-2 flex items-center justify-between">
+                                        <span class="text-[11px] px-2 py-1 rounded bg-gray-100 text-gray-600">{{ $i->location_status ?? 'BODEGA' }}</span>
+                                        <span class="text-sm font-bold text-blue-700">{{ $price !== null ? '$'.number_format($price, 2) : 'Sin precio' }}</span>
+                                    </div>
+                                </button>
+                            @endforeach
+                        </div>
+
+                        @if($unavailableItems->count())
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-4 mb-2">No disponibles</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            @foreach($unavailableItems as $i)
+                                @php
+                                    $price = $i->cost;
+                                @endphp
+                                <button
+                                    type="button"
+                                    disabled
+                                    class="equipment-card product-card h-28 flex flex-col justify-between text-left border border-gray-200 rounded-lg p-3 opacity-55 cursor-not-allowed bg-gray-50"
+                                    data-item-id="{{ $i->id }}"
+                                    data-item-price="{{ $price ?? '' }}"
+                                    data-item-label="{{ trim(($i->brand->name ?? '').' '.$i->model.' — '.$i->serie) }}"
+                                    data-selectable="0"
+                                    data-product-type="equipment"
+                                >
+                                    <div class="text-sm font-semibold text-gray-700 truncate">{{ $i->brand->name ?? '—' }} {{ $i->model }}</div>
+                                    <div class="text-xs text-gray-500 mt-0.5">Serie: {{ $i->serie ?: '—' }}</div>
+                                    <div class="mt-2 flex items-center justify-between">
+                                        <span class="text-[11px] px-2 py-1 rounded bg-red-100 text-red-700">{{ $i->location_status ?? 'NO DISPONIBLE' }}</span>
+                                        <span class="text-sm font-bold text-gray-500">{{ $price !== null ? '$'.number_format($price, 2) : 'Sin precio' }}</span>
+                                    </div>
+                                </button>
+                            @endforeach
+                        </div>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- REFACCIONES TAB CONTENT --}}
+                <div class="product-tab-content hidden" data-tab="refacciones">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Refacciones disponibles</p>
+                    <div class="h-[14.75rem] overflow-y-auto pr-1 mb-4">
+                        <div id="sparepartsCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            @forelse($spareparts as $sp)
+                                <button
+                                    type="button"
+                                    class="sparepart-card product-card h-28 flex flex-col justify-between text-left border border-gray-200 rounded-lg p-3 hover:border-green-300 hover:bg-green-50/40 transition"
+                                    data-sparepart-id="{{ $sp->id }}"
+                                    data-sparepart-price="{{ $sp->unit_price ?? 0 }}"
+                                    data-sparepart-label="{{ $sp->name }} {{ $sp->code ? '('.$sp->code.')' : '' }}"
+                                    data-product-type="sparepart"
+                                >
+                                    <div class="text-sm font-semibold text-gray-900 truncate">{{ $sp->name }}</div>
+                                    <div class="text-xs text-gray-500 mt-0.5">Código: {{ $sp->code ?: '—' }}</div>
+                                    <div class="mt-2 flex items-center justify-between">
+                                        <span class="text-[11px] px-2 py-1 rounded bg-green-100 text-green-700">DISPONIBLE</span>
+                                        <span class="text-sm font-bold text-green-700">{{ $sp->unit_price !== null ? '$'.number_format($sp->unit_price, 2) : 'Sin precio' }}</span>
+                                    </div>
+                                </button>
+                            @empty
+                                <div class="col-span-3 text-center py-8">
+                                    <p class="text-gray-500 text-sm">No hay refacciones disponibles.</p>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+
+                {{-- INVENTARIO TAB CONTENT --}}
+                <div class="product-tab-content hidden" data-tab="inventario">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Toners y artículos disponibles</p>
+                    <div class="h-[14.75rem] overflow-y-auto pr-1 mb-4">
+                        <div id="inventoryCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            @forelse($inventory as $inv)
+                                <button
+                                    type="button"
+                                    class="inventory-card product-card h-28 flex flex-col justify-between text-left border border-gray-200 rounded-lg p-3 hover:border-purple-300 hover:bg-purple-50/40 transition"
+                                    data-inventory-id="{{ $inv->id }}"
+                                    data-inventory-price="{{ $inv->cost ?? 0 }}"
+                                    data-inventory-label="{{ $inv->catalog?->item_name ?? $inv->item_code }}"
+                                    data-product-type="inventory"
+                                >
+                                    <div class="text-sm font-semibold text-gray-900 truncate">{{ $inv->catalog?->item_name ?? '—' }}</div>
+                                    <div class="text-xs text-gray-500 mt-0.5">Código: {{ $inv->item_code }}</div>
+                                    <div class="mt-2 flex items-center justify-between">
+                                        <span class="text-[11px] px-2 py-1 rounded bg-purple-100 text-purple-700">DISPONIBLE</span>
+                                        <span class="text-sm font-bold text-purple-700">{{ $inv->cost !== null ? '$'.number_format($inv->cost, 2) : 'Sin precio' }}</span>
+                                    </div>
+                                </button>
+                            @empty
+                                <div class="col-span-3 text-center py-8">
+                                    <p class="text-gray-500 text-sm">No hay artículos disponibles.</p>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 border border-gray-200 rounded-lg p-3 bg-gray-50/60">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Productos seleccionados</p>
+                    <div id="selectedProductsContainer" class="space-y-3"></div>
+                    <p id="selectedProductsEmpty" class="text-xs text-gray-500">No hay productos seleccionados.</p>
+                    <div class="mt-3 pt-3 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-3 items-end">
+                        <div>
+                            <p class="text-xs text-gray-500">Suma automática de productos seleccionados</p>
+                            <p id="saleTotalHint" class="text-sm font-semibold text-gray-700">$0.00</p>
+                        </div>
+                        <div>
+                            <label class="form-label">Precio de venta general *</label>
+                            <input name="sale_price" id="sale_price_total" type="number" step="0.01" min="0" value="{{ old('sale_price', 0) }}" class="form-input" required>
+                        </div>
+                    </div>
+                </div>
             </div>
     </div>
     <div class="px-5 py-4 border-t border-gray-100 flex gap-3">
@@ -159,12 +242,41 @@ const clientSearchResults = document.getElementById('clientSearchResults');
 const salePriceInput = document.getElementById('sale_price_total');
 const saleTotalHint = document.getElementById('saleTotalHint');
 const equipmentCards = document.querySelectorAll('.equipment-card');
-const itemRowsContainer = document.getElementById('itemRowsContainer');
-const itemRowsEmpty = document.getElementById('itemRowsEmpty');
-const selectedRows = new Map();
+const sparepartCards = document.querySelectorAll('.sparepart-card');
+const inventoryCards = document.querySelectorAll('.inventory-card');
+const productTabButtons = document.querySelectorAll('.product-tab');
+const selectedProductsContainer = document.getElementById('selectedProductsContainer');
+const selectedProductsEmpty = document.getElementById('selectedProductsEmpty');
 const branchesCache = new Map();
 const areasCache = new Map();
+
+// Almacenar productos seleccionados: { tipo: { id: { data } } }
+const selectedProducts = {
+    equipment: new Map(),
+    sparepart: new Map(),
+    inventory: new Map(),
+};
+
 let salePriceManuallyEdited = false;
+
+// TAB SWITCHING
+productTabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        const tab = button.dataset.tab;
+        productTabButtons.forEach(b => {
+            b.classList.toggle('border-blue-600', b.dataset.tab === tab);
+            b.classList.toggle('text-blue-600', b.dataset.tab === tab);
+            b.classList.toggle('bg-blue-50', b.dataset.tab === tab);
+            b.classList.toggle('border-transparent', b.dataset.tab !== tab);
+            b.classList.toggle('text-gray-500', b.dataset.tab !== tab);
+        });
+        
+        document.querySelectorAll('.product-tab-content').forEach(content => {
+            content.classList.toggle('hidden', content.dataset.tab !== tab);
+            content.classList.toggle('active', content.dataset.tab === tab);
+        });
+    });
+});
 
 function normalizeText(value) {
     return String(value || '')
@@ -265,33 +377,81 @@ function setupClientSearch() {
 const initialRows = @json(old('item_rows', []));
 initialRows.forEach(row => {
     if (!row.item_id) return;
-    selectedRows.set(String(row.item_id), {
+    selectedProducts.equipment.set(String(row.item_id), {
         item_id: String(row.item_id),
         branch_id: row.branch_id ? String(row.branch_id) : '',
         area_id: row.area_id ? String(row.area_id) : '',
     });
 });
 
-function updateEquipmentCardSelection() {
+function updateProductCardSelection() {
     equipmentCards.forEach(card => {
-        const active = selectedRows.has(card.dataset.itemId);
+        const active = selectedProducts.equipment.has(card.dataset.itemId);
         card.classList.toggle('border-blue-500', active);
         card.classList.toggle('bg-blue-50', active);
         card.classList.toggle('ring-1', active);
         card.classList.toggle('ring-blue-200', active);
     });
+
+    sparepartCards.forEach(card => {
+        const active = selectedProducts.sparepart.has(card.dataset.sparepartId);
+        card.classList.toggle('border-green-500', active);
+        card.classList.toggle('bg-green-50', active);
+        card.classList.toggle('ring-1', active);
+        card.classList.toggle('ring-green-200', active);
+    });
+
+    inventoryCards.forEach(card => {
+        const active = selectedProducts.inventory.has(card.dataset.inventoryId);
+        card.classList.toggle('border-purple-500', active);
+        card.classList.toggle('bg-purple-50', active);
+        card.classList.toggle('ring-1', active);
+        card.classList.toggle('ring-purple-200', active);
+    });
 }
 
-function getItemPrice(itemId) {
-    const card = document.querySelector(`.equipment-card[data-item-id="${itemId}"]`);
-    const raw = card?.dataset.itemPrice;
-    const numeric = Number.parseFloat(raw);
-    return Number.isFinite(numeric) ? numeric : 0;
+function getProductPrice(productType, productId) {
+    let price = 0;
+    if (productType === 'equipment') {
+        const card = document.querySelector(`.equipment-card[data-item-id="${productId}"]`);
+        price = card?.dataset.itemPrice ? parseFloat(card.dataset.itemPrice) : 0;
+    } else if (productType === 'sparepart') {
+        const card = document.querySelector(`.sparepart-card[data-sparepart-id="${productId}"]`);
+        price = card?.dataset.sparepartPrice ? parseFloat(card.dataset.sparepartPrice) : 0;
+    } else if (productType === 'inventory') {
+        const card = document.querySelector(`.inventory-card[data-inventory-id="${productId}"]`);
+        price = card?.dataset.inventoryPrice ? parseFloat(card.dataset.inventoryPrice) : 0;
+    }
+    return isFinite(price) ? price : 0;
+}
+
+function getProductLabel(productType, productId) {
+    if (productType === 'equipment') {
+        const card = document.querySelector(`.equipment-card[data-item-id="${productId}"]`);
+        return card?.dataset.itemLabel || `Equipo ${productId}`;
+    } else if (productType === 'sparepart') {
+        const card = document.querySelector(`.sparepart-card[data-sparepart-id="${productId}"]`);
+        return card?.dataset.sparepartLabel || `Refacción ${productId}`;
+    } else if (productType === 'inventory') {
+        const card = document.querySelector(`.inventory-card[data-inventory-id="${productId}"]`);
+        return card?.dataset.inventoryLabel || `Inventario ${productId}`;
+    }
+    return '';
 }
 
 function syncSaleTotal() {
-    const total = Array.from(selectedRows.values())
-        .reduce((acc, row) => acc + getItemPrice(row.item_id), 0);
+    let total = 0;
+    
+    selectedProducts.equipment.forEach((row) => {
+        total += getProductPrice('equipment', row.item_id);
+    });
+    selectedProducts.sparepart.forEach((row) => {
+        total += getProductPrice('sparepart', row.sparepart_id);
+    });
+    selectedProducts.inventory.forEach((row) => {
+        total += getProductPrice('inventory', row.inventory_id);
+    });
+
     if (salePriceInput) {
         if (!salePriceManuallyEdited || salePriceInput.value === '' || salePriceInput.value === '0' || salePriceInput.value === '0.00') {
             salePriceInput.value = total.toFixed(2);
@@ -344,50 +504,91 @@ async function loadAreas(branchId) {
     return data;
 }
 
-async function renderItemRows() {
+async function renderSelectedProducts() {
     const branches = await loadBranches(clientSelect.value);
-    itemRowsContainer.innerHTML = '';
+    selectedProductsContainer.innerHTML = '';
+    let index = 0;
 
-    const rows = Array.from(selectedRows.values());
-    itemRowsEmpty.classList.toggle('hidden', rows.length > 0);
-
-    rows.forEach((row, index) => {
-        const card = document.querySelector(`.equipment-card[data-item-id="${row.item_id}"]`);
-        const label = card?.dataset.itemLabel || `Equipo ${row.item_id}`;
-
+    // Equipment rows
+    selectedProducts.equipment.forEach((row, itemId) => {
+        const label = getProductLabel('equipment', itemId);
         const rowEl = document.createElement('div');
-        rowEl.className = 'grid grid-cols-1 md:grid-cols-3 gap-3 bg-white border border-gray-200 rounded-lg p-3';
+        rowEl.className = 'grid grid-cols-1 md:grid-cols-4 gap-3 bg-white border border-blue-200 rounded-lg p-3';
         rowEl.innerHTML = `
-            <input type="hidden" name="item_rows[${index}][item_id]" value="${row.item_id}">
+            <input type="hidden" name="item_rows[${index}][item_id]" value="${itemId}">
             <div class="md:col-span-1">
                 <label class="form-label text-xs">Equipo</label>
                 <div class="text-sm font-medium text-gray-800">${label}</div>
-                <p class="text-xs text-blue-700 font-semibold mt-1">Precio equipo: $${getItemPrice(row.item_id).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <p class="text-xs text-blue-700 font-semibold mt-1">$${getProductPrice('equipment', itemId).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
             <div>
                 <label class="form-label text-xs">Sucursal *</label>
-                <select name="item_rows[${index}][branch_id]" class="form-select branch-select" data-item-id="${row.item_id}">
+                <select name="item_rows[${index}][branch_id]" class="form-select equipment-branch-select" data-item-id="${itemId}">
                     ${branchOptionsHtml(branches, row.branch_id)}
                 </select>
             </div>
             <div>
-                <label class="form-label text-xs">Area</label>
-                <select name="item_rows[${index}][area_id]" class="form-select area-select" data-item-id="${row.item_id}">
+                <label class="form-label text-xs">Área</label>
+                <select name="item_rows[${index}][area_id]" class="form-select equipment-area-select" data-item-id="${itemId}">
                     <option value="">Cargando...</option>
                 </select>
             </div>
+            <div class="flex items-end">
+                <button type="button" class="btn-danger btn-sm w-full remove-product" data-product-type="equipment" data-product-id="${itemId}">Quitar</button>
+            </div>
         `;
-        itemRowsContainer.appendChild(rowEl);
+        selectedProductsContainer.appendChild(rowEl);
+        index++;
     });
 
-    const branchSelects = itemRowsContainer.querySelectorAll('.branch-select');
-    for (const branchSelect of branchSelects) {
-        const itemId = branchSelect.dataset.itemId;
-        const rowState = selectedRows.get(itemId);
-        const areaSelect = itemRowsContainer.querySelector(`.area-select[data-item-id="${itemId}"]`);
+    // Sparepart rows
+    selectedProducts.sparepart.forEach((row, sparepartId) => {
+        const label = getProductLabel('sparepart', sparepartId);
+        const rowEl = document.createElement('div');
+        rowEl.className = 'grid grid-cols-1 md:grid-cols-4 gap-3 bg-white border border-green-200 rounded-lg p-3';
+        rowEl.innerHTML = `
+            <input type="hidden" name="sparepart_rows[${index}][sparepart_id]" value="${sparepartId}">
+            <div class="md:col-span-2">
+                <label class="form-label text-xs">Refacción</label>
+                <div class="text-sm font-medium text-gray-800">${label}</div>
+                <p class="text-xs text-green-700 font-semibold mt-1">$${getProductPrice('sparepart', sparepartId).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            </div>
+            <div class="flex items-end">
+                <button type="button" class="btn-danger btn-sm w-full remove-product" data-product-type="sparepart" data-product-id="${sparepartId}">Quitar</button>
+            </div>
+        `;
+        selectedProductsContainer.appendChild(rowEl);
+        index++;
+    });
+
+    // Inventory rows
+    selectedProducts.inventory.forEach((row, inventoryId) => {
+        const label = getProductLabel('inventory', inventoryId);
+        const rowEl = document.createElement('div');
+        rowEl.className = 'grid grid-cols-1 md:grid-cols-4 gap-3 bg-white border border-purple-200 rounded-lg p-3';
+        rowEl.innerHTML = `
+            <input type="hidden" name="inventory_rows[${index}][inventory_id]" value="${inventoryId}">
+            <div class="md:col-span-2">
+                <label class="form-label text-xs">Toner/Inventario</label>
+                <div class="text-sm font-medium text-gray-800">${label}</div>
+                <p class="text-xs text-purple-700 font-semibold mt-1">$${getProductPrice('inventory', inventoryId).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            </div>
+            <div class="flex items-end">
+                <button type="button" class="btn-danger btn-sm w-full remove-product" data-product-type="inventory" data-product-id="${inventoryId}">Quitar</button>
+            </div>
+        `;
+        selectedProductsContainer.appendChild(rowEl);
+        index++;
+    });
+
+    // Setup event listeners
+    selectedProductsContainer.querySelectorAll('.equipment-branch-select').forEach(select => {
+        const itemId = select.dataset.itemId;
+        const rowState = selectedProducts.equipment.get(itemId);
+        const areaSelect = selectedProductsContainer.querySelector(`.equipment-area-select[data-item-id="${itemId}"]`);
 
         const fillAreas = async () => {
-            const branchId = branchSelect.value;
+            const branchId = select.value;
             const areas = await loadAreas(branchId);
             const areaValue = rowState?.area_id || '';
             areaSelect.innerHTML = areaOptionsHtml(areas, areaValue);
@@ -397,55 +598,104 @@ async function renderItemRows() {
             }
         };
 
-        branchSelect.addEventListener('change', async () => {
-            const state = selectedRows.get(itemId);
-            state.branch_id = branchSelect.value || '';
-            state.area_id = '';
+        select.addEventListener('change', async () => {
+            rowState.branch_id = select.value || '';
+            rowState.area_id = '';
             await fillAreas();
         });
 
         areaSelect.addEventListener('change', () => {
-            const state = selectedRows.get(itemId);
-            state.area_id = areaSelect.value || '';
+            rowState.area_id = areaSelect.value || '';
         });
 
-        await fillAreas();
-    }
+        fillAreas();
+    });
 
+    selectedProductsContainer.querySelectorAll('.remove-product').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const productType = btn.dataset.productType;
+            const productId = btn.dataset.productId;
+            if (productType === 'equipment') {
+                selectedProducts.equipment.delete(productId);
+            } else if (productType === 'sparepart') {
+                selectedProducts.sparepart.delete(productId);
+            } else if (productType === 'inventory') {
+                selectedProducts.inventory.delete(productId);
+            }
+            updateProductCardSelection();
+            await renderSelectedProducts();
+            syncSaleTotal();
+        });
+    });
+
+    const hasProducts = selectedProducts.equipment.size > 0 || selectedProducts.sparepart.size > 0 || selectedProducts.inventory.size > 0;
+    selectedProductsEmpty.classList.toggle('hidden', hasProducts);
     syncSaleTotal();
 }
 
+// Equipment card click handlers
 equipmentCards.forEach(card => {
     card.addEventListener('click', async function () {
         if (this.dataset.selectable !== '1') return;
 
         const itemId = this.dataset.itemId;
-        if (selectedRows.has(itemId)) {
-            selectedRows.delete(itemId);
+        if (selectedProducts.equipment.has(itemId)) {
+            selectedProducts.equipment.delete(itemId);
         } else {
-            selectedRows.set(itemId, { item_id: itemId, branch_id: '', area_id: '' });
+            selectedProducts.equipment.set(itemId, { item_id: itemId, branch_id: '', area_id: '' });
         }
 
-        updateEquipmentCardSelection();
-        await renderItemRows();
+        updateProductCardSelection();
+        await renderSelectedProducts();
+    });
+});
+
+// Sparepart card click handlers
+sparepartCards.forEach(card => {
+    card.addEventListener('click', async function () {
+        const sparepartId = this.dataset.sparepartId;
+        if (selectedProducts.sparepart.has(sparepartId)) {
+            selectedProducts.sparepart.delete(sparepartId);
+        } else {
+            selectedProducts.sparepart.set(sparepartId, { sparepart_id: sparepartId });
+        }
+
+        updateProductCardSelection();
+        await renderSelectedProducts();
+    });
+});
+
+// Inventory card click handlers
+inventoryCards.forEach(card => {
+    card.addEventListener('click', async function () {
+        const inventoryId = this.dataset.inventoryId;
+        if (selectedProducts.inventory.has(inventoryId)) {
+            selectedProducts.inventory.delete(inventoryId);
+        } else {
+            selectedProducts.inventory.set(inventoryId, { inventory_id: inventoryId });
+        }
+
+        updateProductCardSelection();
+        await renderSelectedProducts();
     });
 });
 
 clientSelect.addEventListener('change', async () => {
-    const rows = Array.from(selectedRows.values());
-    rows.forEach(row => {
+    // Clear branches/areas for equipment rows
+    selectedProducts.equipment.forEach(row => {
         row.branch_id = '';
         row.area_id = '';
     });
-    await renderItemRows();
+    await renderSelectedProducts();
 });
 
 setupClientSearch();
-updateEquipmentCardSelection();
-renderItemRows();
+updateProductCardSelection();
+renderSelectedProducts();
 syncSaleTotal();
 
-// Mostrar No. Factura en el título del card y arriba en el h1
+// Invoice title display
 const invoiceInput = document.getElementById('invoiceNumberInput');
 const invoiceTitle = document.getElementById('invoiceTitle');
 const invoiceTitleTop = document.getElementById('invoiceTitleTop');

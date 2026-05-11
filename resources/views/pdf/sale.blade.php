@@ -59,23 +59,24 @@
 
     <div class="grid">
         <div class="item"><div class="label">Cliente</div><div class="value">{{ $sale->client->name ?? '—' }}</div></div>
-        <div class="item"><div class="label">Equipos</div><div class="value">{{ $sale->items->count() ?: 1 }}</div></div>
+        <div class="item"><div class="label">Productos</div><div class="value">{{ ($sale->items->count() ?: ($sale->item_id ? 1 : 0)) + $sale->spareparts->count() + $sale->inventoryItems->count() }}</div></div>
         <div class="item"><div class="label">Sucursal</div><div class="value">{{ $sale->branch->name ?? '—' }}</div></div>
         <div class="item"><div class="label">Área</div><div class="value">{{ $sale->area->name ?? '—' }}</div></div>
         <div class="item"><div class="label">Registró</div><div class="value">{{ $sale->creator?->full_name ?? $sale->creator?->username ?? '—' }}</div></div>
     </div>
 
+    {{-- EQUIPOS --}}
     <table style="width:100%; border-collapse:collapse; margin-top:14px;">
         <thead>
             <tr>
-                <th style="text-align:left; border-bottom:1px solid #eee; padding:6px; font-size:12px;">Equipo</th>
-                <th style="text-align:left; border-bottom:1px solid #eee; padding:6px; font-size:12px;">Serie</th>
-                <th style="text-align:left; border-bottom:1px solid #eee; padding:6px; font-size:12px;">Sucursal</th>
-                <th style="text-align:left; border-bottom:1px solid #eee; padding:6px; font-size:12px;">Area</th>
+                <th style="text-align:left; border-bottom:2px solid #111; padding:8px; font-size:13px; font-weight:700; background:#f9fafb;">Equipos</th>
+                <th style="text-align:left; border-bottom:2px solid #111; padding:8px; font-size:13px; font-weight:700; background:#f9fafb;">Serie</th>
+                <th style="text-align:left; border-bottom:2px solid #111; padding:8px; font-size:13px; font-weight:700; background:#f9fafb;">Sucursal</th>
+                <th style="text-align:left; border-bottom:2px solid #111; padding:8px; font-size:13px; font-weight:700; background:#f9fafb;">Área</th>
             </tr>
         </thead>
         <tbody>
-        @foreach(($sale->items->count() ? $sale->items : collect([$sale->item])) as $eq)
+        @forelse(($sale->items->count() ? $sale->items : collect([$sale->item])) as $eq)
             @php
                 $branchId = $eq->pivot->branch_id ?? $sale->branch_id;
                 $areaId = $eq->pivot->area_id ?? $sale->area_id;
@@ -88,9 +89,54 @@
                 <td style="border-bottom:1px solid #f2f2f2; padding:6px; font-size:12px;">{{ $branch->name ?? '—' }}</td>
                 <td style="border-bottom:1px solid #f2f2f2; padding:6px; font-size:12px;">{{ $area->name ?? '—' }}</td>
             </tr>
+        @empty
+        @endforelse
+        </tbody>
+    </table>
+
+    {{-- REFACCIONES --}}
+    @if($sale->spareparts->count())
+    <table style="width:100%; border-collapse:collapse; margin-top:16px;">
+        <thead>
+            <tr>
+                <th style="text-align:left; border-bottom:2px solid #22c55e; padding:8px; font-size:13px; font-weight:700; background:#f0fdf4;">Refacciones</th>
+                <th style="text-align:left; border-bottom:2px solid #22c55e; padding:8px; font-size:13px; font-weight:700; background:#f0fdf4;">Código</th>
+                <th style="text-align:right; border-bottom:2px solid #22c55e; padding:8px; font-size:13px; font-weight:700; background:#f0fdf4;">Precio</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach($sale->spareparts as $sp)
+            <tr>
+                <td style="border-bottom:1px solid #f2f2f2; padding:6px; font-size:12px;">{{ $sp->name }}</td>
+                <td style="border-bottom:1px solid #f2f2f2; padding:6px; font-size:12px;">{{ $sp->code ?: '—' }}</td>
+                <td style="border-bottom:1px solid #f2f2f2; padding:6px; font-size:12px; text-align:right;">${{ number_format($sp->unit_price, 2) }}</td>
+            </tr>
         @endforeach
         </tbody>
     </table>
+    @endif
+
+    {{-- TONERS / INVENTARIO --}}
+    @if($sale->inventoryItems->count())
+    <table style="width:100%; border-collapse:collapse; margin-top:16px;">
+        <thead>
+            <tr>
+                <th style="text-align:left; border-bottom:2px solid #a855f7; padding:8px; font-size:13px; font-weight:700; background:#faf5ff;">Toners / Inventario</th>
+                <th style="text-align:left; border-bottom:2px solid #a855f7; padding:8px; font-size:13px; font-weight:700; background:#faf5ff;">Código</th>
+                <th style="text-align:right; border-bottom:2px solid #a855f7; padding:8px; font-size:13px; font-weight:700; background:#faf5ff;">Costo</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach($sale->inventoryItems as $inv)
+            <tr>
+                <td style="border-bottom:1px solid #f2f2f2; padding:6px; font-size:12px;">{{ $inv->catalog?->item_name ?? '—' }}</td>
+                <td style="border-bottom:1px solid #f2f2f2; padding:6px; font-size:12px;">{{ $inv->item_code }}</td>
+                <td style="border-bottom:1px solid #f2f2f2; padding:6px; font-size:12px; text-align:right;">${{ number_format($inv->cost, 2) }}</td>
+            </tr>
+        @endforeach
+        </tbody>
+    </table>
+    @endif
 
     <div class="total">Total: ${{ number_format((float)$sale->sale_price, 2) }}</div>
 </body>

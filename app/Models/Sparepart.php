@@ -15,16 +15,23 @@ class Sparepart extends Model
         'unit_price',
         'total_price',
         'invoice_number',
+        'is_active',
     ];
 
     protected $casts = [
         'unit_price'  => 'decimal:2',
         'total_price' => 'decimal:2',
+        'is_active'   => 'boolean',
     ];
 
     public function purchases(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Purchase::class);
+    }
+
+    public function sales(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Sale::class, 'sale_sparepart')->withTimestamps();
     }
 
     /** Devuelve el nombre de la marca (FK si existe, texto si no). */

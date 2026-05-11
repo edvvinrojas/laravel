@@ -42,6 +42,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\EmployeeCreditController;
 use App\Http\Controllers\SupervisionController;
+use App\Http\Controllers\QuoteController;
 
 // Portal público de cliente (sin autenticación)
 Route::get('/portal/contadores/{token}', [ClientPortalController::class, 'show'])->name('portal.counters');
@@ -234,6 +235,19 @@ Route::middleware('auth')->group(function () {
     Route::get('sales/{sale}/pdf', [SaleController::class, 'pdf'])
         ->name('sales.pdf')
         ->middleware('permission:ventas.view');
+
+    // Cotizaciones
+    Route::resource('quotes', QuoteController::class)
+        ->middlewareFor(['index', 'show'], 'permission:cotizaciones.view')
+        ->middlewareFor(['create', 'store'], 'permission:cotizaciones.create')
+        ->middlewareFor(['edit', 'update'], 'permission:cotizaciones.edit')
+        ->middlewareFor('destroy', 'permission:cotizaciones.delete');
+    Route::patch('quotes/{quote}/approve', [QuoteController::class, 'approve'])
+        ->name('quotes.approve')
+        ->middleware('permission:cotizaciones.edit');
+    Route::patch('quotes/{quote}/reject', [QuoteController::class, 'reject'])
+        ->name('quotes.reject')
+        ->middleware('permission:cotizaciones.edit');
 
     // Facturación / Cobranza
     Route::resource('billing', BillingController::class)

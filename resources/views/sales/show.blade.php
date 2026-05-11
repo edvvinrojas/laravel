@@ -29,9 +29,9 @@
             <div><p class="text-gray-500">Registrado por</p><p>{{ $sale->creator?->full_name ?? '—' }}</p></div>
             <div><p class="text-gray-500">Fecha</p><p>{{ $sale->created_at->format('d/m/Y') }}</p></div>
             <div class="col-span-2 border-t pt-3">
-                <p class="text-gray-500 mb-2">Asignacion por equipo</p>
+                <p class="text-gray-500 mb-2 font-semibold">Equipos vendidos</p>
                 <div class="space-y-2">
-                    @foreach(($sale->items->count() ? $sale->items : collect([$sale->item])) as $eq)
+                    @forelse(($sale->items->count() ? $sale->items : collect([$sale->item])) as $eq)
                         @php
                             $branchId = $eq->pivot->branch_id ?? $sale->branch_id;
                             $areaId = $eq->pivot->area_id ?? $sale->area_id;
@@ -39,12 +39,36 @@
                             $branchModel = $sale->client->branches->firstWhere('id', $branchId);
                             $areaName = $branchModel ? optional($branchModel->areas->firstWhere('id', $areaId))->name : null;
                         @endphp
-                        <div class="rounded border border-gray-200 p-2">
-                            <p class="font-medium">{{ $eq->brand->name ?? '' }} {{ $eq->model }} <span class="font-mono text-xs text-gray-500">{{ $eq->serie }}</span></p>
-                            <p class="text-xs text-gray-600">Sucursal: {{ $branchName ?: 'Sin sucursal' }} | Area: {{ $areaName ?: 'Sin area' }}</p>
+                        <div class="rounded border border-blue-200 bg-blue-50/30 p-2">
+                            <p class="font-medium text-blue-900">{{ $eq->brand->name ?? '' }} {{ $eq->model }} <span class="font-mono text-xs text-blue-700">{{ $eq->serie }}</span></p>
+                            <p class="text-xs text-blue-700">Sucursal: {{ $branchName ?: 'Sin sucursal' }} | Área: {{ $areaName ?: 'Sin área' }}</p>
+                        </div>
+                    @empty
+                        <p class="text-xs text-gray-400">Sin equipos</p>
+                    @endforelse
+                </div>
+                @if($sale->spareparts->count())
+                <p class="text-gray-500 mb-2 font-semibold mt-4">Refacciones vendidas</p>
+                <div class="space-y-2">
+                    @foreach($sale->spareparts as $sp)
+                        <div class="rounded border border-green-200 bg-green-50/30 p-2">
+                            <p class="font-medium text-green-900">{{ $sp->name }} <span class="font-mono text-xs text-green-700">{{ $sp->code ?: '—' }}</span></p>
+                            <p class="text-xs text-green-700">${{ number_format($sp->unit_price, 2) }}</p>
                         </div>
                     @endforeach
                 </div>
+                @endif
+                @if($sale->inventoryItems->count())
+                <p class="text-gray-500 mb-2 font-semibold mt-4">Toners/Inventario vendido</p>
+                <div class="space-y-2">
+                    @foreach($sale->inventoryItems as $inv)
+                        <div class="rounded border border-purple-200 bg-purple-50/30 p-2">
+                            <p class="font-medium text-purple-900">{{ $inv->catalog?->item_name ?? $inv->item_code }} <span class="font-mono text-xs text-purple-700">{{ $inv->item_code }}</span></p>
+                            <p class="text-xs text-purple-700">${{ number_format($inv->cost, 2) }}</p>
+                        </div>
+                    @endforeach
+                </div>
+                @endif
             </div>
         </div>
     </div>

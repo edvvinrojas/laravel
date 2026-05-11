@@ -25,4 +25,5 @@ class InventoryItem extends Model
     public function supplier() { return $this->belongsTo(Supplier::class); }
     public function shelf()    { return $this->belongsTo(Shelf::class); }
     public function items()    { return $this->belongsToMany(Item::class, 'inventory_equipment', 'inventory_id', 'item_id'); }
+    public function sales()    { return $this->belongsToMany(Sale::class, 'sale_inventory', 'inventory_id', 'sale_id')->withTimestamps(); }
 }

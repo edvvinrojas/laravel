@@ -102,7 +102,7 @@ class UserController extends Controller
 
         // Construir permisos granulares desde los checkboxes
         $areas = [
-            'ventas','rentas','clientes','produccion','compras','almacen',
+            'ventas','cotizaciones','rentas','clientes','produccion','compras','almacen',
             'cobranza','facturacion','inventario','rutas','ordenes_servicio',
             'taller','recursos_humanos','ti','usuarios','reportes','auditoria',
             'configuracion','migraciones',

@@ -7,6 +7,8 @@ use App\Models\Client;
 use App\Models\Branch;
 use App\Models\Area;
 use App\Models\Item;
+use App\Models\Sparepart;
+use App\Models\InventoryItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -45,18 +47,28 @@ class SaleController extends Controller
             ->orderByRaw("CASE WHEN location_status = 'BODEGA' THEN 0 ELSE 1 END")
             ->orderBy('model')
             ->get();
+        $spareparts = Sparepart::where('is_active', true)->orderBy('name')->get();
+        $inventory = InventoryItem::where('is_active', true)
+            ->where('is_available', true)
+            ->with('catalog')
+            ->orderBy('item_code')
+            ->get();
         $nextInvoice = $this->generateInvoiceNumber();
-        return view('sales.create', compact('clients', 'items', 'nextInvoice'));
+        return view('sales.create', compact('clients', 'items', 'spareparts', 'inventory', 'nextInvoice'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
             'client_id'          => 'required|exists:clients,id',
-            'item_rows'          => 'required|array|min:1',
-            'item_rows.*.item_id' => 'required|integer|exists:items,id|distinct',
-            'item_rows.*.branch_id' => 'required|integer|exists:branches,id',
+            'item_rows'          => 'nullable|array',
+            'item_rows.*.item_id' => 'integer|exists:items,id|distinct',
+            'item_rows.*.branch_id' => 'required_with:item_rows.*|integer|exists:branches,id',
             'item_rows.*.area_id' => 'nullable|integer|exists:areas,id',
+            'sparepart_rows'     => 'nullable|array',
+            'sparepart_rows.*.sparepart_id' => 'integer|exists:spareparts,id|distinct',
+            'inventory_rows'     => 'nullable|array',
+            'inventory_rows.*.inventory_id' => 'integer|exists:inventory,id|distinct',
             'invoice_number'     => 'nullable|string|max:50|unique:sales',
             'sale_status'        => 'required|in:PENDIENTE,CONFIRMADA,ENTREGADA,CANCELADA',
             'sale_price'         => 'required|numeric|min:0',
@@ -64,6 +76,17 @@ class SaleController extends Controller
             'services_included'  => 'boolean',
             'services_quantity'  => 'nullable|integer|min:1',
         ]);
+
+        // Validar que al menos un tipo de producto fue seleccionado
+        $itemRows = !empty($data['item_rows']) ? collect($data['item_rows']) : collect();
+        $sparepartRows = !empty($data['sparepart_rows']) ? collect($data['sparepart_rows']) : collect();
+        $inventoryRows = !empty($data['inventory_rows']) ? collect($data['inventory_rows']) : collect();
+
+        if ($itemRows->isEmpty() && $sparepartRows->isEmpty() && $inventoryRows->isEmpty()) {
+            return back()->withInput()->withErrors([
+                'item_rows' => 'Debes seleccionar al menos un equipo, refacción o artículo de inventario.',
+            ]);
+        }
 
         $data['created_by']         = Auth::id();
         $data['is_foreign']         = $request->boolean('is_foreign');
@@ -74,71 +97,105 @@ class SaleController extends Controller
             $data['invoice_number'] = $this->generateInvoiceNumber();
         }
 
-        $itemRows = collect($data['item_rows'])
-            ->map(function (array $row) {
+        // Validar equipos si existen
+        if (!$itemRows->isEmpty()) {
+            $itemRows = $itemRows->map(function (array $row) {
                 return [
                     'item_id' => (int) $row['item_id'],
                     'branch_id' => (int) $row['branch_id'],
                     'area_id' => !empty($row['area_id']) ? (int) $row['area_id'] : null,
                 ];
-            })
-            ->values();
+            })->values();
 
-        $branchIds = $itemRows->pluck('branch_id')->unique()->values();
-        $validBranchIds = Branch::where('client_id', $data['client_id'])
-            ->whereIn('id', $branchIds)
-            ->pluck('id')
-            ->map(fn ($id) => (int) $id)
-            ->all();
+            $branchIds = $itemRows->pluck('branch_id')->unique()->values();
+            $validBranchIds = Branch::where('client_id', $data['client_id'])
+                ->whereIn('id', $branchIds)
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
 
-        if (count($validBranchIds) !== $branchIds->count()) {
-            return back()->withInput()->withErrors([
-                'item_rows' => 'Cada equipo debe apuntar a una sucursal del cliente seleccionado.',
-            ]);
-        }
-
-        $areaIds = $itemRows->pluck('area_id')->filter()->unique()->values();
-        $areasById = Area::whereIn('id', $areaIds)->get()->keyBy('id');
-        foreach ($itemRows as $row) {
-            if (!$row['area_id']) {
-                continue;
-            }
-
-            $area = $areasById->get($row['area_id']);
-            if (!$area || (int) $area->branch_id !== $row['branch_id']) {
+            if (count($validBranchIds) !== $branchIds->count()) {
                 return back()->withInput()->withErrors([
-                    'item_rows' => 'El area seleccionada debe pertenecer a la sucursal indicada en cada equipo.',
+                    'item_rows' => 'Cada equipo debe apuntar a una sucursal del cliente seleccionado.',
                 ]);
             }
-        }
 
-        $selectedItemIds = $itemRows->pluck('item_id')->unique()->values();
-        $items = Item::whereIn('id', $selectedItemIds)->get();
-        $nonBodega = $items->first(fn ($item) => $item->location_status !== 'BODEGA');
-        if ($nonBodega) {
-            return back()
-                ->withInput()
-                ->withErrors(['item_rows' => 'Solo puedes seleccionar equipos con estado BODEGA.']);
-        }
+            $areaIds = $itemRows->pluck('area_id')->filter()->unique()->values();
+            $areasById = Area::whereIn('id', $areaIds)->get()->keyBy('id');
+            foreach ($itemRows as $row) {
+                if (!$row['area_id']) {
+                    continue;
+                }
 
-        $firstRow = $itemRows->first();
-        $data['item_id'] = $firstRow['item_id'];
-        $data['branch_id'] = $firstRow['branch_id'];
-        $data['area_id'] = $firstRow['area_id'];
-        unset($data['item_rows']);
+                $area = $areasById->get($row['area_id']);
+                if (!$area || (int) $area->branch_id !== $row['branch_id']) {
+                    return back()->withInput()->withErrors([
+                        'item_rows' => 'El area seleccionada debe pertenecer a la sucursal indicada en cada equipo.',
+                    ]);
+                }
+            }
+
+            $selectedItemIds = $itemRows->pluck('item_id')->unique()->values();
+            $items = Item::whereIn('id', $selectedItemIds)->get();
+            $nonBodega = $items->first(fn ($item) => $item->location_status !== 'BODEGA');
+            if ($nonBodega) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['item_rows' => 'Solo puedes seleccionar equipos con estado BODEGA.']);
+            }
+
+            // Usar el primer item como principal
+            $firstItemRow = $itemRows->first();
+            $data['item_id'] = $firstItemRow['item_id'];
+            $data['branch_id'] = $firstItemRow['branch_id'];
+            $data['area_id'] = $firstItemRow['area_id'];
+        } else {
+            // Si no hay items, usar valores null
+            $data['item_id'] = null;
+            $data['branch_id'] = null;
+            $data['area_id'] = null;
+        }
 
         $sale = Sale::create($data);
-        $syncData = [];
-        foreach ($itemRows as $row) {
-            $syncData[$row['item_id']] = [
-                'branch_id' => $row['branch_id'],
-                'area_id' => $row['area_id'],
-            ];
-        }
-        $sale->items()->sync($syncData);
 
-        if ($sale->sale_status === 'ENTREGADA') {
-            Item::whereIn('id', $selectedItemIds)->update(['location_status' => 'VENDIDO']);
+        // Sincronizar items (equipos)
+        if (!$itemRows->isEmpty()) {
+            $syncData = [];
+            foreach ($itemRows as $row) {
+                $syncData[$row['item_id']] = [
+                    'branch_id' => $row['branch_id'],
+                    'area_id' => $row['area_id'],
+                ];
+            }
+            $sale->items()->sync($syncData);
+
+            if ($sale->sale_status === 'ENTREGADA') {
+                Item::whereIn('id', $itemRows->pluck('item_id'))->update(['location_status' => 'VENDIDO']);
+            }
+        }
+
+        // Sincronizar spareparts (refacciones)
+        if (!$sparepartRows->isEmpty()) {
+            $sparepartIds = $sparepartRows->pluck('sparepart_id')->unique();
+            $syncSparepartData = [];
+            foreach ($sparepartIds as $id) {
+                $syncSparepartData[$id] = [];
+            }
+            $sale->spareparts()->sync($syncSparepartData);
+        }
+
+        // Sincronizar inventory items (toners)
+        if (!$inventoryRows->isEmpty()) {
+            $inventoryIds = $inventoryRows->pluck('inventory_id')->unique();
+            $syncInventoryData = [];
+            foreach ($inventoryIds as $id) {
+                $syncInventoryData[$id] = [];
+            }
+            $sale->inventoryItems()->sync($syncInventoryData);
+
+            if ($sale->sale_status === 'ENTREGADA') {
+                InventoryItem::whereIn('id', $inventoryIds)->update(['is_available' => false]);
+            }
         }
 
         return redirect()->route('sales.show', $sale)->with('success', 'Venta registrada correctamente.');
@@ -146,13 +203,13 @@ class SaleController extends Controller
 
     public function show(Sale $sale)
     {
-        $sale->load(['client.branches.areas', 'branch', 'area', 'item.brand', 'items.brand', 'creator', 'billings']);
+        $sale->load(['client.branches.areas', 'branch', 'area', 'item.brand', 'items.brand', 'spareparts', 'inventoryItems.catalog', 'creator', 'billings']);
         return view('sales.show', compact('sale'));
     }
 
     public function pdf(Sale $sale)
     {
-        $sale->load(['client.branches.areas', 'branch', 'area', 'item.brand', 'items.brand', 'creator', 'billings']);
+        $sale->load(['client.branches.areas', 'branch', 'area', 'item.brand', 'items.brand', 'spareparts', 'inventoryItems.catalog', 'creator', 'billings']);
         return view('pdf.sale', compact('sale'));
     }
 
@@ -164,19 +221,38 @@ class SaleController extends Controller
             ->orderByRaw("CASE WHEN location_status = 'BODEGA' THEN 0 ELSE 1 END")
             ->orderBy('model')
             ->get();
+        $spareparts = Sparepart::where('is_active', true)->orderBy('name')->get();
+        $inventory = InventoryItem::where('is_active', true)
+            ->where('is_available', true)
+            ->with('catalog')
+            ->orderBy('item_code')
+            ->get();
         $sale->load('items');
 
-        return view('sales.edit', compact('sale', 'clients', 'items'));
+        $availableItems = $items->filter(fn($i) => $i->location_status === 'BODEGA');
+        $unavailableItems = $items->reject(fn($i) => $i->location_status === 'BODEGA');
+        $selectedIds = $sale->items->pluck('id');
+        if ($selectedIds->isEmpty() && $sale->item_id) {
+            $selectedIds = collect([$sale->item_id]);
+        }
+        $availableItems = $items->filter(fn($i) => $i->location_status === 'BODEGA' || $selectedIds->contains($i->id));
+        $unavailableItems = $items->reject(fn($i) => $i->location_status === 'BODEGA' || $selectedIds->contains($i->id));
+
+        return view('sales.edit', compact('sale', 'clients', 'items', 'spareparts', 'inventory', 'availableItems', 'unavailableItems', 'selectedIds'));
     }
 
     public function update(Request $request, Sale $sale)
     {
         $data = $request->validate([
             'client_id'         => 'required|exists:clients,id',
-            'item_rows'         => 'required|array|min:1',
-            'item_rows.*.item_id' => 'required|integer|exists:items,id|distinct',
-            'item_rows.*.branch_id' => 'required|integer|exists:branches,id',
+            'item_rows'         => 'nullable|array',
+            'item_rows.*.item_id' => 'required_with:item_rows|integer|exists:items,id|distinct',
+            'item_rows.*.branch_id' => 'required_with:item_rows|integer|exists:branches,id',
             'item_rows.*.area_id' => 'nullable|integer|exists:areas,id',
+            'sparepart_rows'    => 'nullable|array',
+            'sparepart_rows.*.sparepart_id' => 'required_with:sparepart_rows|integer|exists:spareparts,id|distinct',
+            'inventory_rows'    => 'nullable|array',
+            'inventory_rows.*.inventory_id' => 'required_with:inventory_rows|integer|exists:inventory,id|distinct',
             'invoice_number'    => "nullable|string|max:50|unique:sales,invoice_number,{$sale->id}",
             'sale_status'       => 'required|in:PENDIENTE,CONFIRMADA,ENTREGADA,CANCELADA',
             'sale_price'        => 'required|numeric|min:0',
@@ -185,81 +261,140 @@ class SaleController extends Controller
             'services_quantity' => 'nullable|integer|min:1',
         ]);
 
+        // Validar que al menos un tipo de producto sea seleccionado
+        $hasItems = !empty($data['item_rows']) && count($data['item_rows']) > 0;
+        $hasSpareparts = !empty($data['sparepart_rows']) && count($data['sparepart_rows']) > 0;
+        $hasInventory = !empty($data['inventory_rows']) && count($data['inventory_rows']) > 0;
+
+        if (!$hasItems && !$hasSpareparts && !$hasInventory) {
+            return back()->withInput()->withErrors([
+                'item_rows' => 'Debes seleccionar al menos un producto (equipo, refacción o inventario).',
+            ]);
+        }
+
         $data['is_foreign']        = $request->boolean('is_foreign');
         $data['services_included'] = $request->boolean('services_included');
         $data['services_quantity'] = $data['services_included'] ? ($data['services_quantity'] ?? null) : null;
 
-        $currentItemIds = $sale->items()->pluck('items.id');
-        if ($currentItemIds->isEmpty() && $sale->item_id) {
-            $currentItemIds = collect([$sale->item_id]);
-        }
+        // Validar items si existen
+        if ($hasItems) {
+            $itemRows = collect($data['item_rows'])
+                ->map(function (array $row) {
+                    return [
+                        'item_id' => (int) $row['item_id'],
+                        'branch_id' => (int) $row['branch_id'],
+                        'area_id' => !empty($row['area_id']) ? (int) $row['area_id'] : null,
+                    ];
+                })
+                ->values();
 
-        $itemRows = collect($data['item_rows'])
-            ->map(function (array $row) {
-                return [
-                    'item_id' => (int) $row['item_id'],
-                    'branch_id' => (int) $row['branch_id'],
-                    'area_id' => !empty($row['area_id']) ? (int) $row['area_id'] : null,
-                ];
-            })
-            ->values();
+            $branchIds = $itemRows->pluck('branch_id')->unique()->values();
+            $validBranchIds = Branch::where('client_id', $data['client_id'])
+                ->whereIn('id', $branchIds)
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
 
-        $branchIds = $itemRows->pluck('branch_id')->unique()->values();
-        $validBranchIds = Branch::where('client_id', $data['client_id'])
-            ->whereIn('id', $branchIds)
-            ->pluck('id')
-            ->map(fn ($id) => (int) $id)
-            ->all();
-
-        if (count($validBranchIds) !== $branchIds->count()) {
-            return back()->withInput()->withErrors([
-                'item_rows' => 'Cada equipo debe apuntar a una sucursal del cliente seleccionado.',
-            ]);
-        }
-
-        $areaIds = $itemRows->pluck('area_id')->filter()->unique()->values();
-        $areasById = Area::whereIn('id', $areaIds)->get()->keyBy('id');
-        foreach ($itemRows as $row) {
-            if (!$row['area_id']) {
-                continue;
-            }
-
-            $area = $areasById->get($row['area_id']);
-            if (!$area || (int) $area->branch_id !== $row['branch_id']) {
+            if (count($validBranchIds) !== $branchIds->count()) {
                 return back()->withInput()->withErrors([
-                    'item_rows' => 'El area seleccionada debe pertenecer a la sucursal indicada en cada equipo.',
+                    'item_rows' => 'Cada equipo debe apuntar a una sucursal del cliente seleccionado.',
                 ]);
             }
+
+            $areaIds = $itemRows->pluck('area_id')->filter()->unique()->values();
+            $areasById = Area::whereIn('id', $areaIds)->get()->keyBy('id');
+            foreach ($itemRows as $row) {
+                if (!$row['area_id']) {
+                    continue;
+                }
+
+                $area = $areasById->get($row['area_id']);
+                if (!$area || (int) $area->branch_id !== $row['branch_id']) {
+                    return back()->withInput()->withErrors([
+                        'item_rows' => 'El area seleccionada debe pertenecer a la sucursal indicada en cada equipo.',
+                    ]);
+                }
+            }
+
+            $currentItemIds = $sale->items()->pluck('items.id');
+            if ($currentItemIds->isEmpty() && $sale->item_id) {
+                $currentItemIds = collect([$sale->item_id]);
+            }
+
+            $selectedItemIds = $itemRows->pluck('item_id')->unique()->values();
+            $items = Item::whereIn('id', $selectedItemIds)->get();
+            $currentLookup = $currentItemIds->map(fn ($id) => (int) $id)->all();
+            $invalid = $items->first(function ($item) use ($currentLookup) {
+                return $item->location_status !== 'BODEGA' && !in_array((int) $item->id, $currentLookup, true);
+            });
+
+            if ($invalid) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['item_rows' => 'Solo puedes seleccionar equipos con estado BODEGA.']);
+            }
+
+            $firstRow = $itemRows->first();
+            $data['item_id'] = $firstRow['item_id'];
+            $data['branch_id'] = $firstRow['branch_id'];
+            $data['area_id'] = $firstRow['area_id'];
         }
-
-        $selectedItemIds = $itemRows->pluck('item_id')->unique()->values();
-        $items = Item::whereIn('id', $selectedItemIds)->get();
-        $currentLookup = $currentItemIds->map(fn ($id) => (int) $id)->all();
-        $invalid = $items->first(function ($item) use ($currentLookup) {
-            return $item->location_status !== 'BODEGA' && !in_array((int) $item->id, $currentLookup, true);
-        });
-
-        if ($invalid) {
-            return back()
-                ->withInput()
-                ->withErrors(['item_rows' => 'Solo puedes seleccionar equipos con estado BODEGA.']);
-        }
-
-        $firstRow = $itemRows->first();
-        $data['item_id'] = $firstRow['item_id'];
-        $data['branch_id'] = $firstRow['branch_id'];
-        $data['area_id'] = $firstRow['area_id'];
+        
+        // Guardar datos de spareparts e inventory antes de hacer unset
+        $sparepartRowsData = collect($data['sparepart_rows'] ?? []);
+        $inventoryRowsData = collect($data['inventory_rows'] ?? []);
+        
         unset($data['item_rows']);
+        unset($data['sparepart_rows']);
+        unset($data['inventory_rows']);
 
         $sale->update($data);
-        $syncData = [];
-        foreach ($itemRows as $row) {
-            $syncData[$row['item_id']] = [
-                'branch_id' => $row['branch_id'],
-                'area_id' => $row['area_id'],
-            ];
+
+        // Sincronizar items
+        if ($hasItems) {
+            $syncData = [];
+            foreach ($itemRows as $row) {
+                $syncData[$row['item_id']] = [
+                    'branch_id' => $row['branch_id'],
+                    'area_id' => $row['area_id'],
+                ];
+            }
+            $sale->items()->sync($syncData);
+
+            if ($sale->sale_status === 'ENTREGADA') {
+                Item::whereIn('id', $itemRows->pluck('item_id'))->update(['location_status' => 'VENDIDO']);
+            }
+        } else {
+            $sale->items()->sync([]);
         }
-        $sale->items()->sync($syncData);
+
+        // Sincronizar spareparts
+        if ($hasSpareparts) {
+            $sparepartIds = $sparepartRowsData->pluck('sparepart_id')->unique();
+            $syncSparepartData = [];
+            foreach ($sparepartIds as $id) {
+                $syncSparepartData[$id] = [];
+            }
+            $sale->spareparts()->sync($syncSparepartData);
+        } else {
+            $sale->spareparts()->sync([]);
+        }
+
+        // Sincronizar inventory items (toners)
+        if ($hasInventory) {
+            $inventoryIds = $inventoryRowsData->pluck('inventory_id')->unique();
+            $syncInventoryData = [];
+            foreach ($inventoryIds as $id) {
+                $syncInventoryData[$id] = [];
+            }
+            $sale->inventoryItems()->sync($syncInventoryData);
+
+            if ($sale->sale_status === 'ENTREGADA') {
+                InventoryItem::whereIn('id', $inventoryIds)->update(['is_available' => false]);
+            }
+        } else {
+            $sale->inventoryItems()->sync([]);
+        }
 
         return redirect()->route('sales.show', $sale)->with('success', 'Venta actualizada.');
     }
