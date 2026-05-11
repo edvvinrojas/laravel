@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Absence;
 use App\Models\Employee;
+use App\Models\Quote;
 use App\Models\Ticket;
 use App\Models\Vacation;
 use Illuminate\Http\Request;
@@ -49,16 +50,29 @@ class SupervisionController extends Controller
 
         $ticketsQuery->whereIn('created_by', $managedUserIds);
 
+        $quotesQuery = Quote::query()
+            ->with(['client', 'creator'])
+            ->whereIn('status', ['BORRADOR', 'ENVIADA'])
+            ->when($search !== '', fn($q) => $q->where(function ($sq) use ($search) {
+                $sq->where('quote_number', 'like', "%{$search}%")
+                    ->orWhere('notes', 'like', "%{$search}%")
+                    ->orWhereHas('client', fn($c) => $c->where('name', 'like', "%{$search}%"));
+            }));
+
+        $quotesQuery->whereIn('created_by', $managedUserIds);
+
         $stats = [
             'vacations_pending' => (clone $vacationsQuery)->count(),
             'absences_pending' => (clone $absencesQuery)->count(),
             'tickets_open' => (clone $ticketsQuery)->count(),
+            'quotes_pending' => (clone $quotesQuery)->count(),
         ];
 
         $vacations = $vacationsQuery->orderBy('start_date')->limit(25)->get();
         $absences = $absencesQuery->orderBy('start_date')->limit(25)->get();
         $tickets = $ticketsQuery->orderBy('created_at', 'desc')->limit(25)->get();
+        $quotes = $quotesQuery->orderBy('created_at', 'desc')->limit(25)->get();
 
-        return view('supervision.requests', compact('vacations', 'absences', 'tickets', 'stats', 'search', 'managedEmployees'));
+        return view('supervision.requests', compact('vacations', 'absences', 'tickets', 'quotes', 'stats', 'search', 'managedEmployees'));
     }
 }

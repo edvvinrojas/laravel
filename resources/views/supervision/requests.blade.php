@@ -8,7 +8,7 @@
         <div class="card-body flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
                 <h2 class="text-base font-semibold text-gray-800">Bandeja de jefes y administracion</h2>
-                <p class="text-sm text-gray-500">Atiende solicitudes pendientes de vacaciones, ausentismo y tickets desde un solo lugar.</p>
+                <p class="text-sm text-gray-500">Atiende solicitudes pendientes de vacaciones, ausentismo, tickets y cotizaciones desde un solo lugar.</p>
             </div>
             <form method="GET" class="flex w-full gap-2 md:w-auto">
                 <input type="text" name="search" value="{{ $search }}" placeholder="Buscar empleado, cliente o folio" class="form-input md:w-80">
@@ -17,7 +17,7 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
         <div class="card p-4">
             <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Vacaciones</p>
             <p class="mt-2 text-2xl font-bold text-blue-600">{{ $stats['vacations_pending'] }}</p>
@@ -32,6 +32,11 @@
             <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Tickets</p>
             <p class="mt-2 text-2xl font-bold text-amber-600">{{ $stats['tickets_open'] }}</p>
             <p class="text-sm text-gray-500">Pendientes de atencion</p>
+        </div>
+        <div class="card p-4">
+            <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Cotizaciones</p>
+            <p class="mt-2 text-2xl font-bold text-emerald-600">{{ $stats['quotes_pending'] }}</p>
+            <p class="text-sm text-gray-500">Pendientes de revision</p>
         </div>
     </div>
 
@@ -202,6 +207,61 @@
                         @empty
                             <tr>
                                 <td colspan="6" class="py-8 text-center text-sm text-gray-500">No hay tickets pendientes para supervision.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="text-sm font-semibold text-gray-700">Cotizaciones por autorizar</h3>
+            <a href="{{ route('quotes.index') }}" class="btn-secondary btn-sm">Ir a cotizaciones</a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-wrap rounded-none border-0 border-t border-gray-100">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Numero</th>
+                            <th>Cliente</th>
+                            <th>Total</th>
+                            <th>Estatus</th>
+                            <th>Creado por</th>
+                            <th class="text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($quotes as $quote)
+                            <tr>
+                                <td class="font-mono text-xs">{{ $quote->quote_number }}</td>
+                                <td>{{ $quote->client?->name ?? 'Sin cliente' }}</td>
+                                <td class="font-semibold">${{ number_format((float) $quote->total, 2) }}</td>
+                                <td>
+                                    <span class="badge {{ $quote->status === 'ENVIADA' ? 'badge-yellow' : 'badge-gray' }}">{{ $quote->status }}</span>
+                                </td>
+                                <td>{{ $quote->creator?->full_name ?? 'Sistema' }}</td>
+                                <td class="text-right">
+                                    <div class="inline-flex gap-1">
+                                        <form method="POST" action="{{ route('quotes.approve', $quote) }}" class="inline">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button class="btn-success btn-sm" type="submit">Aprobar</button>
+                                        </form>
+                                        <form method="POST" action="{{ route('quotes.reject', $quote) }}" class="inline">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button class="btn-danger btn-sm" type="submit">Rechazar</button>
+                                        </form>
+                                        <a href="{{ route('quotes.show', $quote) }}" class="btn-secondary btn-sm">Ver</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="py-8 text-center text-sm text-gray-500">No hay cotizaciones pendientes para supervision.</td>
                             </tr>
                         @endforelse
                     </tbody>
