@@ -11,12 +11,10 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# copiar primero composer files (cache optimizado)
 COPY composer.json composer.lock ./
 
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
-# copiar resto del proyecto
 COPY . .
 
 RUN npm install && npm run build
@@ -25,6 +23,8 @@ RUN chown -R www-data:www-data storage bootstrap/cache
 
 COPY .docker/vhost.conf /etc/apache2/sites-available/000-default.conf
 
-EXPOSE 80
+EXPOSE 10000
 
-CMD php artisan migrate --force && apache2-foreground
+CMD sed -i "s/80/${PORT:-10000}/g" /etc/apache2/ports.conf /etc/apache2/sites-available/000-default.conf && \
+    php artisan migrate --force ; \
+    apache2-foreground
