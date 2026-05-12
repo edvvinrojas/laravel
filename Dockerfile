@@ -23,8 +23,9 @@ RUN chown -R www-data:www-data storage bootstrap/cache
 
 COPY .docker/vhost.conf /etc/apache2/sites-available/000-default.conf
 
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 EXPOSE 10000
 
-CMD sed -i "s/80/${PORT:-10000}/g" /etc/apache2/ports.conf /etc/apache2/sites-available/000-default.conf && \
-    php artisan migrate --force ; \
-    apache2-foreground
+CMD ["docker-entrypoint.sh"]
