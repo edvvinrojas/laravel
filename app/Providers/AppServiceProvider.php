@@ -12,6 +12,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        if (config('app.env') === 'production') {
+            \URL::forceScheme('https');
+        }
+
         Blade::directive('activeRoute', function (string $expression) {
             return "<?php echo request()->routeIs({$expression}) ? 'active' : ''; ?>";
         });
